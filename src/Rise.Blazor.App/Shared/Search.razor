@@ -1,0 +1,33 @@
+﻿@using Rise.Blazor.App.Models
+
+<EditForm Model="@SearchViewModel" OnSubmit="@SearchSubmit">
+	<input @ref="@inputBox" type="search" id="query" name="q" placeholder="Search...">
+	<button>@Label</button>
+</EditForm>
+
+@code {
+	private const string SearchActionText = "Search...";
+	private ElementReference inputBox;
+
+    [Parameter]
+    public string Label { get; set; } = SearchActionText;
+
+    [Parameter]
+    public string Placeholder { get; set; } = SearchActionText;
+
+    [Parameter]
+    public EventCallback<string> OnSubmit { get; set; }
+
+    public SearchViewModel SearchViewModel { get; set; } = new SearchViewModel();
+
+    private bool MessageInputInvalid => string.IsNullOrWhiteSpace(SearchViewModel.Query);
+    private async Task SearchSubmit()
+    {
+        if (!MessageInputInvalid)
+        {
+            await OnSubmit.InvokeAsync(SearchViewModel.Query);
+            SearchViewModel.Query = string.Empty;
+            await inputBox.FocusAsync();
+        }
+    }
+}

@@ -3,9 +3,18 @@ using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Rise.Blazor.App;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
-builder.RootComponents.Add<App>("#app");
-builder.RootComponents.Add<HeadOutlet>("head::after");
 
-builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
+var appSelector = "#app";
+builder.RootComponents
+    .Add<App>(appSelector);
 
-await builder.Build().RunAsync();
+var headSelector = "head::after";
+builder.RootComponents
+    .Add<HeadOutlet>(headSelector);
+
+builder.Services
+    .AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
+
+var host =  builder.Build();
+
+await host.RunAsync();
