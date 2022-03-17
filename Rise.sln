@@ -14,7 +14,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{F98BA79B-B65
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{16D926E3-E821-4E62-9449-9102FFFE2BBC}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rise.Blazor.App", "src\Rise.Blazor.App\Rise.Blazor.App.csproj", "{5FC7220C-2DC9-4B6D-BED8-577249514782}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Rise.Blazor.App", "src\Rise.Blazor.App\Rise.Blazor.App.csproj", "{5FC7220C-2DC9-4B6D-BED8-577249514782}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -1,0 +1,43 @@
+﻿@using Rise.Blazor.App.Models
+
+<EditForm Model="SearchViewModel" OnSubmit="@SearchSubmit">
+    <input @ref="@inputBox" type="search" id="query" name="q" placeholder="Search..." @bind-value="SearchViewModel.Query">
+    <button>@Label <span class="oi oi-external-link" aria-hidden="true"></span></button>
+</EditForm>
+
+@code {
+    private const string SearchActionText = "Search...";
+
+    private ElementReference inputBox;
+
+    [Inject]
+    private IJSRuntime? JSRuntime { get; set; }
+
+    [Parameter]
+    public string Label { get; set; }
+        = SearchActionText;
+
+    [Parameter]
+    public string Placeholder { get; set; }
+        = SearchActionText;
+
+    public SearchViewModel SearchViewModel { get; set; }
+        = new SearchViewModel();
+
+    private bool MessageInputInvalid
+        => string.IsNullOrWhiteSpace(SearchViewModel.Query);
+
+    private async Task SearchSubmit()
+    {
+        if (!MessageInputInvalid)
+        {
+            _ = JSRuntime ?? throw new NullReferenceException("JSRuntime cannot be null.");
+
+            var encodedQuery = System.Web.HttpUtility.UrlEncode(SearchViewModel.Query);
+            await JSRuntime.InvokeAsync<string>("open", "https://google.com/search?q=" + encodedQuery, "_blank");
+
+            SearchViewModel.Query = string.Empty;
+            await inputBox.FocusAsync();
+        }
+    }
+}
