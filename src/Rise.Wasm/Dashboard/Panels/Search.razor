@@ -1,7 +1,5 @@
-﻿@using Rise.Blazor.App.Models
-
-<EditForm Model="SearchViewModel" OnSubmit="@SearchSubmit">
-    <input @ref="@inputBox" type="search" id="query" name="q" placeholder="Search..." @bind-value="SearchViewModel.Query">
+﻿<EditForm Model="Model" OnSubmit="@SearchSubmit">
+    <input @ref="@inputBox" type="search" id="query" name="q" placeholder="Search..." @bind-value="Model.Query">
     <button>@Label <span class="oi oi-external-link" aria-hidden="true"></span></button>
 </EditForm>
 
@@ -21,11 +19,11 @@
     public string Placeholder { get; set; }
         = SearchActionText;
 
-    public SearchViewModel SearchViewModel { get; set; }
-        = new SearchViewModel();
+    public SearchQuery Model { get; set; }
+        = new SearchQuery();
 
     private bool MessageInputInvalid
-        => string.IsNullOrWhiteSpace(SearchViewModel.Query);
+        => string.IsNullOrWhiteSpace(Model.Query);
 
     private async Task SearchSubmit()
     {
@@ -33,11 +31,19 @@
         {
             _ = JSRuntime ?? throw new NullReferenceException("JSRuntime cannot be null.");
 
-            var encodedQuery = System.Web.HttpUtility.UrlEncode(SearchViewModel.Query);
+            var encodedQuery = System.Web.HttpUtility.UrlEncode(Model.Query);
             await JSRuntime.InvokeAsync<string>("open", "https://google.com/search?q=" + encodedQuery, "_blank");
 
-            SearchViewModel.Query = string.Empty;
+            Model.Query = string.Empty;
             await inputBox.FocusAsync();
         }
+    }
+
+    public class SearchQuery
+    {
+        [System.ComponentModel.DataAnnotations.MinLength(length: 1)]
+        [System.ComponentModel.DataAnnotations.MaxLength(length: 1024)]
+        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = false)]
+        public string? Query { get; set; }
     }
 }

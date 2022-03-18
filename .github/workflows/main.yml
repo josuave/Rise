@@ -16,16 +16,16 @@ jobs:
       - name: Setup .NET Core SDK
         uses: actions/setup-dotnet@v1
         with:
-          dotnet-version: 6.0.x
-      
+          dotnet-version: 7.0.0-preview.1.22109.13
+
       # publishes Blazor project to the release-folder
       - name: Publish .NET Core Project
-        run: dotnet publish */**/Rise.Blazor.App.csproj -c Release -o release --nologo
+        run: dotnet publish */**/Rise.Wasm.csproj -c Release -o release --nologo
 
-      # changes the base-tag in index.html from '/' to 'Rise.Blazor.App' to match GitHub Pages repository subdirectory
-      - name: Change base-tag in index.html from / to Rise.Blazor.App
+      # changes the base-tag in index.html from '/' to 'Rise.Wasm' to match GitHub Pages repository subdirectory
+      - name: Change base-tag in index.html from / to Rise.Wasm
         run: sed -i 's/<base href="\/" \/>/<base href="\/Rise\/" \/>/g' release/wwwroot/index.html
-    
+
       # copy index.html to 404.html to serve the same file when a file is not found
       - name: copy index.html to 404.html
         run: cp release/wwwroot/index.html release/wwwroot/404.html
@@ -33,7 +33,7 @@ jobs:
       # add .nojekyll file to tell GitHub pages to not treat this as a Jekyll project. (Allow files and folders starting with an underscore)
       - name: Add .nojekyll file
         run: touch release/wwwroot/.nojekyll
-      
+
       - name: Commit wwwroot to GitHub Pages
         uses: JamesIves/github-pages-deploy-action@3.7.1
         with:

@@ -1,6 +1,6 @@
 {
-  "name": "Rise.Blazor.App",
-  "short_name": "Rise.Blazor.App",
+  "name": "Rise",
+  "short_name": "Rise",
   "start_url": "./",
   "display": "standalone",
   "background_color": "#ffffff",

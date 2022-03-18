@@ -14,7 +14,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{F98BA79B-B65
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{16D926E3-E821-4E62-9449-9102FFFE2BBC}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Rise.Blazor.App", "src\Rise.Blazor.App\Rise.Blazor.App.csproj", "{5FC7220C-2DC9-4B6D-BED8-577249514782}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Rise.Wasm", "src\Rise.Wasm\Rise.Wasm.csproj", "{B54A8400-86CA-4406-8F50-13ECA194C31B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -22,16 +22,16 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{5FC7220C-2DC9-4B6D-BED8-577249514782}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{5FC7220C-2DC9-4B6D-BED8-577249514782}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{5FC7220C-2DC9-4B6D-BED8-577249514782}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{5FC7220C-2DC9-4B6D-BED8-577249514782}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B54A8400-86CA-4406-8F50-13ECA194C31B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B54A8400-86CA-4406-8F50-13ECA194C31B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B54A8400-86CA-4406-8F50-13ECA194C31B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B54A8400-86CA-4406-8F50-13ECA194C31B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
-		{5FC7220C-2DC9-4B6D-BED8-577249514782} = {F98BA79B-B65C-4F76-87B9-52AC5CBB0558}
+		{B54A8400-86CA-4406-8F50-13ECA194C31B} = {F98BA79B-B65C-4F76-87B9-52AC5CBB0558}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {45009BA4-E3C8-4620-B3E4-ECA1751D0677}

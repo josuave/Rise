@@ -1,4 +1,4 @@
-﻿namespace Rise.Blazor.App.Dashboard
+﻿namespace Rise.Wasm.Dashboard
 {
     public class Panel
     {
