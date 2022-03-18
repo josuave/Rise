@@ -53,20 +53,20 @@
       "url": "favicon.ico"
     },
     {
-      "hash": "sha256-DbpQaq68ZSb5IoPosBErM1QWBfsbTxpJqhU0REi6wP4=",
-      "url": "icon-192.png"
-    },
-    {
-      "hash": "sha256-oEo6d+KqX5fjxTiZk\/w9NB3Mi0+ycS5yLwCKwr4IkbA=",
-      "url": "icon-512.png"
-    },
-    {
-      "hash": "sha256-DnknfjpbblnCEAhgY+TxozNVg\/hru3y06tWG6GAswWE=",
+      "hash": "sha256-OXWLyH9HmEoNf0Hn3c2b5hWsht3peTFEzG\/XJIR+gbo=",
       "url": "index.html"
     },
     {
-      "hash": "sha256-YAPwMEUqrsgG609kq3DyoX\/5oyCr3gmS\/qu9xbNxWPI=",
+      "hash": "sha256-V6UTJg1hobO5aNwkIh9CrsZrxEYCDhqPH8hxZjeiupU=",
       "url": "manifest.json"
+    },
+    {
+      "hash": "sha256-xz47yZFW4NzUFOfMmqfCEtiGSGJ\/alpNgVO0JsrJSSk=",
+      "url": "Rise-192.png"
+    },
+    {
+      "hash": "sha256-sYbRyaGC5h1WOWa66WmnhuhuXq2vAFXYSalxnQz549s=",
+      "url": "Rise-512.png"
     },
     {
       "hash": "sha256-4Yh4OTT5TEAPNyXEzOG+n5l2HPK294WFItz4SIelj88=",
@@ -289,5 +289,5 @@
       "url": "_content\/Rise.Infrastructure\/Rise.Infrastructure.bundle.scp.css"
     }
   ],
-  "version": "w\/4Z7Jab"
+  "version": "s2NizQ7G"
 };
