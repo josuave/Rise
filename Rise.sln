@@ -16,11 +16,11 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{16D926E3
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Rise.Wasm", "src\Rise.Wasm\Rise.Wasm.csproj", "{B54A8400-86CA-4406-8F50-13ECA194C31B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rise.Application", "src\Rise.Application\Rise.Application.csproj", "{9D2503C5-1605-4D28-80E2-534E1A66CBDE}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Rise.Application", "src\Rise.Application\Rise.Application.csproj", "{9D2503C5-1605-4D28-80E2-534E1A66CBDE}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rise.Domain", "src\Rise.Domain\Rise.Domain.csproj", "{09AD3B57-6AC7-4F2B-B381-32EC74C11D5D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Rise.Domain", "src\Rise.Domain\Rise.Domain.csproj", "{09AD3B57-6AC7-4F2B-B381-32EC74C11D5D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rise.Infrastructure", "src\Rise.Infrastructure\Rise.Infrastructure.csproj", "{8C937E87-C90A-46B9-83BB-1114D4685F21}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Rise.Infrastructure", "src\Rise.Infrastructure\Rise.Infrastructure.csproj", "{8C937E87-C90A-46B9-83BB-1114D4685F21}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
