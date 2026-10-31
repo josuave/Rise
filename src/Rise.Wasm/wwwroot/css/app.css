@@ -62,3 +62,162 @@ a, .btn-link {
     .blazor-error-boundary::after {
         content: "An error has occurred."
     }
+
+/* Calm redesign */
+.calm-shell {
+    background: #f7f5f0;
+    color: #222222;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    padding: 4rem 1rem 2rem;
+    box-sizing: border-box;
+}
+
+.calm-page {
+    width: 100%;
+    max-width: 620px;
+    text-align: center;
+}
+
+.calm-date {
+    color: #8a8378;
+    font-size: 0.9rem;
+    margin: 0;
+}
+
+.calm-clock {
+    font-size: 3.5rem;
+    font-weight: 300;
+    margin: 0.25rem 0 0;
+}
+
+.calm-greeting {
+    color: #6b655c;
+    margin: 0 0 2rem;
+}
+
+.calm-search {
+    display: flex;
+    gap: 0.5rem;
+    max-width: 480px;
+    margin: 0 auto;
+}
+
+.calm-search-input {
+    flex: 1;
+    border: 1px solid #ddd5c8;
+    border-radius: 999px;
+    padding: 0.75rem 1.25rem;
+    font-size: 1rem;
+    background: #ffffff;
+    color: #222222;
+    min-width: 0;
+}
+
+.calm-search-button {
+    border: 1px solid #ddd5c8;
+    border-radius: 999px;
+    padding: 0.75rem 1.25rem;
+    background: #ffffff;
+    color: #222222;
+    cursor: pointer;
+}
+
+.calm-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    justify-content: center;
+    margin-top: 2.5rem;
+}
+
+.calm-link {
+    position: relative;
+    background: #ffffff;
+    border: 1px solid #e2ddd2;
+    border-radius: 14px;
+    width: 76px;
+    padding: 0.75rem 0.25rem;
+    box-sizing: border-box;
+}
+
+.calm-link-target {
+    color: #222222;
+    text-decoration: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.calm-link-initials {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: #efe9df;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.9rem;
+}
+
+.calm-link-name {
+    font-size: 0.8rem;
+    word-break: break-word;
+}
+
+.calm-link-remove {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    border: 1px solid #ddd5c8;
+    background: #ffffff;
+    color: #8a8378;
+    cursor: pointer;
+    line-height: 1;
+}
+
+.calm-edit-toggle {
+    margin-top: 2rem;
+    background: none;
+    border: none;
+    color: #8a8378;
+    cursor: pointer;
+    font-size: 0.85rem;
+    text-decoration: underline;
+}
+
+.calm-add-form {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    justify-content: center;
+    margin-top: 1rem;
+}
+
+.calm-add-form input {
+    border: 1px solid #ddd5c8;
+    border-radius: 8px;
+    padding: 0.5rem 0.75rem;
+    background: #ffffff;
+    color: #222222;
+}
+
+.calm-add-form button {
+    border: 1px solid #ddd5c8;
+    border-radius: 8px;
+    padding: 0.5rem 1rem;
+    background: #ffffff;
+    color: #222222;
+    cursor: pointer;
+}
+
+.calm-form-error {
+    color: #a33;
+    font-size: 0.85rem;
+}
