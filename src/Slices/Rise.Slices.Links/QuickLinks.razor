@@ -1,0 +1,34 @@
+@using Rise.Domain
+
+<div class="calm-links">
+    @foreach (var link in Page.Links)
+    {
+        <div class="calm-link">
+            <a class="calm-link-target" href="@link.Url.Value" target="_blank" rel="noopener noreferrer" title="@link.Url.Value">
+                <span class="calm-link-initials">@link.Initials</span>
+                <span class="calm-link-name">@link.Name</span>
+            </a>
+            @if (Editing)
+            {
+                <button type="button" class="calm-link-remove" aria-label="Remove @link.Name" @onclick="() => RemoveAsync(link)">×</button>
+            }
+        </div>
+    }
+</div>
+
+<button type="button" class="calm-edit-toggle" @onclick="() => Editing = !Editing">
+    @(Editing ? "Done" : "Edit links")
+</button>
+
+@if (Editing)
+{
+    <div class="calm-add-form">
+        <input type="text" placeholder="Name" aria-label="Link name" @bind="NewName" />
+        <input type="url" placeholder="https://example.com" aria-label="Link URL" @bind="NewUrl" />
+        <button type="button" @onclick="AddAsync">Add link</button>
+    </div>
+    @if (!string.IsNullOrEmpty(FormError))
+    {
+        <p class="calm-form-error">@FormError</p>
+    }
+}
