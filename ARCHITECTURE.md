@@ -119,14 +119,20 @@ calls, the same way it provides `window.riseStorage` for links.
 
 ## Settings contract: how a slice injects into Settings
 
-The Settings dialog is itself a slice, but no slice may depend on
-another slice — and adding a slice contract should not require editing
-the root application library either. So the contract lives in its own
-abstractions project, `src/Rise.Slices.Abstractions`, borrowing the
-Microsoft.Extensions.*.Abstractions pattern: interfaces only, no
-implementations, no dependencies. `ISettingsSection` (`Title`, `Order`,
-`Description`, `ComponentType`) lives there, and that is where future
-cross-slice contracts go too:
+Settings is its own slice and its own library — `Rise.Slices.Settings`,
+a Razor class library in `src/Slices/` — not part of the core. The core
+is Domain / Application / Infrastructure; Settings depends on the core's
+services, never the other way around. And its contract lives in its own
+abstractions library, separate from the core: Settings is not the core,
+so its contract does not belong in a core abstractions library either.
+
+So `ISettingsSection` (`Title`, `Order`, `Description`,
+`ComponentType`) lives in `src/Slices/Rise.Slices.Settings.Abstractions`,
+borrowing the Microsoft.Extensions.*.Abstractions pattern: interfaces
+only, no implementations, no dependencies. A future core abstractions
+library, if one ever earns its existence, would hold only contracts
+shared across slices — not settings-specific ones — and would stay
+separate from this one:
 
 1. **Contribute.** A slice implements `ISettingsSection` and ships its
    own Razor component for the section. The component is the section's

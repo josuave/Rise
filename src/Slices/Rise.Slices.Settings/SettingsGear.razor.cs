@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Components;
 using Rise.Application.Ports;
 using Rise.Application.Services;
-using Rise.Slices.Abstractions;
+using Rise.Slices.Settings.Abstractions;
 using Rise.Domain;
 
 namespace Rise.Slices.Settings;

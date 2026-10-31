@@ -17,7 +17,7 @@
   <ItemGroup>
     <!-- Slice depends only on the core's ports/services, never on Infrastructure (the adapters). -->
     <ProjectReference Include="..\..\Rise.Application\Rise.Application.csproj" />
-    <ProjectReference Include="..\..\Rise.Slices.Abstractions\Rise.Slices.Abstractions.csproj" />
+    <ProjectReference Include="..\Rise.Slices.Settings.Abstractions\Rise.Slices.Settings.Abstractions.csproj" />
   </ItemGroup>
 
 </Project>

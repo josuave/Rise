@@ -1,5 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
-using Rise.Slices.Abstractions;
+using Rise.Slices.Settings.Abstractions;
 
 namespace Rise.Slices.Links;
 

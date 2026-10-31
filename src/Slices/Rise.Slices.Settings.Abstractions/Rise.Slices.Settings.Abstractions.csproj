@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net11.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <!--
+    Abstractions only for the Settings slice (Microsoft.Extensions.*.Abstractions
+    pattern): interfaces for contracts the Settings slice exposes to other
+    slices, no implementations, no dependencies. This library belongs to
+    Settings, not to the core: it is separate from the core (Domain /
+    Application / Infrastructure, whose ports still live in Application)
+    and separate from any future core abstractions library, which would
+    hold only contracts shared across slices, not settings-specific ones.
+  -->
+
+</Project>
