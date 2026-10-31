@@ -3,6 +3,12 @@ name: Deploy to GitHub Pages
 on:
   push:
     branches: [ main ]
+    # The site is built only from src/, so test, doc, and workflow-only
+    # pushes should not redeploy it (PR #12 was test-only and still
+    # redeployed the site).
+    paths:
+      - 'src/**'
+      - 'global.json'
 
 jobs:
   deploy-to-github-pages:
