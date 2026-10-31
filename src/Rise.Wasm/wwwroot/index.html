@@ -5,7 +5,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 
-    <title>Rise.Wasm</title>
+    <title>Rise</title>
 
     <base href="/" />
 
@@ -27,6 +27,12 @@
         <a href="" class="reload">Reload</a>
         <a class="dismiss">🗙</a>
     </div>
+    <script>
+        window.riseStorage = {
+            get: function (key) { return window.localStorage.getItem(key); },
+            set: function (key, value) { window.localStorage.setItem(key, value); }
+        };
+    </script>
     <script src="_framework/blazor.webassembly.js"></script>
     <script>navigator.serviceWorker.register('service-worker.js');</script>
 </body>

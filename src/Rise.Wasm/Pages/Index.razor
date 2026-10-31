@@ -1,5 +1,52 @@
-﻿@page "/"
+@page "/"
+@implements IDisposable
 
-<PageTitle>Index</PageTitle>
+<PageTitle>Rise</PageTitle>
 
-<Rise.Wasm.Searching.Search />
+<div class="calm-page">
+    <p class="calm-date">@DateText</p>
+    <h1 class="calm-clock">@ClockText</h1>
+    <p class="calm-greeting">@Greeting</p>
+
+    <Rise.Wasm.Searching.Search />
+
+    <Rise.Wasm.QuickLinks.QuickLinks />
+</div>
+
+@code {
+    private System.Threading.Timer? _timer;
+
+    private string DateText => DateTime.Now.ToString("dddd, MMMM d");
+    private string ClockText => DateTime.Now.ToString("h:mm tt");
+
+    private string Greeting
+    {
+        get
+        {
+            var hour = DateTime.Now.Hour;
+            if (hour < 12)
+            {
+                return "Good morning.";
+            }
+            if (hour < 18)
+            {
+                return "Good afternoon.";
+            }
+            return "Good evening.";
+        }
+    }
+
+    protected override void OnInitialized()
+    {
+        _timer = new System.Threading.Timer(
+            _ => InvokeAsync(StateHasChanged),
+            null,
+            TimeSpan.FromSeconds(1),
+            TimeSpan.FromSeconds(30));
+    }
+
+    public void Dispose()
+    {
+        _timer?.Dispose();
+    }
+}
