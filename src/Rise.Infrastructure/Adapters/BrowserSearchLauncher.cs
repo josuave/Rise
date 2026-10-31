@@ -10,7 +10,8 @@ public sealed class BrowserSearchLauncher(IJSRuntime js) : ISearchLauncher
     {
         try
         {
-            await js.InvokeVoidAsync("open", cancellationToken, url.ToString(), "_blank");
+            // AbsoluteUri, not ToString(): ToString() unescapes %20 back to spaces.
+            await js.InvokeVoidAsync("open", cancellationToken, url.AbsoluteUri, "_blank");
         }
         catch (JSException)
         {
