@@ -171,7 +171,14 @@ its own beyond the clock/greeting shell.
   `LazyAssemblyLoader` is a small change, worth it only for a heavy
   slice — not for Links/Search today.
 - **Tests:** pure core tests need no browser; service tests need only
-  a fake port; component tests need only a fake service.
+  a fake port; component tests need only a fake service. That last
+  one is now real: `tests/Rise.Slices.Tests` (bUnit + xUnit) renders
+  slice components, clicks their buttons, and asserts the result —
+  including the Edit-links regression test that would have caught
+  the PR #9 dead-clicks bug. Slice tests use real application
+  services with fake ports (in-memory link store, recording search
+  launcher, recording theme store), never a browser, JS, or
+  Infrastructure.
 - **New slice:** copy a slice project, depend on Application, add its
   component to the shell page, wire any new port in Infrastructure.
   No core or existing slice changes required.
