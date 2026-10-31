@@ -178,7 +178,9 @@ its own beyond the clock/greeting shell.
   the PR #9 dead-clicks bug. Slice tests use real application
   services with fake ports (in-memory link store, recording search
   launcher, recording theme store), never a browser, JS, or
-  Infrastructure.
+  Infrastructure. Both test projects carry `coverlet.collector`;
+  CI collects Cobertura coverage via `coverage.runsettings`
+  (test assemblies excluded) and uploads it to Codecov.
 - **New slice:** copy a slice project, depend on Application, add its
   component to the shell page, wire any new port in Infrastructure.
   No core or existing slice changes required.
