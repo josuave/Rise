@@ -17,6 +17,19 @@
     <link href="manifest.json" rel="manifest" />
     <link rel="apple-touch-icon" sizes="512x512" href="Rise-512.png" />
     <link rel="apple-touch-icon" sizes="192x192" href="Rise-192.png" />
+    <script>
+        // Apply an explicit stored theme before first paint, so dark
+        // users don't flash light. "system" (or nothing stored) leaves
+        // data-theme unset, and the CSS system media query decides.
+        (function () {
+            try {
+                var t = window.localStorage.getItem('rise.theme.v1');
+                if (t === 'light' || t === 'dark') {
+                    document.documentElement.setAttribute('data-theme', t);
+                }
+            } catch (e) { /* private mode: stay on the CSS default */ }
+        })();
+    </script>
 </head>
 
 <body>
@@ -32,25 +45,20 @@
             get: function (key) { return window.localStorage.getItem(key); },
             set: function (key, value) { window.localStorage.setItem(key, value); }
         };
-        // Diagnostics/maintenance helpers for the Settings slice. Kept in the
-        // shell (not in a component) so slices stay free of JS interop.
-        window.riseDiagnostics = {
-            getRaw: function (key) { return window.localStorage.getItem(key); },
-            clearKey: function (key) { window.localStorage.removeItem(key); return window.localStorage.getItem(key) === null; },
-            getUserAgent: function () { return window.navigator.userAgent; },
-            copyText: async function (text) { try { await window.navigator.clipboard.writeText(text); return true; } catch { return false; } },
-            getServiceWorkers: async function () {
-                if (!('serviceWorker' in window.navigator)) return 'not supported';
-                var regs = await window.navigator.serviceWorker.getRegistrations();
-                if (regs.length === 0) return 'none registered';
-                return regs.length + ' registered: ' + regs.map(function (r) { return r.scope; }).join(', ');
+        // Theme helpers for the Settings slice. Kept in the shell
+        // (not in a component) so slices stay free of JS interop.
+        window.riseTheme = {
+            getStored: function (key) { return window.localStorage.getItem(key); },
+            setStored: function (key, value) { window.localStorage.setItem(key, value); },
+            apply: function (theme) {
+                if (theme === 'light' || theme === 'dark') {
+                    document.documentElement.setAttribute('data-theme', theme);
+                } else {
+                    document.documentElement.removeAttribute('data-theme');
+                }
             },
-            unregisterServiceWorkers: async function () {
-                if (!('serviceWorker' in window.navigator)) return false;
-                var regs = await window.navigator.serviceWorker.getRegistrations();
-                var ok = true;
-                for (var i = 0; i < regs.length; i++) { ok = await regs[i].unregister() && ok; }
-                return ok;
+            prefersDark: function () {
+                return window.matchMedia('(prefers-color-scheme: dark)').matches;
             }
         };
     </script>

@@ -1,26 +1,19 @@
 using Microsoft.AspNetCore.Components;
 using Rise.Application.Ports;
-using Rise.Application.Services;
 using Rise.Slices.Settings.Abstractions;
-using Rise.Domain;
 
 namespace Rise.Slices.Settings;
 
 /// <summary>
-/// Imperative shell for the Settings slice: it renders the gear button and the
-/// diagnostics/maintenance dialog, and calls application services and the
-/// diagnostics port. It contains no storage, JS, or service-worker code itself.
+/// Imperative shell for the Settings slice: it renders the theme
+/// toggle + gear button cluster and the Settings dialog (theme
+/// section first, then sections contributed by other slices), and
+/// calls the theme port. It contains no storage or JS code itself.
 /// </summary>
 public partial class SettingsGear
 {
     [Inject]
-    private StartPageService? StartPageService { get; set; }
-
-    [Inject]
-    private IDiagnosticsProbe? DiagnosticsProbe { get; set; }
-
-    [Inject]
-    private IClock? Clock { get; set; }
+    private IThemeStore? ThemeStore { get; set; }
 
     /// <summary>
     /// Sections contributed by other slices through the <see cref="ISettingsSection"/>
@@ -29,111 +22,64 @@ public partial class SettingsGear
     [Inject]
     private IEnumerable<ISettingsSection> Sections { get; set; } = Array.Empty<ISettingsSection>();
 
-    [Inject]
-    private NavigationManager Nav { get; set; } = null!;
-
     private bool IsOpen { get; set; }
-    private bool Loading { get; set; }
-    private int ClickCount { get; set; }
-    private string? CheckedAt { get; set; }
-    private string? PageUri { get; set; }
-    private string? UserAgent { get; set; }
-    private int LinkCount { get; set; }
-    private string LinkNames { get; set; } = string.Empty;
-    private string LinksSource { get; set; } = string.Empty;
-    private string? RawStoredLinks { get; set; }
-    private string ServiceWorkerState { get; set; } = "unavailable";
-    private string? CopyMessage { get; set; }
-    private string? ActionMessage { get; set; }
 
-    private async Task OpenAsync()
+    /// <summary>Stored preference: "light", "dark", or "system" (the default).</summary>
+    private string StoredTheme { get; set; } = "system";
+
+    /// <summary>Effective theme right now, after resolving "system" against the device.</summary>
+    private bool EffectiveDark { get; set; }
+
+    /// <summary>Glyph on the quick toggle: sun when dark is showing (tap for light), moon when light is showing.</summary>
+    private string ToggleGlyph => EffectiveDark ? "\u2600" : "\u263E";
+
+    private string ToggleLabel => EffectiveDark ? "Switch to light mode" : "Switch to dark mode";
+
+    protected override async Task OnInitializedAsync()
     {
-        IsOpen = true;
-        Loading = true;
-        ClickCount = 0;
-        CopyMessage = null;
-        ActionMessage = null;
-        StateHasChanged();
+        var stored = ThemeStore is null ? null : await ThemeStore.GetStoredThemeAsync();
+        StoredTheme = stored is "light" or "dark" or "system" ? stored : "system";
 
-        CheckedAt = Clock is null ? "unavailable" : Clock.Now.ToString("yyyy-MM-dd HH:mm:ss");
-        PageUri = Nav.BaseUri;
+        if (ThemeStore is not null)
+        {
+            await ThemeStore.ApplyThemeAsync(StoredTheme);
+        }
 
-        var page = StartPageService is null ? StartPage.Default() : await StartPageService.LoadAsync();
-        LinkCount = page.Links.Count;
-        LinkNames = string.Join(", ", page.Links.Select(l => l.Name));
-
-        RawStoredLinks = DiagnosticsProbe is null ? null : await DiagnosticsProbe.GetRawStoredLinksAsync();
-        LinksSource = RawStoredLinks is null
-            ? "defaults (nothing saved yet)"
-            : "saved links";
-
-        UserAgent = DiagnosticsProbe is null ? null : await DiagnosticsProbe.GetUserAgentAsync();
-        ServiceWorkerState = DiagnosticsProbe is null
-            ? "unavailable"
-            : await DiagnosticsProbe.GetServiceWorkerStateAsync();
-
-        Loading = false;
+        EffectiveDark = await ComputeEffectiveDarkAsync();
     }
+
+    private async Task<bool> ComputeEffectiveDarkAsync()
+    {
+        return StoredTheme switch
+        {
+            "dark" => true,
+            "light" => false,
+            _ => ThemeStore is not null && await ThemeStore.PrefersDarkAsync(),
+        };
+    }
+
+    private async Task SetThemeAsync(string theme)
+    {
+        StoredTheme = theme;
+
+        if (ThemeStore is not null)
+        {
+            await ThemeStore.SetStoredThemeAsync(theme);
+            await ThemeStore.ApplyThemeAsync(theme);
+        }
+
+        EffectiveDark = await ComputeEffectiveDarkAsync();
+    }
+
+    /// <summary>
+    /// Quick toggle next to the gear: flips light/dark directly. From
+    /// "system" it picks the explicit opposite of whatever the device
+    /// is currently showing, so the toggle always does the obvious thing.
+    /// </summary>
+    private async Task ToggleThemeAsync() =>
+        await SetThemeAsync(EffectiveDark ? "light" : "dark");
+
+    private void Open() => IsOpen = true;
 
     private void Close() => IsOpen = false;
-
-    private string DiagnosticsText() =>
-        "Rise diagnostics\n" +
-        $"Checked at: {CheckedAt}\n" +
-        $"Page: {PageUri}\n" +
-        $"Browser: {UserAgent ?? "unavailable"}\n" +
-        $"Links shown ({LinkCount}): {LinkNames}\n" +
-        $"Links source: {LinksSource}\n" +
-        $"Saved links (raw): {RawStoredLinks ?? "(nothing saved)"}\n" +
-        $"Service workers: {ServiceWorkerState}\n" +
-        $"Click test taps: {ClickCount}\n";
-
-    private async Task CopyAsync()
-    {
-        if (DiagnosticsProbe is null)
-        {
-            CopyMessage = "Copy is unavailable here.";
-            return;
-        }
-
-        CopyMessage = await DiagnosticsProbe.CopyTextAsync(DiagnosticsText())
-            ? "Copied. Paste it into chat with Muse."
-            : "Copy was refused by the browser. Read the values above instead.";
-    }
-
-    private async Task ResetLinksAsync()
-    {
-        if (StartPageService is null)
-        {
-            ActionMessage = "Links service is unavailable, so nothing was changed.";
-            return;
-        }
-
-        await StartPageService.ResetToDefaultsAsync();
-        Reload();
-    }
-
-    private async Task ClearSavedLinksAsync()
-    {
-        if (DiagnosticsProbe is null || !await DiagnosticsProbe.ClearStoredLinksAsync())
-        {
-            ActionMessage = "Could not clear saved links.";
-            return;
-        }
-
-        Reload();
-    }
-
-    private async Task UnregisterServiceWorkersAsync()
-    {
-        if (DiagnosticsProbe is null || !await DiagnosticsProbe.UnregisterServiceWorkersAsync())
-        {
-            ActionMessage = "No service workers were unregistered.";
-            return;
-        }
-
-        Reload();
-    }
-
-    private void Reload() => Nav.NavigateTo(Nav.Uri, forceLoad: true);
 }
