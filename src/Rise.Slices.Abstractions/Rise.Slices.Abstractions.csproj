@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net11.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <!--
+    Abstractions only: interfaces for contracts slices expose to each other
+    and to the shell (Microsoft.Extensions.*.Abstractions pattern). No
+    implementations, no dependencies. A new slice contract goes here, so
+    Rise.Application is never modified just to add a public contract.
+  -->
+
+</Project>

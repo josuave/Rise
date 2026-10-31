@@ -76,6 +76,7 @@ library (RCL) at a minimum:
 src/Slices/
   Rise.Slices.Links/    QuickLinks.razor (+ code-behind shell)
   Rise.Slices.Search/   Search.razor (+ code-behind shell)
+  Rise.Slices.Settings/ SettingsGear.razor (+ code-behind shell)
 ```
 
 Rules for a slice:
@@ -106,8 +107,49 @@ Rules for a slice:
    stays coherent. A slice may add component-scoped CSS for its own
    layout, but the theme is not duplicated per slice.
 
-Current slices: Links (editable tiles, persisted via `ILinkStore`)
-and Search (query box, launched via `ISearchLauncher`). The home
+Current slices: Links (editable tiles, persisted via `ILinkStore`),
+Search (query box, launched via `ISearchLauncher`), and Settings
+(gear button + diagnostics/maintenance dialog, via the
+`IDiagnosticsProbe` port: raw saved-links JSON, user agent, service-
+worker state, clipboard copy of a diagnostics summary, clear saved
+links, unregister service workers, reset links to defaults via
+`StartPageService.ResetToDefaultsAsync`). The shell's index.html
+provides the `window.riseDiagnostics` script block the probe adapter
+calls, the same way it provides `window.riseStorage` for links.
+
+## Settings contract: how a slice injects into Settings
+
+The Settings dialog is itself a slice, but no slice may depend on
+another slice — and adding a slice contract should not require editing
+the root application library either. So the contract lives in its own
+abstractions project, `src/Rise.Slices.Abstractions`, borrowing the
+Microsoft.Extensions.*.Abstractions pattern: interfaces only, no
+implementations, no dependencies. `ISettingsSection` (`Title`, `Order`,
+`Description`, `ComponentType`) lives there, and that is where future
+cross-slice contracts go too:
+
+1. **Contribute.** A slice implements `ISettingsSection` and ships its
+   own Razor component for the section. The component is the section's
+   behavior and UI: it injects core services and does the work, exactly
+   like any slice component. Example: `LinksSettingsSection`
+   (`Order = 100`, component `LinksSettings`, which lists, removes,
+   and resets links) in `Rise.Slices.Links`.
+2. **Register.** The slice exposes a small DI extension (e.g.
+   `AddLinksSettings()` registering
+   `ISettingsSection -> LinksSettingsSection`) and the shell calls it
+   in `Program.cs`. Registration is the shell's job, not the Settings
+   slice's, so slices stay independent of each other.
+3. **Render.** The Settings dialog injects
+   `IEnumerable<ISettingsSection>`, orders by `Order`, and renders each
+   section with Blazor's `DynamicComponent` using its `ComponentType`.
+   It knows nothing about the contributing slice's internals, and a
+   section's component is only ever rendered from an assembly the app
+   already loads — this is an extension point for first-party slices,
+   not a plugin loader for arbitrary assemblies.
+
+To add a section to a new slice: implement the interface, add the
+component, expose the `Add…Settings()` extension, and call it from
+the shell. No change to the Settings slice is needed. The home
 page in Rise.Wasm composes them; it contains no feature logic of
 its own beyond the clock/greeting shell.
 

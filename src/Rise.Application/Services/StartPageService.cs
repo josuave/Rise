@@ -23,6 +23,10 @@ public sealed class StartPageService(ILinkStore store)
         return result;
     }
 
+    /// <summary>Saves the default page, discarding any saved links.</summary>
+    public async Task ResetToDefaultsAsync(CancellationToken cancellationToken = default) =>
+        await store.SaveAsync(StartPage.Default(), cancellationToken);
+
     public async Task<StartPage> RemoveLinkAsync(StartPage page, Guid id, CancellationToken cancellationToken = default)
     {
         var next = page.RemoveLink(id);
