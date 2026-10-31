@@ -37,7 +37,7 @@ public partial class SettingsGear
 
     protected override async Task OnInitializedAsync()
     {
-        var stored = ThemeStore is null ? null : await ThemeStore.GetStoredThemeAsync();
+        string? stored = ThemeStore is null ? null : await ThemeStore.GetStoredThemeAsync();
         StoredTheme = stored is "light" or "dark" or "system" ? stored : "system";
 
         if (ThemeStore is not null)
@@ -48,15 +48,13 @@ public partial class SettingsGear
         EffectiveDark = await ComputeEffectiveDarkAsync();
     }
 
-    private async Task<bool> ComputeEffectiveDarkAsync()
-    {
-        return StoredTheme switch
+    private async Task<bool> ComputeEffectiveDarkAsync() =>
+        StoredTheme switch
         {
             "dark" => true,
             "light" => false,
             _ => ThemeStore is not null && await ThemeStore.PrefersDarkAsync(),
         };
-    }
 
     private async Task SetThemeAsync(string theme)
     {

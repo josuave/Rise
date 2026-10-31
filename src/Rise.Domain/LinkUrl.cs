@@ -7,7 +7,7 @@ public sealed record LinkUrl(string Value)
     {
         url = null;
         error = null;
-        var text = input?.Trim();
+        string? text = input?.Trim();
         if (string.IsNullOrEmpty(text))
         {
             error = "Give the link a name and a URL.";
@@ -19,8 +19,8 @@ public sealed record LinkUrl(string Value)
             text = "https://" + text;
         }
 
-        if (!Uri.TryCreate(text, UriKind.Absolute, out var uri)
-            || (uri.Scheme != Uri.UriSchemeHttp && uri.Scheme != Uri.UriSchemeHttps))
+        if (!Uri.TryCreate(text, UriKind.Absolute, out Uri? uri)
+            || uri.Scheme != Uri.UriSchemeHttp && uri.Scheme != Uri.UriSchemeHttps)
         {
             error = "That doesn't look like a valid web address.";
             return false;

@@ -20,4 +20,17 @@ jobs:
         run: dotnet build Rise.sln -c Release --nologo
 
       - name: Run core tests
-        run: dotnet test tests/Rise.Core.Tests/Rise.Core.Tests.csproj -c Release --no-build --nologo
+        run: dotnet test tests/Rise.Core.Tests/Rise.Core.Tests.csproj -c Release --no-build --nologo --collect:"XPlat Code Coverage" --settings coverage.runsettings --results-directory TestResults
+
+      - name: Run slice tests
+        run: dotnet test tests/Rise.Slices.Tests/Rise.Slices.Tests.csproj -c Release --no-build --nologo --collect:"XPlat Code Coverage" --settings coverage.runsettings --results-directory TestResults
+
+      # Codecov is free for public repos and needs no token here (tokenless
+      # upload from GitHub Actions). It posts a coverage comment on the PR
+      # and a per-file breakdown. fail_ci_if_error is off so a Codecov
+      # outage never blocks a merge on its own.
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          files: ./TestResults/**/coverage.cobertura.xml
+          fail_ci_if_error: false

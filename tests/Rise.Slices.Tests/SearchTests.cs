@@ -1,3 +1,4 @@
+using AngleSharp.Dom;
 using Bunit;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.Extensions.DependencyInjection;
@@ -21,7 +22,7 @@ public class SearchTests : BunitContext
     [Fact]
     public void SearchButton_LaunchesEncodedGoogleUrl()
     {
-        var cut = Render<SearchComponent>();
+        IRenderedComponent<SearchComponent> cut = Render<SearchComponent>();
 
         cut.Find(".calm-search-input").Input("hello world");
         cut.Find(".calm-search-button").Click();
@@ -35,20 +36,20 @@ public class SearchTests : BunitContext
     [Fact]
     public void EnterKey_LaunchesSearch()
     {
-        var cut = Render<SearchComponent>();
+        IRenderedComponent<SearchComponent> cut = Render<SearchComponent>();
 
-        var input = cut.Find(".calm-search-input");
+        IElement input = cut.Find(".calm-search-input");
         input.Input("from enter");
         input.KeyDown(new KeyboardEventArgs { Code = "Enter" });
 
         Assert.Single(_launcher.LaunchedUrls);
-        Assert.Contains("from%20enter", _launcher.LaunchedUrls[0].AbsoluteUri);
+        Assert.Contains("from%20enter", _launcher.LaunchedUrls[0].AbsoluteUri, StringComparison.Ordinal);
     }
 
     [Fact]
     public void BlankQuery_LaunchesNothing()
     {
-        var cut = Render<SearchComponent>();
+        IRenderedComponent<SearchComponent> cut = Render<SearchComponent>();
 
         cut.Find(".calm-search-button").Click();
 

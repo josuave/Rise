@@ -1,0 +1,8 @@
+# Test-project overrides. The root .editorconfig still applies; this file
+# only relaxes rules that fight test conventions.
+[*.cs]
+
+# CA1707: Identifiers should not contain underscores. Test methods use the
+# MethodName_Condition_Expected convention across the .NET ecosystem;
+# renaming them to satisfy CA1707 would make the suite harder to read.
+dotnet_diagnostic.CA1707.severity = none

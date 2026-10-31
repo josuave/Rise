@@ -1,0 +1,32 @@
+<Project>
+  <!--
+    Shared build settings for every project in this repo. MSBuild imports
+    this file automatically for all projects under this directory.
+    Per-project settings that are not shared (e.g. Wasm's
+    ServiceWorkerAssetsManifest, the test projects' IsPackable) stay in
+    their own .csproj files. Analyzers, when chosen, are added here as
+    PackageReferences with PrivateAssets="all" (their versions then live
+    in Directory.Packages.props like any other package).
+  -->
+  <PropertyGroup>
+    <TargetFramework>net11.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <!-- Static analysis, per Milan Jovanovic's recipe: built-in Roslyn
+      analyzers at full strength, style rules enforced in build, and
+      code-analysis warnings (CA, Sonar S) as errors. Full
+      TreatWarningsAsErrors is deliberately NOT set yet: Blazor warnings
+      (e.g. the benign BL0012 seen after PR #9) would fail the build.
+      Rule severities and silences live in .editorconfig. -->
+    <AnalysisLevel>latest</AnalysisLevel>
+    <AnalysisMode>All</AnalysisMode>
+    <CodeAnalysisTreatWarningsAsErrors>true</CodeAnalysisTreatWarningsAsErrors>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="SonarAnalyzer.CSharp">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+</Project>

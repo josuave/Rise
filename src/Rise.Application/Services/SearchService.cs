@@ -8,7 +8,7 @@ public sealed class SearchService(ISearchLauncher launcher)
 {
     public async Task<bool> LaunchSearchAsync(string? query, CancellationToken cancellationToken = default)
     {
-        var url = SearchQuery.Build(query);
+        Uri? url = SearchQuery.Build(query);
         if (url is null)
         {
             return false;

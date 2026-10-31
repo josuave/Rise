@@ -1,3 +1,5 @@
+using System.Diagnostics.CodeAnalysis;
+
 namespace Rise.Domain;
 
 /// <summary>
@@ -15,6 +17,10 @@ public sealed record StartPage(IReadOnlyList<Link> Links)
         Link.Create("Wikipedia", new LinkUrl("https://www.wikipedia.org/")),
     });
 
+    // CA1054 does not fit here: the parameter is unvalidated user input.
+    // LinkUrl.TryCreate validates it and reports failures via Result;
+    // a Uri parameter could not represent invalid input at all.
+    [SuppressMessage("Microsoft.Design", "CA1054:UriParametersShouldNotBeStrings", Justification = "Parameter is unvalidated user input validated by LinkUrl.TryCreate.")]
     public Result<StartPage> AddLink(string name, string urlInput)
     {
         if (string.IsNullOrWhiteSpace(name))
@@ -22,7 +28,7 @@ public sealed record StartPage(IReadOnlyList<Link> Links)
             return Result<StartPage>.Failure("Give the link a name and a URL.");
         }
 
-        if (!LinkUrl.TryCreate(urlInput, out var url, out var error) || url is null)
+        if (!LinkUrl.TryCreate(urlInput, out LinkUrl? url, out string? error) || url is null)
         {
             return Result<StartPage>.Failure(error ?? "That doesn't look like a valid web address.");
         }
