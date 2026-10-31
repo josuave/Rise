@@ -1,9 +1,11 @@
+@using Rise.Domain
+
 <div class="calm-links">
-    @foreach (var link in Links)
+    @foreach (var link in Page.Links)
     {
         <div class="calm-link">
-            <a class="calm-link-target" href="@link.Url" target="_blank" rel="noopener noreferrer" title="@link.Url">
-                <span class="calm-link-initials">@Initials(link.Name)</span>
+            <a class="calm-link-target" href="@link.Url.Value" target="_blank" rel="noopener noreferrer" title="@link.Url.Value">
+                <span class="calm-link-initials">@link.Initials</span>
                 <span class="calm-link-name">@link.Name</span>
             </a>
             @if (Editing)

@@ -1,40 +1,21 @@
 @page "/"
 @implements IDisposable
+@inject Rise.Application.Ports.IClock Clock
 
 <PageTitle>Rise</PageTitle>
 
 <div class="calm-page">
-    <p class="calm-date">@DateText</p>
-    <h1 class="calm-clock">@ClockText</h1>
-    <p class="calm-greeting">@Greeting</p>
+    <p class="calm-date">@Rise.Domain.Greeting.FormatDate(Clock.Now)</p>
+    <h1 class="calm-clock">@Rise.Domain.Greeting.FormatTime(Clock.Now)</h1>
+    <p class="calm-greeting">@Rise.Domain.Greeting.For(Clock.Now)</p>
 
-    <Rise.Wasm.Searching.Search />
+    <Rise.Slices.Search.Search />
 
-    <Rise.Wasm.QuickLinks.QuickLinks />
+    <Rise.Slices.Links.QuickLinks />
 </div>
 
 @code {
     private System.Threading.Timer? _timer;
-
-    private string DateText => DateTime.Now.ToString("dddd, MMMM d");
-    private string ClockText => DateTime.Now.ToString("h:mm tt");
-
-    private string Greeting
-    {
-        get
-        {
-            var hour = DateTime.Now.Hour;
-            if (hour < 12)
-            {
-                return "Good morning.";
-            }
-            if (hour < 18)
-            {
-                return "Good afternoon.";
-            }
-            return "Good evening.";
-        }
-    }
 
     protected override void OnInitialized()
     {
