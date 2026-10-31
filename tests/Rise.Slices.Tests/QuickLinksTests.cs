@@ -76,6 +76,9 @@ public class QuickLinksTests : BunitContext
         cut.Find(".calm-add-form button").Click();
 
         cut.WaitForAssertion(() => Assert.Contains("already on the page", cut.Markup, StringComparison.Ordinal));
-        Assert.DoesNotContain(_store.StoredPage!.Links, l => l.Name == "Again");
+        // Nothing is ever persisted on a failed add, so the store may
+        // still be empty (defaults come from the service, not the store).
+        // Either way, "Again" must not be in what was saved.
+        Assert.DoesNotContain(_store.StoredPage?.Links ?? [], l => l.Name == "Again");
     }
 }
