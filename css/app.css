@@ -64,9 +64,55 @@ a, .btn-link {
     }
 
 /* Calm redesign */
+
+/* Calm theme: light by default, dark via data-theme="dark" on <html>,
+   system via the prefers-color-scheme media query when data-theme is
+   absent or "light" is not set. Slices use these class names, so the
+   look stays coherent across slices. */
+:root {
+    --calm-bg: #f7f5f0;
+    --calm-text: #222222;
+    --calm-muted: #6b655c;
+    --calm-faint: #8a8378;
+    --calm-surface: #ffffff;
+    --calm-border: #ddd5c8;
+    --calm-border-soft: #e2ddd2;
+    --calm-tile-bg: #efe9df;
+    --calm-error: #a33;
+    color-scheme: light;
+}
+
+[data-theme="dark"] {
+    --calm-bg: #1b1b1f;
+    --calm-text: #f0ede6;
+    --calm-muted: #a8a29e;
+    --calm-faint: #8e8a85;
+    --calm-surface: #26262b;
+    --calm-border: #3a3a40;
+    --calm-border-soft: #33333a;
+    --calm-tile-bg: #2e2e34;
+    --calm-error: #e88;
+    color-scheme: dark;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+        --calm-bg: #1b1b1f;
+        --calm-text: #f0ede6;
+        --calm-muted: #a8a29e;
+        --calm-faint: #8e8a85;
+        --calm-surface: #26262b;
+        --calm-border: #3a3a40;
+        --calm-border-soft: #33333a;
+        --calm-tile-bg: #2e2e34;
+        --calm-error: #e88;
+        color-scheme: dark;
+    }
+}
+
 .calm-shell {
-    background: #f7f5f0;
-    color: #222222;
+    background: var(--calm-bg);
+    color: var(--calm-text);
     min-height: 100vh;
     display: flex;
     justify-content: center;
@@ -81,7 +127,7 @@ a, .btn-link {
 }
 
 .calm-date {
-    color: #8a8378;
+    color: var(--calm-faint);
     font-size: 0.9rem;
     margin: 0;
 }
@@ -93,7 +139,7 @@ a, .btn-link {
 }
 
 .calm-greeting {
-    color: #6b655c;
+    color: var(--calm-muted);
     margin: 0 0 2rem;
 }
 
@@ -106,21 +152,21 @@ a, .btn-link {
 
 .calm-search-input {
     flex: 1;
-    border: 1px solid #ddd5c8;
+    border: 1px solid var(--calm-border);
     border-radius: 999px;
     padding: 0.75rem 1.25rem;
     font-size: 1rem;
-    background: #ffffff;
-    color: #222222;
+    background: var(--calm-surface);
+    color: var(--calm-text);
     min-width: 0;
 }
 
 .calm-search-button {
-    border: 1px solid #ddd5c8;
+    border: 1px solid var(--calm-border);
     border-radius: 999px;
     padding: 0.75rem 1.25rem;
-    background: #ffffff;
-    color: #222222;
+    background: var(--calm-surface);
+    color: var(--calm-text);
     cursor: pointer;
 }
 
@@ -134,8 +180,8 @@ a, .btn-link {
 
 .calm-link {
     position: relative;
-    background: #ffffff;
-    border: 1px solid #e2ddd2;
+    background: var(--calm-surface);
+    border: 1px solid var(--calm-border-soft);
     border-radius: 14px;
     width: 76px;
     padding: 0.75rem 0.25rem;
@@ -143,7 +189,7 @@ a, .btn-link {
 }
 
 .calm-link-target {
-    color: #222222;
+    color: var(--calm-text);
     text-decoration: none;
     display: flex;
     flex-direction: column;
@@ -155,7 +201,7 @@ a, .btn-link {
     width: 44px;
     height: 44px;
     border-radius: 12px;
-    background: #efe9df;
+    background: var(--calm-tile-bg);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -175,9 +221,9 @@ a, .btn-link {
     width: 22px;
     height: 22px;
     border-radius: 50%;
-    border: 1px solid #ddd5c8;
-    background: #ffffff;
-    color: #8a8378;
+    border: 1px solid var(--calm-border);
+    background: var(--calm-surface);
+    color: var(--calm-faint);
     cursor: pointer;
     line-height: 1;
 }
@@ -186,7 +232,7 @@ a, .btn-link {
     margin-top: 2rem;
     background: none;
     border: none;
-    color: #8a8378;
+    color: var(--calm-faint);
     cursor: pointer;
     font-size: 0.85rem;
     text-decoration: underline;
@@ -201,39 +247,47 @@ a, .btn-link {
 }
 
 .calm-add-form input {
-    border: 1px solid #ddd5c8;
+    border: 1px solid var(--calm-border);
     border-radius: 8px;
     padding: 0.5rem 0.75rem;
-    background: #ffffff;
-    color: #222222;
+    background: var(--calm-surface);
+    color: var(--calm-text);
 }
 
 .calm-add-form button {
-    border: 1px solid #ddd5c8;
+    border: 1px solid var(--calm-border);
     border-radius: 8px;
     padding: 0.5rem 1rem;
-    background: #ffffff;
-    color: #222222;
+    background: var(--calm-surface);
+    color: var(--calm-text);
     cursor: pointer;
 }
 
 .calm-form-error {
-    color: #a33;
+    color: var(--calm-error);
     font-size: 0.85rem;
 }
 
-/* Settings gear + diagnostics dialog (kept subtle so the Calm page stays calm) */
-.calm-settings-gear {
+/* Settings cluster (kept subtle so the Calm page stays calm): theme
+   toggle immediately left of the gear, fixed top-right. */
+.calm-settings-cluster {
     position: fixed;
     top: 1rem;
     right: 1rem;
+    display: flex;
+    gap: 0.25rem;
+    align-items: center;
+    z-index: 10;
+}
+
+.calm-settings-gear,
+.calm-theme-toggle {
     background: none;
     border: none;
-    color: #8a8378;
+    color: var(--calm-faint);
     cursor: pointer;
     font-size: 1.25rem;
     line-height: 1;
-    z-index: 10;
 }
 
 .calm-dialog-overlay {
@@ -250,15 +304,15 @@ a, .btn-link {
 }
 
 .calm-dialog {
-    background: #ffffff;
-    border: 1px solid #e2ddd2;
+    background: var(--calm-surface);
+    border: 1px solid var(--calm-border-soft);
     border-radius: 14px;
     width: 100%;
     max-width: 560px;
     padding: 1.25rem 1.5rem;
     box-sizing: border-box;
     text-align: left;
-    color: #222222;
+    color: var(--calm-text);
 }
 
 .calm-dialog-header {
@@ -275,7 +329,7 @@ a, .btn-link {
 .calm-dialog-close {
     background: none;
     border: none;
-    color: #8a8378;
+    color: var(--calm-faint);
     cursor: pointer;
     font-size: 1.5rem;
     line-height: 1;
@@ -287,39 +341,19 @@ a, .btn-link {
 }
 
 .calm-dialog-note {
-    color: #6b655c;
+    color: var(--calm-muted);
     font-size: 0.85rem;
 }
 
-.calm-diagnostics {
-    margin: 0;
-}
-
-.calm-diagnostics dt {
-    font-weight: 700;
-    margin-top: 0.5rem;
-}
-
-.calm-diagnostics dd {
-    margin: 0;
-    word-break: break-word;
-}
-
-.calm-diagnostics-raw {
-    white-space: pre-wrap;
-    word-break: break-all;
-    background: #f7f5f0;
-    border: 1px solid #e2ddd2;
-    border-radius: 8px;
-    padding: 0.5rem;
-    margin: 0.25rem 0 0;
-    font-size: 0.8rem;
-}
-
-.calm-dialog-actions {
+.calm-theme-options {
     display: flex;
     flex-wrap: wrap;
     gap: 0.5rem;
+}
+
+.calm-theme-option.selected {
+    background: var(--calm-tile-bg);
+    font-weight: 700;
 }
 
 .calm-settings-list {
@@ -339,10 +373,16 @@ a, .btn-link {
 }
 
 .calm-dialog button {
-    border: 1px solid #ddd5c8;
+    border: 1px solid var(--calm-border);
     border-radius: 8px;
     padding: 0.5rem 1rem;
-    background: #ffffff;
-    color: #222222;
+    background: var(--calm-surface);
+    color: var(--calm-text);
     cursor: pointer;
+}
+
+.calm-dialog .calm-dialog-close {
+    background: none;
+    border: none;
+    padding: 0;
 }
