@@ -1,3 +1,4 @@
+using AngleSharp.Dom;
 using Bunit;
 using Microsoft.Extensions.DependencyInjection;
 using Rise.Application.Ports;
@@ -25,23 +26,23 @@ public class SettingsGearTests : BunitContext
     [Fact]
     public void GearButton_OpensDialog_WithThemeAndLinksSections()
     {
-        var cut = Render<SettingsGear>();
+        IRenderedComponent<SettingsGear> cut = Render<SettingsGear>();
 
         cut.Find(".calm-settings-gear").Click();
 
         Assert.NotNull(cut.Find(".calm-dialog"));
-        Assert.Contains("Theme", cut.Markup);
-        Assert.Contains("Tiles shown on the home page.", cut.Markup);
-        Assert.Contains("Google", cut.Markup);
+        Assert.Contains("Theme", cut.Markup, StringComparison.Ordinal);
+        Assert.Contains("Tiles shown on the home page.", cut.Markup, StringComparison.Ordinal);
+        Assert.Contains("Google", cut.Markup, StringComparison.Ordinal);
     }
 
     [Fact]
     public void ThemeOption_Dark_PersistsAndAppliesDark()
     {
-        var cut = Render<SettingsGear>();
+        IRenderedComponent<SettingsGear> cut = Render<SettingsGear>();
         cut.Find(".calm-settings-gear").Click();
 
-        var dark = cut.FindAll(".calm-theme-option")
+        IElement dark = cut.FindAll(".calm-theme-option")
             .Single(b => b.TextContent.Trim() == "Dark");
         dark.Click();
 
@@ -52,10 +53,10 @@ public class SettingsGearTests : BunitContext
     [Fact]
     public void ThemeOption_System_PersistsAndAppliesSystem()
     {
-        var cut = Render<SettingsGear>();
+        IRenderedComponent<SettingsGear> cut = Render<SettingsGear>();
         cut.Find(".calm-settings-gear").Click();
 
-        var system = cut.FindAll(".calm-theme-option")
+        IElement system = cut.FindAll(".calm-theme-option")
             .Single(b => b.TextContent.Trim() == "System");
         system.Click();
 
@@ -66,7 +67,7 @@ public class SettingsGearTests : BunitContext
     [Fact]
     public void QuickToggle_FlipsLightToDark_AndBack()
     {
-        var cut = Render<SettingsGear>();
+        IRenderedComponent<SettingsGear> cut = Render<SettingsGear>();
 
         // Default is System on a light device, so the toggle shows the moon (to dark).
         cut.Find(".calm-theme-toggle").Click();

@@ -38,7 +38,7 @@ public class ServiceTests
     {
         var service = new StartPageService(new FakeLinkStore());
 
-        var page = await service.LoadAsync();
+        StartPage page = await service.LoadAsync();
 
         Assert.Equal(StartPage.Default().Links.Count, page.Links.Count);
     }
@@ -48,9 +48,9 @@ public class ServiceTests
     {
         var store = new FakeLinkStore();
         var service = new StartPageService(store);
-        var page = await service.LoadAsync();
+        StartPage page = await service.LoadAsync();
 
-        var result = await service.AddLinkAsync(page, "Example", "example.com");
+        Result<StartPage> result = await service.AddLinkAsync(page, "Example", "example.com");
 
         Assert.True(result.IsSuccess);
         Assert.NotNull(store.Stored);
@@ -62,9 +62,9 @@ public class ServiceTests
     {
         var store = new FakeLinkStore();
         var service = new StartPageService(store);
-        var page = await service.LoadAsync();
+        StartPage page = await service.LoadAsync();
 
-        var result = await service.AddLinkAsync(page, "Example", "ftp://example.com");
+        Result<StartPage> result = await service.AddLinkAsync(page, "Example", "ftp://example.com");
 
         Assert.False(result.IsSuccess);
         Assert.Null(store.Stored);

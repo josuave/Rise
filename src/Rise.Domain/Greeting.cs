@@ -1,3 +1,5 @@
+using System.Globalization;
+
 namespace Rise.Domain;
 
 /// <summary>Pure time-of-day presentation: given a moment, produce the greeting and clock text. The clock itself (DateTime.Now) lives in the imperative shell.</summary>
@@ -16,7 +18,7 @@ public static class Greeting
         return "Good evening.";
     }
 
-    public static string FormatDate(DateTime now) => now.ToString("dddd, MMMM d");
+    public static string FormatDate(DateTime now) => now.ToString("dddd, MMMM d", CultureInfo.CurrentCulture);
 
-    public static string FormatTime(DateTime now) => now.ToString("h:mm tt");
+    public static string FormatTime(DateTime now) => now.ToString("h:mm tt", CultureInfo.CurrentCulture);
 }

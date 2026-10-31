@@ -20,26 +20,26 @@ public sealed class LocalStorageLinkStore(IJSRuntime js) : ILinkStore
     {
         try
         {
-            var stored = await js.InvokeAsync<string?>("riseStorage.get", cancellationToken, StorageKey);
+            string? stored = await js.InvokeAsync<string?>("riseStorage.get", cancellationToken, StorageKey);
             if (string.IsNullOrWhiteSpace(stored))
             {
                 return null;
             }
 
-            var parsed = JsonSerializer.Deserialize<List<StoredLink>>(stored);
+            List<StoredLink>? parsed = JsonSerializer.Deserialize<List<StoredLink>>(stored);
             if (parsed is null)
             {
                 return null;
             }
 
             var links = new List<Link>();
-            foreach (var item in parsed)
+            foreach (StoredLink item in parsed)
             {
                 if (string.IsNullOrWhiteSpace(item.Name))
                 {
                     continue;
                 }
-                if (!LinkUrl.TryCreate(item.Url, out var url, out _) || url is null)
+                if (!LinkUrl.TryCreate(item.Url, out LinkUrl? url, out _) || url is null)
                 {
                     continue;
                 }

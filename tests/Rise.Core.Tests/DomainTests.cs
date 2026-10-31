@@ -11,7 +11,7 @@ public class DomainTests
     [InlineData("  https://example.com/path  ", "https://example.com/path")]
     public void LinkUrl_NormalizesValidInput(string input, string expected)
     {
-        Assert.True(LinkUrl.TryCreate(input, out var url, out var error));
+        Assert.True(LinkUrl.TryCreate(input, out LinkUrl? url, out string? error));
         Assert.Null(error);
         Assert.Equal(expected, url!.Value);
     }
@@ -23,7 +23,7 @@ public class DomainTests
     [InlineData("not a url with spaces://x")]
     public void LinkUrl_RejectsInvalidInput(string input)
     {
-        Assert.False(LinkUrl.TryCreate(input, out var url, out var error));
+        Assert.False(LinkUrl.TryCreate(input, out LinkUrl? url, out string? error));
         Assert.Null(url);
         Assert.NotNull(error);
     }
@@ -32,7 +32,7 @@ public class DomainTests
     public void StartPage_AddLink_AppendsAndReturnsNewPage()
     {
         var page = StartPage.Default();
-        var result = page.AddLink("Example", "example.com");
+        Result<StartPage> result = page.AddLink("Example", "example.com");
 
         Assert.True(result.IsSuccess);
         Assert.Equal(page.Links.Count + 1, result.Value!.Links.Count);
@@ -45,9 +45,9 @@ public class DomainTests
     public void StartPage_AddLink_RejectsDuplicates()
     {
         var page = StartPage.Default();
-        var existing = page.Links[0].Url.Value;
+        string existing = page.Links[0].Url.Value;
 
-        var result = page.AddLink("Again", existing);
+        Result<StartPage> result = page.AddLink("Again", existing);
 
         Assert.False(result.IsSuccess);
         Assert.NotNull(result.Error);
@@ -58,18 +58,16 @@ public class DomainTests
     [InlineData("   ", "example.com")]
     [InlineData("Example", "")]
     [InlineData("Example", "ftp://example.com")]
-    public void StartPage_AddLink_RejectsBadInput(string name, string url)
-    {
-        Assert.False(StartPage.Default().AddLink(name, url).IsSuccess);
-    }
+    public void StartPage_AddLink_RejectsBadInput(string name, string input) =>
+        Assert.False(StartPage.Default().AddLink(name, input).IsSuccess);
 
     [Fact]
     public void StartPage_RemoveLink_RemovesOnlyThatLink()
     {
         var page = StartPage.Default();
-        var id = page.Links[0].Id;
+        Guid id = page.Links[0].Id;
 
-        var next = page.RemoveLink(id);
+        StartPage next = page.RemoveLink(id);
 
         Assert.Equal(page.Links.Count - 1, next.Links.Count);
         Assert.DoesNotContain(next.Links, l => l.Id == id);
@@ -79,15 +77,13 @@ public class DomainTests
     [InlineData(null, null)]
     [InlineData("", null)]
     [InlineData("   ", null)]
-    public void SearchQuery_BlankInput_ReturnsNull(string? query, string? _)
-    {
+    public void SearchQuery_BlankInput_ReturnsNull(string? query, string? _) =>
         Assert.Null(SearchQuery.Build(query));
-    }
 
     [Fact]
     public void SearchQuery_BuildsEncodedGoogleUrl()
     {
-        var url = SearchQuery.Build("  hello world & friends ");
+        Uri? url = SearchQuery.Build("  hello world & friends ");
 
         // AbsoluteUri, not ToString(): ToString() unescapes %20 back to spaces.
         Assert.Equal("https://www.google.com/search?q=hello%20world%20%26%20friends", url!.AbsoluteUri);
@@ -100,10 +96,8 @@ public class DomainTests
     [InlineData(17, "Good afternoon.")]
     [InlineData(18, "Good evening.")]
     [InlineData(23, "Good evening.")]
-    public void Greeting_FollowsTimeOfDay(int hour, string expected)
-    {
+    public void Greeting_FollowsTimeOfDay(int hour, string expected) =>
         Assert.Equal(expected, Greeting.For(new DateTime(2026, 10, 31, hour, 0, 0)));
-    }
 
     [Theory]
     [InlineData("GitHub", "GI")]

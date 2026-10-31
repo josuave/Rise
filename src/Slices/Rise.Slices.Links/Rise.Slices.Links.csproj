@@ -1,17 +1,11 @@
 <Project Sdk="Microsoft.NET.Sdk.Razor">
 
-  <PropertyGroup>
-    <TargetFramework>net11.0</TargetFramework>
-    <Nullable>enable</Nullable>
-    <ImplicitUsings>enable</ImplicitUsings>
-  </PropertyGroup>
-
   <ItemGroup>
     <SupportedPlatform Include="browser" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="11.0.0-rc.3.26522.148" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.Web" />
     <!-- Microsoft.Extensions.DependencyInjection.Abstractions is available implicitly; do not reference it (NU1510). -->
   </ItemGroup>
 

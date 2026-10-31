@@ -1,11 +1,5 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFramework>net11.0</TargetFramework>
-    <Nullable>enable</Nullable>
-    <ImplicitUsings>enable</ImplicitUsings>
-  </PropertyGroup>
-
   <!--
     Abstractions only for the Settings slice (Microsoft.Extensions.*.Abstractions
     pattern): interfaces for contracts the Settings slice exposes to other

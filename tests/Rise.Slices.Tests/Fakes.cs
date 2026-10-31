@@ -1,10 +1,11 @@
+using System.Collections.ObjectModel;
 using Rise.Application.Ports;
 using Rise.Domain;
 
 namespace Rise.Slices.Tests;
 
 /// <summary>In-memory link store for slice tests: no localStorage, no JS.</summary>
-public sealed class FakeLinkStore : ILinkStore
+internal sealed class FakeLinkStore : ILinkStore
 {
     public StartPage? StoredPage { get; private set; }
 
@@ -21,9 +22,9 @@ public sealed class FakeLinkStore : ILinkStore
 }
 
 /// <summary>Search launcher that records URLs instead of opening tabs.</summary>
-public sealed class FakeSearchLauncher : ISearchLauncher
+internal sealed class FakeSearchLauncher : ISearchLauncher
 {
-    public List<Uri> LaunchedUrls { get; } = new();
+    public Collection<Uri> LaunchedUrls { get; } = new();
 
     public Task LaunchAsync(Uri url, CancellationToken cancellationToken = default)
     {
@@ -33,7 +34,7 @@ public sealed class FakeSearchLauncher : ISearchLauncher
 }
 
 /// <summary>Theme store that records preference/apply calls instead of touching the DOM.</summary>
-public sealed class FakeThemeStore : IThemeStore
+internal sealed class FakeThemeStore : IThemeStore
 {
     public string? Stored { get; private set; }
     public string? Applied { get; private set; }

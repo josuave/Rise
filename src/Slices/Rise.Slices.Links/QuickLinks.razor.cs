@@ -36,7 +36,7 @@ public partial class QuickLinks
             return;
         }
 
-        var result = await StartPageService.AddLinkAsync(Page, NewName, NewUrl);
+        Result<StartPage> result = await StartPageService.AddLinkAsync(Page, NewName, NewUrl);
         if (result.IsSuccess && result.Value is not null)
         {
             Page = result.Value;

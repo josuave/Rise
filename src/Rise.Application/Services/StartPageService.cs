@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using Rise.Application.Ports;
 using Rise.Domain;
 
@@ -13,9 +14,12 @@ public sealed class StartPageService(ILinkStore store)
     public async Task<StartPage> LoadAsync(CancellationToken cancellationToken = default) =>
         await store.LoadAsync(cancellationToken) ?? StartPage.Default();
 
+    // CA1054 does not fit here either: this only forwards unvalidated user
+    // input to StartPage.AddLink, which validates it (see its suppression).
+    [SuppressMessage("Microsoft.Design", "CA1054:UriParametersShouldNotBeStrings", Justification = "Forwards unvalidated user input to StartPage.AddLink for validation.")]
     public async Task<Result<StartPage>> AddLinkAsync(StartPage page, string name, string url, CancellationToken cancellationToken = default)
     {
-        var result = page.AddLink(name, url);
+        Result<StartPage> result = page.AddLink(name, url);
         if (result.IsSuccess && result.Value is not null)
         {
             await store.SaveAsync(result.Value, cancellationToken);
@@ -29,7 +33,7 @@ public sealed class StartPageService(ILinkStore store)
 
     public async Task<StartPage> RemoveLinkAsync(StartPage page, Guid id, CancellationToken cancellationToken = default)
     {
-        var next = page.RemoveLink(id);
+        StartPage next = page.RemoveLink(id);
         await store.SaveAsync(next, cancellationToken);
         return next;
     }

@@ -10,7 +10,7 @@ public sealed record Link(Guid Id, string Name, LinkUrl Url)
     {
         get
         {
-            var words = Name.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+            string[] words = Name.Split(' ', StringSplitOptions.RemoveEmptyEntries);
             if (words.Length == 0)
             {
                 return "?";
