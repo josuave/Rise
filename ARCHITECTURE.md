@@ -109,13 +109,17 @@ Rules for a slice:
 
 Current slices: Links (editable tiles, persisted via `ILinkStore`),
 Search (query box, launched via `ISearchLauncher`), and Settings
-(gear button + diagnostics/maintenance dialog, via the
-`IDiagnosticsProbe` port: raw saved-links JSON, user agent, service-
-worker state, clipboard copy of a diagnostics summary, clear saved
-links, unregister service workers, reset links to defaults via
-`StartPageService.ResetToDefaultsAsync`). The shell's index.html
-provides the `window.riseDiagnostics` script block the probe adapter
-calls, the same way it provides `window.riseStorage` for links.
+(theme toggle + gear button cluster and a Settings dialog: a built-in
+Theme section — Light / Dark / System, persisted via the `IThemeStore`
+port — plus sections contributed by other slices). The shell's
+index.html provides the `window.riseTheme` script block the theme
+adapter calls (localStorage, the page's data-theme attribute,
+matchMedia), the same way it provides `window.riseStorage` for links,
+plus a small head script that applies an explicit stored theme before
+first paint. The diagnostics/maintenance dialog that lived here while
+the dead-clicks bug was being chased was removed once that bug was
+fixed (PR #9); its `IDiagnosticsProbe` port and adapter went with it,
+and can be restored from git history if a future bug needs them again.
 
 ## Settings contract: how a slice injects into Settings
 
