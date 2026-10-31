@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net11.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="bunit" Version="2.13.3" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />
+    <PackageReference Include="xunit" Version="2.9.2" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Component tests for the slices: render, click, assert. No browser, no JS, no Infrastructure. -->
+    <ProjectReference Include="..\..\src\Rise.Domain\Rise.Domain.csproj" />
+    <ProjectReference Include="..\..\src\Rise.Application\Rise.Application.csproj" />
+    <ProjectReference Include="..\..\src\Slices\Rise.Slices.Links\Rise.Slices.Links.csproj" />
+    <ProjectReference Include="..\..\src\Slices\Rise.Slices.Search\Rise.Slices.Search.csproj" />
+    <ProjectReference Include="..\..\src\Slices\Rise.Slices.Settings\Rise.Slices.Settings.csproj" />
+    <ProjectReference Include="..\..\src\Slices\Rise.Slices.Settings.Abstractions\Rise.Slices.Settings.Abstractions.csproj" />
+  </ItemGroup>
+
+</Project>
