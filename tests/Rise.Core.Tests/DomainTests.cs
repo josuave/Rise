@@ -89,7 +89,8 @@ public class DomainTests
     {
         var url = SearchQuery.Build("  hello world & friends ");
 
-        Assert.Equal("https://www.google.com/search?q=hello%20world%20%26%20friends", url!.ToString());
+        // AbsoluteUri, not ToString(): ToString() unescapes %20 back to spaces.
+        Assert.Equal("https://www.google.com/search?q=hello%20world%20%26%20friends", url!.AbsoluteUri);
     }
 
     [Theory]

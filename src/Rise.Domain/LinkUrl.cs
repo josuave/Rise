@@ -26,7 +26,8 @@ public sealed record LinkUrl(string Value)
             return false;
         }
 
-        url = new LinkUrl(uri.ToString());
+        // AbsoluteUri, not ToString(): ToString() unescapes %20 back to spaces, which corrupts encoded URLs.
+        url = new LinkUrl(uri.AbsoluteUri);
         return true;
     }
 

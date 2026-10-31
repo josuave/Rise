@@ -78,7 +78,7 @@ public class ServiceTests
 
         Assert.True(await service.LaunchSearchAsync("hello world"));
         Assert.Single(launcher.Launched);
-        Assert.Equal("https://www.google.com/search?q=hello%20world", launcher.Launched[0].ToString());
+        Assert.Equal("https://www.google.com/search?q=hello%20world", launcher.Launched[0].AbsoluteUri);
 
         Assert.False(await service.LaunchSearchAsync("   "));
         Assert.Single(launcher.Launched);
