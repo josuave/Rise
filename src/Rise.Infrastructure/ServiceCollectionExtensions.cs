@@ -17,6 +17,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<SearchService>();
         services.AddScoped<ILinkStore, LocalStorageLinkStore>();
         services.AddScoped<ISearchLauncher, BrowserSearchLauncher>();
+        services.AddScoped<IDiagnosticsProbe, DiagnosticsProbe>();
         services.AddSingleton<IClock, SystemClock>();
         return services;
     }

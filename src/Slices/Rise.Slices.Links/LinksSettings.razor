@@ -1,0 +1,15 @@
+<p class="calm-dialog-note">Manage the tiles on the home page from here, without going back to the page itself.</p>
+<ul class="calm-settings-list">
+    @foreach (var link in Page.Links)
+    {
+        <li>
+            <span>@link.Name (@link.Url.Value)</span>
+            <button type="button" aria-label="Remove @link.Name" @onclick="() => RemoveAsync(link)">Remove</button>
+        </li>
+    }
+</ul>
+<button type="button" @onclick="ResetAsync">Reset links to defaults</button>
+@if (!string.IsNullOrEmpty(Message))
+{
+    <span class="calm-dialog-note"> @Message</span>
+}

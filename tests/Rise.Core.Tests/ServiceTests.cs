@@ -71,6 +71,19 @@ public class ServiceTests
     }
 
     [Fact]
+    public async Task StartPageService_ResetToDefaults_SavesDefaultPage()
+    {
+        var store = new FakeLinkStore();
+        var service = new StartPageService(store);
+
+        await service.ResetToDefaultsAsync();
+
+        Assert.NotNull(store.Stored);
+        Assert.Equal(StartPage.Default().Links.Count, store.Stored!.Links.Count);
+        Assert.Equal(StartPage.Default().Links[0].Name, store.Stored.Links[0].Name);
+    }
+
+    [Fact]
     public async Task SearchService_LaunchesBuiltUrl_AndIgnoresBlank()
     {
         var launcher = new FakeLauncher();

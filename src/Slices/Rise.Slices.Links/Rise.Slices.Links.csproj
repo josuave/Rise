@@ -12,11 +12,13 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="11.0.0-rc.3.26522.148" />
+    <!-- Microsoft.Extensions.DependencyInjection.Abstractions is available implicitly; do not reference it (NU1510). -->
   </ItemGroup>
 
   <ItemGroup>
     <!-- Slice depends only on the core's ports/services, never on Infrastructure (the adapters). -->
     <ProjectReference Include="..\..\Rise.Application\Rise.Application.csproj" />
+    <ProjectReference Include="..\Rise.Slices.Settings.Abstractions\Rise.Slices.Settings.Abstractions.csproj" />
   </ItemGroup>
 
 </Project>

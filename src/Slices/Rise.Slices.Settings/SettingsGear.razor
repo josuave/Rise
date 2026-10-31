@@ -1,0 +1,80 @@
+@using Microsoft.AspNetCore.Components
+
+<button type="button" class="calm-settings-gear" aria-label="Settings and diagnostics" @onclick="OpenAsync">&#9881;</button>
+
+@if (IsOpen)
+{
+    <div class="calm-dialog-overlay" @onclick="Close">
+        <div class="calm-dialog" role="dialog" aria-label="Settings and diagnostics" @onclick:stopPropagation="true">
+            <div class="calm-dialog-header">
+                <h2>Settings</h2>
+                <button type="button" class="calm-dialog-close" aria-label="Close settings" @onclick="Close">&times;</button>
+            </div>
+
+            @if (Loading)
+            {
+                <p>Loading diagnostics&hellip;</p>
+            }
+            else
+            {
+                <section>
+                    <h3>Diagnostics</h3>
+                    <p class="calm-dialog-note">If a button on this page does nothing, this is the place to check. Copy the summary below and paste it into chat with Muse.</p>
+                    <dl class="calm-diagnostics">
+                        <dt>Checked at</dt>
+                        <dd>@CheckedAt</dd>
+                        <dt>Page</dt>
+                        <dd>@PageUri</dd>
+                        <dt>Browser</dt>
+                        <dd>@(UserAgent ?? "unavailable")</dd>
+                        <dt>Links shown</dt>
+                        <dd>@LinkCount (@LinkNames)</dd>
+                        <dt>Links source</dt>
+                        <dd>@LinksSource</dd>
+                        <dt>Saved links (raw)</dt>
+                        <dd><pre class="calm-diagnostics-raw">@(RawStoredLinks ?? "(nothing saved)")</pre></dd>
+                        <dt>Service workers</dt>
+                        <dd>@ServiceWorkerState</dd>
+                    </dl>
+                    <button type="button" @onclick="CopyAsync">Copy diagnostics</button>
+                    @if (!string.IsNullOrEmpty(CopyMessage))
+                    {
+                        <span class="calm-dialog-note"> @CopyMessage</span>
+                    }
+
+                    <h3>Click test</h3>
+                    <p class="calm-dialog-note">If this button counts up, clicks are reaching the app. If it does not, clicks are broken everywhere, not just on one button.</p>
+                    <button type="button" @onclick="() => ClickCount++">Tap to test clicks</button>
+                    <span> Taps: @ClickCount</span>
+                </section>
+
+                @foreach (var section in Sections.OrderBy(s => s.Order))
+                {
+                    <section>
+                        <h3>@section.Title</h3>
+                        @if (!string.IsNullOrEmpty(section.Description))
+                        {
+                            <p class="calm-dialog-note">@section.Description</p>
+                        }
+                        <DynamicComponent Type="@section.ComponentType" />
+                    </section>
+                }
+
+                <section>
+                    <h3>Maintenance</h3>
+                    <p class="calm-dialog-note">Each of these reloads the page afterwards, so the change takes effect immediately.</p>
+                    <div class="calm-dialog-actions">
+                        <button type="button" @onclick="ResetLinksAsync">Reset links to defaults</button>
+                        <button type="button" @onclick="ClearSavedLinksAsync">Clear saved links</button>
+                        <button type="button" @onclick="UnregisterServiceWorkersAsync">Unregister service workers and reload</button>
+                        <button type="button" @onclick="Reload">Reload page</button>
+                    </div>
+                    @if (!string.IsNullOrEmpty(ActionMessage))
+                    {
+                        <p class="calm-dialog-note">@ActionMessage</p>
+                    }
+                </section>
+            }
+        </div>
+    </div>
+}

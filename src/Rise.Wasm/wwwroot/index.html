@@ -32,6 +32,27 @@
             get: function (key) { return window.localStorage.getItem(key); },
             set: function (key, value) { window.localStorage.setItem(key, value); }
         };
+        // Diagnostics/maintenance helpers for the Settings slice. Kept in the
+        // shell (not in a component) so slices stay free of JS interop.
+        window.riseDiagnostics = {
+            getRaw: function (key) { return window.localStorage.getItem(key); },
+            clearKey: function (key) { window.localStorage.removeItem(key); return window.localStorage.getItem(key) === null; },
+            getUserAgent: function () { return window.navigator.userAgent; },
+            copyText: async function (text) { try { await window.navigator.clipboard.writeText(text); return true; } catch { return false; } },
+            getServiceWorkers: async function () {
+                if (!('serviceWorker' in window.navigator)) return 'not supported';
+                var regs = await window.navigator.serviceWorker.getRegistrations();
+                if (regs.length === 0) return 'none registered';
+                return regs.length + ' registered: ' + regs.map(function (r) { return r.scope; }).join(', ');
+            },
+            unregisterServiceWorkers: async function () {
+                if (!('serviceWorker' in window.navigator)) return false;
+                var regs = await window.navigator.serviceWorker.getRegistrations();
+                var ok = true;
+                for (var i = 0; i < regs.length; i++) { ok = await regs[i].unregister() && ok; }
+                return ok;
+            }
+        };
     </script>
     <script src="_framework/blazor.webassembly.js"></script>
     <script>navigator.serviceWorker.register('service-worker.js');</script>
