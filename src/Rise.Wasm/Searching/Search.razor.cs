@@ -19,7 +19,14 @@ namespace Rise.Wasm.Searching
             if ((args.Code == "Enter" || args.Code == "NumpadEnter") && SearchString is not null && JS is not null)
             {
                 var url = $"https://www.google.com/search?q={SearchString.Replace(' ', '+')}";
-                await JS.InvokeVoidAsync("open", url, "_blank");
+                try
+                {
+                    await JS.InvokeVoidAsync("open", url, "_blank");
+                }
+                catch (JSException)
+                {
+                    // Opening the search tab failed (e.g. popup blocked); there is nothing useful to show for a start-page search box, so swallow it.
+                }
             }
         }
     }
