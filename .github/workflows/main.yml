@@ -1,7 +1,6 @@
 name: Deploy to GitHub Pages
 
 on:
-  # Triggers the workflow on push or pull request events but only for the main branch
   push:
     branches: [ main ]
 
@@ -9,23 +8,21 @@ jobs:
   deploy-to-github-pages:
     runs-on: ubuntu-latest
     steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
-      # sets up .NET Core SDK 6
-      - name: Setup .NET Core SDK
-        uses: actions/setup-dotnet@v1
+      # .NET 11 is still prerelease (11.0.100-rc.3 here); switch to '11.0.x' without include-prerelease once GA lands, expected Nov 10, 2026.
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '7.0.100-preview.1.22110.4'
+          dotnet-version: '11.0.x'
           include-prerelease: true
 
-      # publishes Blazor project to the release-folder
-      - name: Publish .NET Core Project
-        run: dotnet publish */**/Rise.Wasm.csproj -c Release -o release --nologo
+      - name: Publish Blazor project
+        run: dotnet publish src/Rise.Wasm/Rise.Wasm.csproj -c Release -o release --nologo
 
-      # changes the base-tag in index.html from '/' to 'Rise.Wasm' to match GitHub Pages repository subdirectory
-      - name: Change base-tag in index.html from / to Rise.Wasm
-        run: sed -i 's/<base href="\/" \/>/<base href="\/Rise\/" \/>/g' release/wwwroot/index.html
+      # changes the base-tag in index.html from '/' to '/Rise/' to match GitHub Pages repository subdirectory
+      - name: Change base-tag in index.html from / to /Rise/
+        run: sed -i 's|<base href="/" />|<base href="/Rise/" />|g' release/wwwroot/index.html
 
       # copy index.html to 404.html to serve the same file when a file is not found
       - name: copy index.html to 404.html
@@ -36,7 +33,7 @@ jobs:
         run: touch release/wwwroot/.nojekyll
 
       - name: Commit wwwroot to GitHub Pages
-        uses: JamesIves/github-pages-deploy-action@3.7.1
+        uses: JamesIves/github-pages-deploy-action@v4
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           BRANCH: gh-pages
