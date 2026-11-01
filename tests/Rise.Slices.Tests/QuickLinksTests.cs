@@ -20,12 +20,12 @@ namespace Rise.Slices.Tests;
 public class QuickLinksTests : BunitContext
 {
     private readonly FakeLinkStore _store = new();
-    private readonly FakeLayoutStore _layoutStore = new();
+    private readonly FakeLayoutCollectionStore _layoutStore = new();
 
     public QuickLinksTests()
     {
         Services.AddScoped<ILinkStore>(_ => _store);
-        Services.AddScoped<ILayoutStore>(_ => _layoutStore);
+        Services.AddScoped<ILayoutCollectionStore>(_ => _layoutStore);
         Services.AddScoped<StartPageService>();
         Services.AddScoped<LayoutService>();
         Services.AddSingleton<IWidgetDefinition, SearchWidgetDefinition>();
@@ -51,8 +51,11 @@ public class QuickLinksTests : BunitContext
 
         cut.Find(".calm-edit-toggle").Click();
 
-        Assert.NotNull(_layoutStore.StoredLayout);
-        Assert.True(_layoutStore.StoredLayout.Widgets.Single(w => w.Id == LinkEditorWidgetDefinition.WidgetId).Visible);
+        LayoutCollection? stored = _layoutStore.StoredCollection;
+        Assert.NotNull(stored);
+        NamedLayout? active = stored.Active;
+        Assert.NotNull(active);
+        Assert.True(active.Layout.Widgets.Single(w => w.Id == LinkEditorWidgetDefinition.WidgetId).Visible);
     }
 
     [Fact]

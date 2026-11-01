@@ -33,19 +33,19 @@ internal sealed class FakeSearchLauncher : ISearchLauncher
     }
 }
 
-/// <summary>In-memory layout store for slice tests: no localStorage, no JS.</summary>
-internal sealed class FakeLayoutStore : ILayoutStore
+/// <summary>In-memory layout collection store for slice tests: no localStorage, no JS.</summary>
+internal sealed class FakeLayoutCollectionStore : ILayoutCollectionStore
 {
-    public PageLayout? StoredLayout { get; private set; }
+    public LayoutCollection? StoredCollection { get; private set; }
 
-    public FakeLayoutStore(PageLayout? initial = null) => StoredLayout = initial;
+    public FakeLayoutCollectionStore(LayoutCollection? initial = null) => StoredCollection = initial;
 
-    public Task<PageLayout?> LoadAsync(CancellationToken cancellationToken = default) =>
-        Task.FromResult(StoredLayout);
+    public Task<LayoutCollection?> LoadAsync(CancellationToken cancellationToken = default) =>
+        Task.FromResult(StoredCollection);
 
-    public Task SaveAsync(PageLayout layout, CancellationToken cancellationToken = default)
+    public Task SaveAsync(LayoutCollection collection, CancellationToken cancellationToken = default)
     {
-        StoredLayout = layout;
+        StoredCollection = collection;
         return Task.CompletedTask;
     }
 }

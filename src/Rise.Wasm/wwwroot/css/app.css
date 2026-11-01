@@ -457,3 +457,36 @@ a, .btn-link {
     gap: 0.5rem;
     padding: 0.25rem 0;
 }
+
+.calm-layout-save-as,
+.calm-layout-rename {
+    display: flex;
+    gap: 0.5rem;
+    margin: 0.5rem 0;
+}
+
+.calm-layout-save-as input,
+.calm-layout-rename input {
+    flex: 1;
+    border: 1px solid var(--calm-border);
+    border-radius: 8px;
+    padding: 0.35rem 0.75rem;
+    background: var(--calm-surface);
+    color: var(--calm-text);
+}
+
+.calm-layout-save-as button,
+.calm-layout-rename button {
+    border: 1px solid var(--calm-border);
+    border-radius: 8px;
+    padding: 0.35rem 0.75rem;
+    background: var(--calm-surface);
+    color: var(--calm-text);
+    cursor: pointer;
+}
+
+.calm-layout-save-as button:disabled,
+.calm-layout-rename button:disabled {
+    opacity: 0.4;
+    cursor: default;
+}

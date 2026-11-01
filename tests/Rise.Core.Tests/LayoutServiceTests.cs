@@ -7,9 +7,6 @@ namespace Rise.Core.Tests;
 
 public class LayoutServiceTests
 {
-    private static readonly string[] DefaultOrder = new[] { "Search", "Links", "LinkEditor", "Theme", "Settings" };
-    private static readonly string[] ReconciledOrder = new[] { "Links", "Search", "Theme", "LinkEditor", "Settings" };
-
     private sealed record TestDefinition(
         string Id,
         string Title,
@@ -18,21 +15,24 @@ public class LayoutServiceTests
         int Order,
         Type ComponentType) : IWidgetDefinition;
 
-    private sealed class FakeLayoutStore : ILayoutStore
+    private sealed class FakeLayoutCollectionStore : ILayoutCollectionStore
     {
-        public PageLayout? StoredLayout { get; private set; }
+        public LayoutCollection? StoredCollection { get; private set; }
 
-        public FakeLayoutStore(PageLayout? initial = null) => StoredLayout = initial;
+        public FakeLayoutCollectionStore(LayoutCollection? initial = null) => StoredCollection = initial;
 
-        public Task<PageLayout?> LoadAsync(CancellationToken cancellationToken = default) =>
-            Task.FromResult(StoredLayout);
+        public Task<LayoutCollection?> LoadAsync(CancellationToken cancellationToken = default) =>
+            Task.FromResult(StoredCollection);
 
-        public Task SaveAsync(PageLayout layout, CancellationToken cancellationToken = default)
+        public Task SaveAsync(LayoutCollection collection, CancellationToken cancellationToken = default)
         {
-            StoredLayout = layout;
+            StoredCollection = collection;
             return Task.CompletedTask;
         }
     }
+
+    private static readonly string[] DefaultOrder = new[] { "Search", "Links", "LinkEditor", "Theme", "Settings" };
+    private static readonly string[] ReconciledOrder = new[] { "Links", "Search", "Theme", "LinkEditor", "Settings" };
 
     private static IWidgetDefinition[] Definitions() => new IWidgetDefinition[]
     {
@@ -44,50 +44,109 @@ public class LayoutServiceTests
     };
 
     [Fact]
-    public async Task Load_WithNothingStored_ReturnsDefinitionsInOrder()
+    public async Task LoadCollection_WithNothingStored_ReturnsJustTheDefaultLayout()
     {
-        var service = new LayoutService(new FakeLayoutStore(), Definitions());
+        var service = new LayoutService(new FakeLayoutCollectionStore(), Definitions());
 
-        PageLayout layout = await service.LoadAsync();
+        LayoutCollection collection = await service.LoadCollectionAsync();
 
-        Assert.Equal(
-            DefaultOrder,
-            layout.Widgets.Select(w => w.Id));
-        Assert.False(layout.Widgets.Single(w => w.Id == "LinkEditor").Visible);
-        Assert.True(layout.Widgets.Where(w => w.Id != "LinkEditor").All(w => w.Visible));
+        Assert.Equal(LayoutCollection.DefaultId, collection.ActiveId);
+        Assert.Single(collection.Layouts);
+        NamedLayout? active = collection.Active;
+        Assert.NotNull(active);
+        Assert.Equal(LayoutCollection.DefaultName, active.Name);
+        Assert.Equal(DefaultOrder, active.Layout.Widgets.Select(w => w.Id));
+        Assert.False(active.Layout.Widgets.Single(w => w.Id == "LinkEditor").Visible);
     }
 
     [Fact]
-    public async Task Load_ReconcilesStoredLayout_AgainstDefinitions()
+    public async Task LoadCollection_ReconcilesStoredLayouts_AgainstDefinitions()
     {
-        // Stored order is user-chosen; zones are placeholders (Main) as
-        // the store persists them; "Ghost" is a widget that no longer exists.
-        var stored = new PageLayout(new[]
+        var stored = new LayoutCollection("ghost", new[]
         {
-            new WidgetPlacement("Links", WidgetZone.Main, false),
-            new WidgetPlacement("Search", WidgetZone.Main, true),
-            new WidgetPlacement("Ghost", WidgetZone.Main, true),
-            new WidgetPlacement("Theme", WidgetZone.Main, true),
+            new NamedLayout("work", "Work", new PageLayout(new[]
+            {
+                new WidgetPlacement("Links", WidgetZone.Main, false),
+                new WidgetPlacement("Search", WidgetZone.Main, true),
+                new WidgetPlacement("Ghost", WidgetZone.Main, true),
+                new WidgetPlacement("Theme", WidgetZone.Main, true),
+            })),
+            new NamedLayout("morning", "   ", new PageLayout(new[]
+            {
+                new WidgetPlacement("Search", WidgetZone.Main, true),
+            })),
         });
-        var service = new LayoutService(new FakeLayoutStore(stored), Definitions());
+        var service = new LayoutService(new FakeLayoutCollectionStore(stored), Definitions());
 
-        PageLayout layout = await service.LoadAsync();
+        LayoutCollection collection = await service.LoadCollectionAsync();
 
-        // Kept order and visibility, unknown id dropped, zones taken
-        // from the definitions, missing widgets appended with defaults.
+        // Default layout is always present (first); unknown active id
+        // falls back to it; unknown widget ids are dropped; zones come
+        // from the definitions; blank names become "Untitled"; widgets
+        // a layout predates are appended with defaults.
+        Assert.Equal(LayoutCollection.DefaultId, collection.ActiveId);
+        Assert.Equal(
+            new[] { LayoutCollection.DefaultId, "work", "morning" },
+            collection.Layouts.Select(l => l.Id));
+        NamedLayout work = collection.Layouts.Single(l => l.Id == "work");
         Assert.Equal(
             ReconciledOrder,
-            layout.Widgets.Select(w => w.Id));
-        Assert.False(layout.Widgets.Single(w => w.Id == "Links").Visible);
-        Assert.Equal(WidgetZone.Cluster, layout.Widgets.Single(w => w.Id == "Theme").Zone);
-        Assert.False(layout.Widgets.Single(w => w.Id == "LinkEditor").Visible);
-        Assert.True(layout.Widgets.Single(w => w.Id == "Settings").Visible);
+            work.Layout.Widgets.Select(w => w.Id));
+        Assert.False(work.Layout.Widgets.Single(w => w.Id == "Links").Visible);
+        Assert.Equal(WidgetZone.Cluster, work.Layout.Widgets.Single(w => w.Id == "Theme").Zone);
+        Assert.Equal("Untitled", collection.Layouts.Single(l => l.Id == "morning").Name);
+        Assert.Equal(DefaultOrder, collection.Layouts.Single(l => l.Id == "morning").Layout.Widgets.Select(w => w.Id));
     }
 
     [Fact]
-    public async Task Reset_RestoresDefaults_AndNotifies()
+    public async Task ActiveOperations_AffectOnlyTheActiveLayout()
     {
-        var store = new FakeLayoutStore();
+        var store = new FakeLayoutCollectionStore();
+        var service = new LayoutService(store, Definitions());
+        await service.SaveAsAsync("Work");
+
+        PageLayout active = await service.LoadAsync();
+        await service.SetVisibleAsync(active, "Search", false);
+
+        Assert.NotNull(store.StoredCollection);
+        NamedLayout work = store.StoredCollection.Layouts.Single(l => l.Name == "Work");
+        Assert.False(work.Layout.Widgets.Single(w => w.Id == "Search").Visible);
+        NamedLayout defaults = store.StoredCollection.Layouts.Single(l => l.Id == LayoutCollection.DefaultId);
+        Assert.True(defaults.Layout.Widgets.Single(w => w.Id == "Search").Visible);
+    }
+
+    [Fact]
+    public async Task SaveSwitchRenameDelete_ManageTheCollection()
+    {
+        var store = new FakeLayoutCollectionStore();
+        var service = new LayoutService(store, Definitions());
+
+        LayoutCollection saved = await service.SaveAsAsync("Work");
+        Assert.Equal(2, saved.Layouts.Count);
+        Assert.Equal("Work", saved.Active?.Name);
+
+        LayoutCollection savedAgain = await service.SaveAsAsync("Work");
+        Assert.Equal("Work 2", savedAgain.Active?.Name);
+
+        LayoutCollection switched = await service.SetActiveLayoutAsync(LayoutCollection.DefaultId);
+        Assert.Equal(LayoutCollection.DefaultId, switched.ActiveId);
+
+        string workId = store.StoredCollection!.Layouts.Single(l => l.Name == "Work").Id;
+        LayoutCollection renamed = await service.RenameLayoutAsync(workId, "Morning");
+        Assert.Equal("Morning", renamed.Layouts.Single(l => l.Id == workId).Name);
+
+        string work2Id = store.StoredCollection.Layouts.Single(l => l.Name == "Work 2").Id;
+        LayoutCollection deleted = await service.DeleteLayoutAsync(work2Id);
+        Assert.DoesNotContain(deleted.Layouts, l => l.Id == work2Id);
+
+        LayoutCollection defaultKept = await service.DeleteLayoutAsync(LayoutCollection.DefaultId);
+        Assert.Contains(defaultKept.Layouts, l => l.Id == LayoutCollection.DefaultId);
+    }
+
+    [Fact]
+    public async Task Reset_RestoresActiveDefaults_AndNotifies()
+    {
+        var store = new FakeLayoutCollectionStore();
         var service = new LayoutService(store, Definitions());
         PageLayout hidden = await service.SetVisibleAsync(await service.LoadAsync(), "Search", false);
         Assert.False(hidden.Widgets.Single(w => w.Id == "Search").Visible);
@@ -99,6 +158,6 @@ public class LayoutServiceTests
 
         Assert.True(reset.Widgets.Single(w => w.Id == "Search").Visible);
         Assert.True(notified);
-        Assert.NotNull(store.StoredLayout);
+        Assert.NotNull(store.StoredCollection);
     }
 }

@@ -6,10 +6,12 @@ using Rise.Domain;
 namespace Rise.Slices.Layout;
 
 /// <summary>
-/// The layout editor widget: reorder, hide/show, and reset the page
-/// widgets. Titles come from the registered definitions, so the editor
-/// never names a concrete widget. Every change goes through the layout
-/// service, which persists it and notifies the shell to re-render.
+/// The layout editor widget: reorder, hide/show, and reset the active
+/// layout's widgets, plus manage the saved layouts themselves (switch,
+/// save the current arrangement as new, rename, delete). Titles come
+/// from the registered definitions, so the editor never names a
+/// concrete widget. Every change goes through the layout service,
+/// which persists it and notifies the shell to re-render.
 /// </summary>
 public partial class LayoutEditor : IDisposable
 {
@@ -19,13 +21,21 @@ public partial class LayoutEditor : IDisposable
     [Inject]
     private IEnumerable<IWidgetDefinition> Definitions { get; set; } = Array.Empty<IWidgetDefinition>();
 
-    private PageLayout Layout { get; set; } = new PageLayout(Array.Empty<WidgetPlacement>());
+    private LayoutCollection Collection { get; set; } = new LayoutCollection(
+        LayoutCollection.DefaultId,
+        Array.Empty<NamedLayout>());
+
+    private PageLayout Layout => Collection.Active?.Layout ?? new PageLayout(Array.Empty<WidgetPlacement>());
+
+    private string NewLayoutName { get; set; } = string.Empty;
+
+    private string RenameName { get; set; } = string.Empty;
 
     protected override async Task OnInitializedAsync()
     {
         if (LayoutService is not null)
         {
-            Layout = await LayoutService.LoadAsync();
+            await RefreshAsync();
             LayoutService.Changed += OnLayoutChanged;
         }
     }
@@ -37,8 +47,19 @@ public partial class LayoutEditor : IDisposable
             return;
         }
 
-        Layout = await LayoutService.LoadAsync();
+        await RefreshAsync();
         await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task RefreshAsync()
+    {
+        if (LayoutService is null)
+        {
+            return;
+        }
+
+        Collection = await LayoutService.LoadCollectionAsync();
+        RenameName = Collection.Active?.Name ?? string.Empty;
     }
 
     private string TitleOf(WidgetPlacement placement) =>
@@ -64,7 +85,7 @@ public partial class LayoutEditor : IDisposable
     {
         if (LayoutService is not null)
         {
-            Layout = await LayoutService.MoveUpAsync(Layout, placement.Id);
+            await LayoutService.MoveUpAsync(Layout, placement.Id);
         }
     }
 
@@ -72,7 +93,7 @@ public partial class LayoutEditor : IDisposable
     {
         if (LayoutService is not null)
         {
-            Layout = await LayoutService.MoveDownAsync(Layout, placement.Id);
+            await LayoutService.MoveDownAsync(Layout, placement.Id);
         }
     }
 
@@ -80,7 +101,7 @@ public partial class LayoutEditor : IDisposable
     {
         if (LayoutService is not null)
         {
-            Layout = await LayoutService.SetVisibleAsync(Layout, placement.Id, !placement.Visible);
+            await LayoutService.SetVisibleAsync(Layout, placement.Id, !placement.Visible);
         }
     }
 
@@ -88,7 +109,40 @@ public partial class LayoutEditor : IDisposable
     {
         if (LayoutService is not null)
         {
-            Layout = await LayoutService.ResetAsync();
+            await LayoutService.ResetAsync();
+        }
+    }
+
+    private async Task SwitchAsync(string id)
+    {
+        if (LayoutService is not null)
+        {
+            await LayoutService.SetActiveLayoutAsync(id);
+        }
+    }
+
+    private async Task SaveAsAsync()
+    {
+        if (LayoutService is not null)
+        {
+            await LayoutService.SaveAsAsync(NewLayoutName);
+            NewLayoutName = string.Empty;
+        }
+    }
+
+    private async Task RenameAsync()
+    {
+        if (LayoutService is not null && Collection.Active is not null)
+        {
+            await LayoutService.RenameLayoutAsync(Collection.Active.Id, RenameName);
+        }
+    }
+
+    private async Task DeleteAsync(string id)
+    {
+        if (LayoutService is not null)
+        {
+            await LayoutService.DeleteLayoutAsync(id);
         }
     }
 

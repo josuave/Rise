@@ -1,7 +1,39 @@
 @using Rise.Domain
 
 <div class="calm-layout-editor">
-    <h3>Layout</h3>
+    <h3>Layouts</h3>
+    <p class="calm-dialog-note">Switch between saved arrangements, or save the current one under a new name.</p>
+
+    @foreach (var saved in Collection.Layouts)
+    {
+        <div class="calm-layout-row">
+            <span class="calm-layout-name">@saved.Name</span>
+            @if (saved.Id == Collection.ActiveId)
+            {
+                <span class="calm-layout-zone">Active</span>
+            }
+            else
+            {
+                <button type="button" aria-label="Switch to @saved.Name" @onclick="() => SwitchAsync(saved.Id)">Switch</button>
+            }
+            @if (saved.Id != LayoutCollection.DefaultId)
+            {
+                <button type="button" aria-label="Delete @saved.Name" @onclick="() => DeleteAsync(saved.Id)">Delete</button>
+            }
+        </div>
+    }
+
+    <div class="calm-layout-save-as">
+        <input type="text" placeholder="New layout name" aria-label="New layout name" @bind="NewLayoutName" />
+        <button type="button" @onclick="SaveAsAsync" disabled="@string.IsNullOrWhiteSpace(NewLayoutName)">Save current as new</button>
+    </div>
+
+    <div class="calm-layout-rename">
+        <input type="text" aria-label="Rename active layout" @bind="RenameName" />
+        <button type="button" @onclick="RenameAsync" disabled="@string.IsNullOrWhiteSpace(RenameName)">Rename active</button>
+    </div>
+
+    <h3>Widgets in this layout</h3>
     <p class="calm-dialog-note">Move widgets within their area, hide the ones you don't want, or reset to defaults. Changes save automatically.</p>
 
     @foreach (var placement in Layout.Widgets)
