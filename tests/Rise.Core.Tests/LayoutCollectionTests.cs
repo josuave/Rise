@@ -24,7 +24,8 @@ public class LayoutCollectionTests
         LayoutCollection collection = TwoLayouts();
 
         Assert.Same(collection, collection.SetActive("nope"));
-        Assert.Equal("work", collection.SetActive(LayoutCollection.DefaultId).ActiveId);
+        Assert.Equal(LayoutCollection.DefaultId, collection.SetActive(LayoutCollection.DefaultId).ActiveId);
+        Assert.Equal("work", collection.ActiveId);
     }
 
     [Fact]
