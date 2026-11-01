@@ -33,6 +33,12 @@ internal sealed class FakeSearchLauncher : ISearchLauncher
     }
 }
 
+/// <summary>Clock that always reports the same moment, for header tests.</summary>
+internal sealed class FakeClock(DateTime now) : IClock
+{
+    public DateTime Now => now;
+}
+
 /// <summary>In-memory layout collection store for slice tests: no localStorage, no JS.</summary>
 internal sealed class FakeLayoutCollectionStore : ILayoutCollectionStore
 {

@@ -31,11 +31,12 @@ public class LayoutServiceTests
         }
     }
 
-    private static readonly string[] DefaultOrder = new[] { "Search", "Links", "LinkEditor", "Theme", "Settings" };
-    private static readonly string[] ReconciledOrder = new[] { "Links", "Search", "Theme", "LinkEditor", "Settings" };
+    private static readonly string[] DefaultOrder = new[] { "Header", "Search", "Links", "LinkEditor", "Theme", "Settings" };
+    private static readonly string[] ReconciledOrder = new[] { "Header", "Links", "Search", "LinkEditor", "Theme", "Settings" };
 
     private static IWidgetDefinition[] Definitions() => new IWidgetDefinition[]
     {
+        new TestDefinition("Header", "Header", WidgetZone.Main, true, 5, typeof(object)),
         new TestDefinition("Search", "Search", WidgetZone.Main, true, 10, typeof(object)),
         new TestDefinition("Links", "Links", WidgetZone.Main, true, 20, typeof(object)),
         new TestDefinition("LinkEditor", "Link editor", WidgetZone.Main, false, 30, typeof(object)),
@@ -83,7 +84,7 @@ public class LayoutServiceTests
         // Default layout is always present (first); unknown active id
         // falls back to it; unknown widget ids are dropped; zones come
         // from the definitions; blank names become "Untitled"; widgets
-        // a layout predates are appended with defaults.
+        // a layout predates slot in by definition Order.
         Assert.Equal(LayoutCollection.DefaultId, collection.ActiveId);
         Assert.Equal(
             new[] { LayoutCollection.DefaultId, "work", "morning" },

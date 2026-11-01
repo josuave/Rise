@@ -5,6 +5,7 @@ using Rise.Application.Ports;
 using Rise.Application.Services;
 using Rise.Domain;
 using Rise.Slices.Layout;
+using Rise.Slices.Header;
 using Rise.Slices.Links;
 using Rise.Slices.Search;
 using Rise.Slices.Settings;
@@ -14,9 +15,9 @@ namespace Rise.Slices.Tests;
 
 public class LayoutEditorTests : BunitContext
 {
-    private static readonly string[] DefaultOrder = new[] { "Search", "Links", "LinkEditor", "Theme", "Settings" };
-    private static readonly string[] MovedOrder = new[] { "Links", "Search", "LinkEditor", "Theme", "Settings" };
-    private static readonly bool[] DefaultVisibility = new[] { true, true, false, true, true };
+    private static readonly string[] DefaultOrder = new[] { "Header", "Search", "Links", "LinkEditor", "Theme", "Settings" };
+    private static readonly string[] MovedOrder = new[] { "Header", "Links", "Search", "LinkEditor", "Theme", "Settings" };
+    private static readonly bool[] DefaultVisibility = new[] { true, true, true, false, true, true };
 
     private readonly FakeLayoutCollectionStore _layoutStore = new();
 
@@ -24,6 +25,7 @@ public class LayoutEditorTests : BunitContext
     {
         Services.AddScoped<ILayoutCollectionStore>(_ => _layoutStore);
         Services.AddScoped<LayoutService>();
+        Services.AddSingleton<IWidgetDefinition, HeaderWidgetDefinition>();
         Services.AddSingleton<IWidgetDefinition, SearchWidgetDefinition>();
         Services.AddSingleton<IWidgetDefinition, LinksWidgetDefinition>();
         Services.AddSingleton<IWidgetDefinition, LinkEditorWidgetDefinition>();
@@ -49,7 +51,7 @@ public class LayoutEditorTests : BunitContext
 
         cut.WaitForAssertion(() => Assert.Contains("Link editor", cut.Markup, StringComparison.Ordinal));
         Assert.Contains("Default", cut.Markup, StringComparison.Ordinal);
-        Assert.Equal(10, cut.FindAll("[aria-label^=\"Move\"]").Count);
+        Assert.Equal(12, cut.FindAll("[aria-label^=\"Move\"]").Count);
     }
 
     [Fact]

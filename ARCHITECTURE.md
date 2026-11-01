@@ -139,9 +139,18 @@ wander into the other zone, and hiding a widget never loses its
 position. The layout service reconciles a stored layout against the
 definitions on load: unknown ids are dropped, zones always come from
 the definition, visibility is kept, and widgets the stored layout
-predates are appended with their defaults. The default layout is
-just the definitions in Order — it reproduces the old page (Search,
-Links, Theme, Settings visible; Link editor hidden).
+predates slot in by definition Order, ahead of every widget ordered
+after them — so a new widget lands where its Order puts it instead
+of last, and the stored relative order of existing widgets is never
+disturbed. The default layout is just the definitions in Order —
+it reproduces the old page (Header, Search, Links, Theme, Settings
+visible; Link editor hidden).
+
+The header itself is a widget: the Header slice renders date, clock,
+and greeting and owns the refresh timer, so the shell re-renders
+only when the layout changes instead of on every clock tick. The
+"Edit layout" button and the editor stay shell-rendered, not widgets:
+an editor you could hide would strand the user with no way back.
 
 Adding a widget is a new definition plus one line in Program.cs:
 no change to Domain, the layout service, the editor, or the shell.
@@ -258,7 +267,9 @@ its own beyond the clock/greeting shell.
   (defaults and reconciliation against definitions); named layouts
   added collection tests (name uniqueness, delete fallback, rename)
   and service tests (save/switch/rename/delete, active-only edits)
-  plus editor tests for the save-as/switch/delete/rename UI. Both test projects carry `coverlet.collector`;
+  plus editor tests for the save-as/switch/delete/rename UI; the
+  header widget added a component test (fixed clock) and a reconcile
+  test proving new widgets slot in by Order. Both test projects carry `coverlet.collector`;
   CI collects Cobertura coverage via `coverage.runsettings`
   (test assemblies excluded) and uploads it to Codecov.
 - **New slice:** copy a slice project, depend on Application, add its

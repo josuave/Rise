@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Rise.Infrastructure;
+using Rise.Slices.Header;
 using Rise.Slices.Links;
 using Rise.Slices.Search;
 using Rise.Slices.Settings;
@@ -20,6 +21,7 @@ builder.Services.AddLinksSettings();
 
 // Widget definitions, wired here: adding a widget is a new definition
 // plus one line here, never a change to the layout model or the shell.
+builder.Services.AddHeaderWidget();
 builder.Services.AddSearchWidget();
 builder.Services.AddLinksWidgets();
 builder.Services.AddSettingsWidgets();
