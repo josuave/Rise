@@ -158,12 +158,32 @@ is an extension point for first-party slices, not a plugin loader:
 DynamicComponent only renders components from assemblies the app
 already loads.
 
+Named layouts: the user can save more than one arrangement. The
+stored shape is a `LayoutCollection` (Domain): an active id plus a
+list of `NamedLayout`s (id, name, `PageLayout`). The default layout
+always exists, can be renamed but never deleted, and is the fallback
+when the active layout is deleted. Names are unique (a clash gets
+" 2", " 3", ...), saving the current arrangement activates the copy,
+and every layout is reconciled against the definitions on load the
+same way a single layout was — per layout, so an old layout gains
+new widgets with defaults just like the default one does. The
+single-layout operations (move, hide, reset, show/hide widget) always
+act on the active layout, so the shell and the other widgets did not
+change: they render the active layout and re-render on `Changed`.
+The layout editor adds a layouts section above the widget rows:
+switch, save the current arrangement as new, rename the active
+layout, delete (never the default).
+
 Persistence is the same localStorage pattern as links: `LayoutService`
-(Application) over the `ILayoutStore` port, `LocalStorageLayoutStore`
-(Infrastructure) under `rise.layout.v1`, storing only ids and
+(Application) over the `ILayoutCollectionStore` port,
+`LocalStorageLayoutCollectionStore` (Infrastructure) under
+`rise.layouts.v1`, storing only layout ids, names, widget ids, and
 visibility (zones come from the definitions), corrupt or missing data
-falling back to defaults. A theme editor (custom light/dark themes,
-possibly generated) is the planned Phase 2 on top of this; it is not
+falling back to the default collection. Per-page layouts (a layout
+per route) are a later step: Rise has one page today, so named
+layouts on that page come first. A theme editor (custom light/dark
+themes, possibly generated) is the planned Phase 2 on top of this; it
+is not
 in v1. The shell's
 index.html provides the `window.riseTheme` script block the theme
 adapter calls (localStorage, the page's data-theme attribute,
@@ -235,7 +255,10 @@ its own beyond the clock/greeting shell.
   for the editor widget, the split-out link editor, and the split-out
   theme toggle; the registry rework added core layout tests (zones,
   in-zone moves, hide-keeps-position) and layout service tests
-  (defaults and reconciliation against definitions). Both test projects carry `coverlet.collector`;
+  (defaults and reconciliation against definitions); named layouts
+  added collection tests (name uniqueness, delete fallback, rename)
+  and service tests (save/switch/rename/delete, active-only edits)
+  plus editor tests for the save-as/switch/delete/rename UI. Both test projects carry `coverlet.collector`;
   CI collects Cobertura coverage via `coverage.runsettings`
   (test assemblies excluded) and uploads it to Codecov.
 - **New slice:** copy a slice project, depend on Application, add its

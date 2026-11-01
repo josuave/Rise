@@ -3,6 +3,7 @@ using Bunit;
 using Microsoft.Extensions.DependencyInjection;
 using Rise.Application.Ports;
 using Rise.Application.Services;
+using Rise.Domain;
 using Rise.Slices.Layout;
 using Rise.Slices.Links;
 using Rise.Slices.Search;
@@ -17,11 +18,11 @@ public class LayoutEditorTests : BunitContext
     private static readonly string[] MovedOrder = new[] { "Links", "Search", "LinkEditor", "Theme", "Settings" };
     private static readonly bool[] DefaultVisibility = new[] { true, true, false, true, true };
 
-    private readonly FakeLayoutStore _layoutStore = new();
+    private readonly FakeLayoutCollectionStore _layoutStore = new();
 
     public LayoutEditorTests()
     {
-        Services.AddScoped<ILayoutStore>(_ => _layoutStore);
+        Services.AddScoped<ILayoutCollectionStore>(_ => _layoutStore);
         Services.AddScoped<LayoutService>();
         Services.AddSingleton<IWidgetDefinition, SearchWidgetDefinition>();
         Services.AddSingleton<IWidgetDefinition, LinksWidgetDefinition>();
@@ -30,13 +31,25 @@ public class LayoutEditorTests : BunitContext
         Services.AddSingleton<IWidgetDefinition, SettingsWidgetDefinition>();
     }
 
+    private static NamedLayout ActiveOf(LayoutCollection? collection)
+    {
+        Assert.NotNull(collection);
+        NamedLayout? active = collection.Active;
+        Assert.NotNull(active);
+        return active;
+    }
+
+    private static IElement ButtonWithText(IRenderedComponent<LayoutEditor> cut, string text) =>
+        cut.FindAll("button").Single(b => b.TextContent.Trim() == text);
+
     [Fact]
-    public void RendersOneRowPerWidget()
+    public void RendersLayoutsAndWidgetRows()
     {
         IRenderedComponent<LayoutEditor> cut = Render<LayoutEditor>();
 
         cut.WaitForAssertion(() => Assert.Contains("Link editor", cut.Markup, StringComparison.Ordinal));
-        Assert.Equal(5, cut.FindAll(".calm-layout-row").Count);
+        Assert.Contains("Default", cut.Markup, StringComparison.Ordinal);
+        Assert.Equal(10, cut.FindAll("[aria-label^=\"Move\"]").Count);
     }
 
     [Fact]
@@ -47,10 +60,7 @@ public class LayoutEditorTests : BunitContext
 
         cut.Find("[aria-label=\"Move Links up\"]").Click();
 
-        Assert.NotNull(_layoutStore.StoredLayout);
-        Assert.Equal(
-            MovedOrder,
-            _layoutStore.StoredLayout.Widgets.Select(w => w.Id));
+        Assert.Equal(MovedOrder, ActiveOf(_layoutStore.StoredCollection).Layout.Widgets.Select(w => w.Id));
     }
 
     [Fact]
@@ -60,11 +70,10 @@ public class LayoutEditorTests : BunitContext
         cut.WaitForAssertion(() => Assert.Contains("Link editor", cut.Markup, StringComparison.Ordinal));
 
         cut.Find("[aria-label=\"Hide Search\"]").Click();
-        Assert.NotNull(_layoutStore.StoredLayout);
-        Assert.False(_layoutStore.StoredLayout.Widgets.Single(w => w.Id == "Search").Visible);
+        Assert.False(ActiveOf(_layoutStore.StoredCollection).Layout.Widgets.Single(w => w.Id == "Search").Visible);
 
         cut.Find("[aria-label=\"Show Link editor\"]").Click();
-        Assert.True(_layoutStore.StoredLayout.Widgets.Single(w => w.Id == "LinkEditor").Visible);
+        Assert.True(ActiveOf(_layoutStore.StoredCollection).Layout.Widgets.Single(w => w.Id == "LinkEditor").Visible);
     }
 
     [Fact]
@@ -76,12 +85,66 @@ public class LayoutEditorTests : BunitContext
         cut.Find("[aria-label=\"Hide Search\"]").Click();
         cut.Find(".calm-layout-reset").Click();
 
-        Assert.NotNull(_layoutStore.StoredLayout);
-        Assert.Equal(
-            DefaultOrder,
-            _layoutStore.StoredLayout.Widgets.Select(w => w.Id));
-        Assert.Equal(
-            DefaultVisibility,
-            _layoutStore.StoredLayout.Widgets.Select(w => w.Visible));
+        Assert.Equal(DefaultOrder, ActiveOf(_layoutStore.StoredCollection).Layout.Widgets.Select(w => w.Id));
+        Assert.Equal(DefaultVisibility, ActiveOf(_layoutStore.StoredCollection).Layout.Widgets.Select(w => w.Visible));
+    }
+
+    [Fact]
+    public void SaveAs_CreatesAndActivatesNewLayout()
+    {
+        IRenderedComponent<LayoutEditor> cut = Render<LayoutEditor>();
+        cut.WaitForAssertion(() => Assert.Contains("Link editor", cut.Markup, StringComparison.Ordinal));
+
+        cut.Find("[aria-label=\"New layout name\"]").Change("Work");
+        ButtonWithText(cut, "Save current as new").Click();
+
+        cut.WaitForAssertion(() => Assert.Contains("Work", cut.Markup, StringComparison.Ordinal));
+        LayoutCollection? stored = _layoutStore.StoredCollection;
+        Assert.NotNull(stored);
+        Assert.Equal(2, stored.Layouts.Count);
+        Assert.Equal("Work", stored.Active?.Name);
+    }
+
+    [Fact]
+    public void Switch_ChangesActiveLayout()
+    {
+        IRenderedComponent<LayoutEditor> cut = Render<LayoutEditor>();
+        cut.WaitForAssertion(() => Assert.Contains("Link editor", cut.Markup, StringComparison.Ordinal));
+        cut.Find("[aria-label=\"New layout name\"]").Change("Work");
+        ButtonWithText(cut, "Save current as new").Click();
+        cut.WaitForAssertion(() => Assert.Contains("Work", cut.Markup, StringComparison.Ordinal));
+
+        cut.Find("[aria-label=\"Switch to Default\"]").Click();
+
+        Assert.Equal(LayoutCollection.DefaultId, ActiveOf(_layoutStore.StoredCollection).Id);
+    }
+
+    [Fact]
+    public void Delete_RemovesLayout_AndFallsBackToDefault()
+    {
+        IRenderedComponent<LayoutEditor> cut = Render<LayoutEditor>();
+        cut.WaitForAssertion(() => Assert.Contains("Link editor", cut.Markup, StringComparison.Ordinal));
+        cut.Find("[aria-label=\"New layout name\"]").Change("Work");
+        ButtonWithText(cut, "Save current as new").Click();
+        cut.WaitForAssertion(() => Assert.Contains("Work", cut.Markup, StringComparison.Ordinal));
+
+        cut.Find("[aria-label=\"Delete Work\"]").Click();
+
+        LayoutCollection? stored = _layoutStore.StoredCollection;
+        Assert.NotNull(stored);
+        Assert.Single(stored.Layouts);
+        Assert.Equal(LayoutCollection.DefaultId, stored.ActiveId);
+    }
+
+    [Fact]
+    public void Rename_ChangesActiveLayoutName()
+    {
+        IRenderedComponent<LayoutEditor> cut = Render<LayoutEditor>();
+        cut.WaitForAssertion(() => Assert.Contains("Link editor", cut.Markup, StringComparison.Ordinal));
+
+        cut.Find("[aria-label=\"Rename active layout\"]").Change("Morning");
+        ButtonWithText(cut, "Rename active").Click();
+
+        Assert.Equal("Morning", ActiveOf(_layoutStore.StoredCollection).Name);
     }
 }
