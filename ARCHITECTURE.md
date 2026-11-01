@@ -210,7 +210,11 @@ theme adapter calls (localStorage, the page's data-theme attribute,
 custom inline variables, matchMedia), the same way it provides
 `window.riseStorage` for links,
 plus a small head script that applies an explicit stored theme before
-first paint. The diagnostics/maintenance dialog that lived here while
+first paint. The same head order gives the loading screen its theme
+for free: `#app` holds a minimal centered "Rise" wordmark and sliding
+bar (styled from app.css's calm variables), shown until Blazor
+starts and clears it — so the loading screen already matches
+light/dark/system/custom with no extra code. The diagnostics/maintenance dialog that lived here while
 the dead-clicks bug was being chased was removed once that bug was
 fixed (PR #9); its `IDiagnosticsProbe` port and adapter went with it,
 and can be restored from git history if a future bug needs them again.
