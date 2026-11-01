@@ -20,14 +20,38 @@
     <script>
         // Apply an explicit stored theme before first paint, so dark
         // users don't flash light. "system" (or nothing stored) leaves
-        // data-theme unset, and the CSS system media query decides.
+        // data-theme unset, and the CSS system media query decides. A
+        // "custom:<id>" choice applies that theme's light or dark half
+        // as inline variables, by device preference. Keep the variable
+        // names in sync with app.css and the riseTheme block below.
         (function () {
             try {
                 var t = window.localStorage.getItem('rise.theme.v1');
                 if (t === 'light' || t === 'dark') {
                     document.documentElement.setAttribute('data-theme', t);
+                } else if (t && t.indexOf('custom:') === 0) {
+                    var themes = JSON.parse(window.localStorage.getItem('rise.themes.v1') || '[]');
+                    var id = t.substring('custom:'.length);
+                    var found = null;
+                    for (var i = 0; i < themes.length; i++) {
+                        if (themes[i].Id === id) { found = themes[i]; break; }
+                    }
+                    if (found) {
+                        var dark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                        var half = dark ? found.Dark : found.Light;
+                        var vars = {
+                            '--calm-bg': half.Background, '--calm-text': half.Text,
+                            '--calm-muted': half.Muted, '--calm-faint': half.Faint,
+                            '--calm-surface': half.Surface, '--calm-border': half.Border,
+                            '--calm-border-soft': half.BorderSoft, '--calm-tile-bg': half.TileBackground,
+                            '--calm-error': half.Error
+                        };
+                        for (var key in vars) {
+                            if (vars[key]) { document.documentElement.style.setProperty(key, vars[key]); }
+                        }
+                    }
                 }
-            } catch (e) { /* private mode: stay on the CSS default */ }
+            } catch (e) { /* private mode or corrupt data: stay on the CSS default */ }
         })();
     </script>
 </head>
@@ -47,20 +71,66 @@
         };
         // Theme helpers for the Settings slice. Kept in the shell
         // (not in a component) so slices stay free of JS interop.
+        // Custom palettes live as inline variables, which override the
+        // stylesheet palettes; switching to a built-in theme clears
+        // them again. Variable names stay in sync with app.css.
         window.riseTheme = {
+            customVars: ['--calm-bg', '--calm-text', '--calm-muted', '--calm-faint',
+                '--calm-surface', '--calm-border', '--calm-border-soft', '--calm-tile-bg', '--calm-error'],
             getStored: function (key) { return window.localStorage.getItem(key); },
             setStored: function (key, value) { window.localStorage.setItem(key, value); },
+            clearCustom: function () {
+                var vars = window.riseTheme.customVars;
+                for (var i = 0; i < vars.length; i++) {
+                    document.documentElement.style.removeProperty(vars[i]);
+                }
+            },
             apply: function (theme) {
+                window.riseTheme.clearCustom();
                 if (theme === 'light' || theme === 'dark') {
                     document.documentElement.setAttribute('data-theme', theme);
                 } else {
                     document.documentElement.removeAttribute('data-theme');
                 }
             },
+            applyCustom: function (vars) {
+                document.documentElement.removeAttribute('data-theme');
+                for (var key in vars) {
+                    if (vars[key]) { document.documentElement.style.setProperty(key, vars[key]); }
+                }
+            },
+            applyStoredCustom: function () {
+                try {
+                    var t = window.localStorage.getItem('rise.theme.v1');
+                    if (!t || t.indexOf('custom:') !== 0) { return; }
+                    var themes = JSON.parse(window.localStorage.getItem('rise.themes.v1') || '[]');
+                    var id = t.substring('custom:'.length);
+                    var found = null;
+                    for (var i = 0; i < themes.length; i++) {
+                        if (themes[i].Id === id) { found = themes[i]; break; }
+                    }
+                    if (!found) { return; }
+                    var dark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                    var half = dark ? found.Dark : found.Light;
+                    var vars = {
+                        '--calm-bg': half.Background, '--calm-text': half.Text,
+                        '--calm-muted': half.Muted, '--calm-faint': half.Faint,
+                        '--calm-surface': half.Surface, '--calm-border': half.Border,
+                        '--calm-border-soft': half.BorderSoft, '--calm-tile-bg': half.TileBackground,
+                        '--calm-error': half.Error
+                    };
+                    window.riseTheme.applyCustom(vars);
+                } catch (e) { /* corrupt data: leave the current theme alone */ }
+            },
             prefersDark: function () {
                 return window.matchMedia('(prefers-color-scheme: dark)').matches;
             }
         };
+        // When the device flips light/dark, a custom theme follows it
+        // by re-applying the matching half.
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function () {
+            window.riseTheme.applyStoredCustom();
+        });
     </script>
     <script src="_framework/blazor.webassembly.js"></script>
     <script>navigator.serviceWorker.register('service-worker.js');</script>
