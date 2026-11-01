@@ -190,13 +190,25 @@ Persistence is the same localStorage pattern as links: `LayoutService`
 visibility (zones come from the definitions), corrupt or missing data
 falling back to the default collection. Per-page layouts (a layout
 per route) are a later step: Rise has one page today, so named
-layouts on that page come first. A theme editor (custom light/dark
-themes, possibly generated) is the planned Phase 2 on top of this; it
-is not
-in v1. The shell's
-index.html provides the `window.riseTheme` script block the theme
-adapter calls (localStorage, the page's data-theme attribute,
-matchMedia), the same way it provides `window.riseStorage` for links,
+layouts on that page come first. The theme editor is Phase 2, built
+on the same shape: a custom theme is a name over a light palette
+and a dark palette (the nine calm CSS variables; the built-in
+defaults mirror app.css), created as a copy of the built-ins and
+tweaked with color pickers in the Settings dialog. Definitions live
+under `rise.themes.v1` via `ICustomThemeStore`; the active choice
+stays in `rise.theme.v1` as "custom:&lt;id&gt;", so the picker,
+the quick toggle, and the before-first-paint script all keep
+working: built-in choices use the data-theme attribute, custom
+choices apply one palette half as inline variables (dark half when
+the device prefers dark, re-applied on OS-preference change), and
+switching to a built-in clears the inline variables. Deleting the
+active custom theme repairs the choice to "system"; an orphaned
+custom choice repairs the same way on startup. Generating a theme
+from a seed color or image is a later step, not this one. The
+shell's index.html provides the `window.riseTheme` script block the
+theme adapter calls (localStorage, the page's data-theme attribute,
+custom inline variables, matchMedia), the same way it provides
+`window.riseStorage` for links,
 plus a small head script that applies an explicit stored theme before
 first paint. The diagnostics/maintenance dialog that lived here while
 the dead-clicks bug was being chased was removed once that bug was

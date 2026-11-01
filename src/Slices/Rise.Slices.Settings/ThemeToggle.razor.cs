@@ -1,19 +1,27 @@
 using Microsoft.AspNetCore.Components;
 using Rise.Application.Ports;
+using Rise.Application.Services;
+using Rise.Domain;
 
 namespace Rise.Slices.Settings;
 
 /// <summary>
 /// The theme widget: the sun/moon quick toggle. It owns applying the
 /// stored theme on startup and flipping between explicit light/dark.
-/// The Settings dialog keeps its own Light/Dark/System picker.
+/// The Settings dialog keeps its own Light/Dark/System picker. A
+/// custom theme counts as "system" for the toggle's effective-dark
+/// resolution (its dark half shows when the device prefers dark), and
+/// toggling away from one switches to an explicit built-in theme.
 /// </summary>
 public partial class ThemeToggle
 {
     [Inject]
     private IThemeStore? ThemeStore { get; set; }
 
-    /// <summary>Stored preference: "light", "dark", or "system" (the default).</summary>
+    [Inject]
+    private CustomThemeService? CustomThemeService { get; set; }
+
+    /// <summary>Stored preference: "light", "dark", "system" (the default), or "custom:&lt;id&gt;".</summary>
     private string StoredTheme { get; set; } = "system";
 
     /// <summary>Effective theme right now, after resolving "system" against the device.</summary>
@@ -27,11 +35,35 @@ public partial class ThemeToggle
     protected override async Task OnInitializedAsync()
     {
         string? stored = ThemeStore is null ? null : await ThemeStore.GetStoredThemeAsync();
-        StoredTheme = stored is "light" or "dark" or "system" ? stored : "system";
-
-        if (ThemeStore is not null)
+        if (stored is "light" or "dark" or "system")
         {
-            await ThemeStore.ApplyThemeAsync(StoredTheme);
+            StoredTheme = stored;
+            if (ThemeStore is not null)
+            {
+                await ThemeStore.ApplyThemeAsync(StoredTheme);
+            }
+        }
+        else if (stored is not null
+            && CustomThemeService is not null
+            && global::Rise.Application.Services.CustomThemeService.TryParseChoice(stored, out string id)
+            && (await CustomThemeService.LoadAsync()).FirstOrDefault(t => t.Id == id) is CustomTheme active)
+        {
+            StoredTheme = stored;
+            if (ThemeStore is not null)
+            {
+                await ThemeStore.ApplyCustomThemeAsync(await CustomThemeService.ResolveHalfAsync(active));
+            }
+        }
+        else
+        {
+            // Unknown or orphaned choice (a deleted custom theme):
+            // repair to the default rather than leaving a dead value.
+            StoredTheme = "system";
+            if (ThemeStore is not null)
+            {
+                await ThemeStore.SetStoredThemeAsync("system");
+                await ThemeStore.ApplyThemeAsync("system");
+            }
         }
 
         EffectiveDark = await ComputeEffectiveDarkAsync();
