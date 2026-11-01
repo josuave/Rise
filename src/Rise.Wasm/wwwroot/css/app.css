@@ -215,11 +215,14 @@ a, .btn-link {
 }
 
 .calm-link-remove {
-    position: absolute;
-    top: -8px;
-    right: -8px;
+    /* Flows as the right-hand item of its editor row (which already
+       lays out name left, button right). It must not be absolute:
+       the row has no positioned ancestor, so an absolute button
+       anchored to the viewport and all four stacked at the top
+       right of the page instead of on their own rows. */
     width: 22px;
     height: 22px;
+    flex-shrink: 0;
     border-radius: 50%;
     border: 1px solid var(--calm-border);
     background: var(--calm-surface);
