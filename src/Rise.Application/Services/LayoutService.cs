@@ -36,7 +36,7 @@ public sealed class LayoutService(ILayoutCollectionStore store, IEnumerable<IWid
     /// Brings a stored collection up to date with the registered
     /// widgets: per layout, unknown widget ids are dropped, zones come
     /// from the definitions, and visibility is kept; widgets a layout
-    /// predates are appended with defaults. Blank layout names become
+    /// predates slot in by definition Order. Blank layout names become
     /// "Untitled", duplicate names are made unique, and the default
     /// layout is always present; the active id falls back to it when
     /// it points nowhere. A null stored collection reconciles to a
@@ -102,13 +102,23 @@ public sealed class LayoutService(ILayoutCollectionStore store, IEnumerable<IWid
                 (placement, definition) => new WidgetPlacement(definition.Id, definition.Zone, placement.Visible))
             .ToList();
 
+        // Widgets a layout predates slot in by definition Order, ahead
+        // of every widget ordered after them, so a new low-Order widget
+        // (the header) lands first on old layouts instead of last.
+        // The stored relative order of existing widgets is never
+        // disturbed. This relies on _definitions being Order-sorted.
         var known = placements.Select(w => w.Id).ToHashSet();
-        placements.AddRange(_definitions
-            .Where(definition => !known.Contains(definition.Id))
-            .Select(definition => new WidgetPlacement(definition.Id, definition.Zone, definition.DefaultVisible)));
+        foreach (IWidgetDefinition definition in _definitions.Where(d => !known.Contains(d.Id)))
+        {
+            int index = placements.Count(p => DefinitionOrder(p.Id) < definition.Order);
+            placements.Insert(index, new WidgetPlacement(definition.Id, definition.Zone, definition.DefaultVisible));
+        }
 
         return new PageLayout(placements);
     }
+
+    private int DefinitionOrder(string id) =>
+        _definitions.FirstOrDefault(d => d.Id == id)?.Order ?? int.MaxValue;
 
     private PageLayout DefaultPlacements() => new(_definitions
         .Select(definition => new WidgetPlacement(definition.Id, definition.Zone, definition.DefaultVisible))

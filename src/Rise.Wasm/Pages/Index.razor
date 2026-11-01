@@ -1,7 +1,6 @@
 @page "/"
 @implements IDisposable
 @using Microsoft.AspNetCore.Components
-@inject Rise.Application.Ports.IClock Clock
 @inject Rise.Application.Services.LayoutService LayoutService
 @inject IEnumerable<Rise.Application.Ports.IWidgetDefinition> WidgetDefinitions
 
@@ -18,10 +17,6 @@
 </div>
 
 <div class="calm-page">
-    <p class="calm-date">@Rise.Domain.Greeting.FormatDate(Clock.Now)</p>
-    <h1 class="calm-clock">@Rise.Domain.Greeting.FormatTime(Clock.Now)</h1>
-    <p class="calm-greeting">@Rise.Domain.Greeting.For(Clock.Now)</p>
-
     @foreach (var widget in Layout.MainWidgets().Where(w => w.Visible))
     {
         @if (ComponentFor(widget.Id) is Type mainComponent)
@@ -41,8 +36,6 @@
 </div>
 
 @code {
-    private System.Threading.Timer? _timer;
-
     private Rise.Domain.PageLayout Layout { get; set; } =
         new Rise.Domain.PageLayout(Array.Empty<Rise.Domain.WidgetPlacement>());
 
@@ -51,19 +44,12 @@
     /// <summary>
     /// The shell knows widgets only through their definitions: no
     /// switch on widget kinds anywhere in this page. A widget whose
-    /// definition is missing is skipped rather than rendered.
+    /// definition is missing is skipped rather than rendered. The
+    /// shell re-renders only when the layout changes; each widget
+    /// owns its own refresh (the header owns the clock tick).
     /// </summary>
     private Type? ComponentFor(string id) =>
         WidgetDefinitions.FirstOrDefault(d => d.Id == id)?.ComponentType;
-
-    protected override void OnInitialized()
-    {
-        _timer = new System.Threading.Timer(
-            _ => InvokeAsync(StateHasChanged),
-            null,
-            TimeSpan.FromSeconds(1),
-            TimeSpan.FromSeconds(30));
-    }
 
     protected override async Task OnInitializedAsync()
     {
@@ -87,7 +73,6 @@
     {
         if (disposing)
         {
-            _timer?.Dispose();
             LayoutService.Changed -= OnLayoutChanged;
         }
     }
