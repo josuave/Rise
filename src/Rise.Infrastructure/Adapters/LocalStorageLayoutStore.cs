@@ -8,15 +8,18 @@ namespace Rise.Infrastructure.Adapters;
 /// <summary>
 /// Outbound adapter: persists the widget layout in the browser's
 /// localStorage under "rise.layout.v1", through the same riseStorage
-/// helper the link store uses. Unknown widget kinds in stored data are
-/// skipped, and kinds added by a later version are appended with their
-/// default visibility, so an old layout never breaks a new release.
+/// helper the link store uses. Only widget ids and visibility are
+/// stored — zones come from the definitions, so this adapter never
+/// needs to know them. Zones here are placeholders (Main); the layout
+/// service reconciles them against the registered definitions on load.
+/// Corrupt or unavailable storage returns null and the caller falls
+/// back to defaults.
 /// </summary>
 public sealed class LocalStorageLayoutStore(IJSRuntime js) : ILayoutStore
 {
     private const string StorageKey = "rise.layout.v1";
 
-    private sealed record StoredWidget(string Kind, bool Visible);
+    private sealed record StoredWidget(string Id, bool Visible);
 
     public async Task<PageLayout?> LoadAsync(CancellationToken cancellationToken = default)
     {
@@ -34,24 +37,12 @@ public sealed class LocalStorageLayoutStore(IJSRuntime js) : ILayoutStore
                 return null;
             }
 
-            var placements = new List<WidgetPlacement>();
-            foreach (StoredWidget item in parsed)
-            {
-                if (Enum.TryParse<WidgetKind>(item.Kind, out WidgetKind kind) &&
-                    !placements.Any(w => w.Kind == kind))
-                {
-                    placements.Add(new WidgetPlacement(kind, item.Visible));
-                }
-            }
-
-            // Kinds a newer version added that this layout predates.
-            foreach (WidgetPlacement fallback in PageLayout.Default().Widgets)
-            {
-                if (!placements.Any(w => w.Kind == fallback.Kind))
-                {
-                    placements.Add(fallback);
-                }
-            }
+            // Blank ids are skipped; duplicates keep the first occurrence.
+            var placements = parsed
+                .Where(item => !string.IsNullOrWhiteSpace(item.Id))
+                .GroupBy(item => item.Id)
+                .Select(group => new WidgetPlacement(group.Key, WidgetZone.Main, group.First().Visible))
+                .ToList();
 
             return placements.Count == 0 ? null : new PageLayout(placements);
         }
@@ -67,7 +58,7 @@ public sealed class LocalStorageLayoutStore(IJSRuntime js) : ILayoutStore
         try
         {
             var stored = layout.Widgets
-                .Select(w => new StoredWidget(w.Kind.ToString(), w.Visible))
+                .Select(w => new StoredWidget(w.Id, w.Visible))
                 .ToList();
             await js.InvokeVoidAsync("riseStorage.set", cancellationToken, StorageKey, JsonSerializer.Serialize(stored));
         }

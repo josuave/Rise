@@ -7,11 +7,11 @@
     @foreach (var placement in Layout.Widgets)
     {
         <div class="calm-layout-row">
-            <span class="calm-layout-name">@DisplayName(placement.Kind)</span>
-            <span class="calm-layout-zone">@(PageLayout.ZoneOf(placement.Kind) == WidgetZone.Cluster ? "Top-right" : "Main")</span>
-            <button type="button" aria-label="Move @DisplayName(placement.Kind) up" disabled="@IsFirstInZone(placement.Kind)" @onclick="() => MoveUpAsync(placement.Kind)">↑</button>
-            <button type="button" aria-label="Move @DisplayName(placement.Kind) down" disabled="@IsLastInZone(placement.Kind)" @onclick="() => MoveDownAsync(placement.Kind)">↓</button>
-            <button type="button" aria-label="@(placement.Visible ? "Hide" : "Show") @DisplayName(placement.Kind)" @onclick="() => ToggleVisibleAsync(placement)">
+            <span class="calm-layout-name">@TitleOf(placement)</span>
+            <span class="calm-layout-zone">@(placement.Zone == WidgetZone.Cluster ? "Top-right" : "Main")</span>
+            <button type="button" aria-label="Move @TitleOf(placement) up" disabled="@IsFirstInZone(placement)" @onclick="() => MoveUpAsync(placement)">↑</button>
+            <button type="button" aria-label="Move @TitleOf(placement) down" disabled="@IsLastInZone(placement)" @onclick="() => MoveDownAsync(placement)">↓</button>
+            <button type="button" aria-label="@(placement.Visible ? "Hide" : "Show") @TitleOf(placement)" @onclick="() => ToggleVisibleAsync(placement)">
                 @(placement.Visible ? "Hide" : "Show")
             </button>
         </div>

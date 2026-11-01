@@ -43,7 +43,7 @@ public partial class QuickLinks : IDisposable
     {
         if (LayoutService is not null)
         {
-            await LayoutService.ShowWidgetAsync(WidgetKind.LinkEditor);
+            await LayoutService.ShowWidgetAsync(LinkEditorWidgetDefinition.WidgetId);
         }
     }
 

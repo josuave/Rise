@@ -5,67 +5,70 @@ namespace Rise.Core.Tests;
 
 public class LayoutTests
 {
-    [Fact]
-    public void Default_HasAllWidgets_WithEditorHidden()
-    {
-        var layout = PageLayout.Default();
+    private static readonly string[] MainIds = new[] { "Search", "Links", "LinkEditor" };
+    private static readonly string[] ClusterIds = new[] { "Theme", "Settings" };
+    private static readonly string[] FullOrder = new[] { "Search", "Links", "LinkEditor", "Theme", "Settings" };
+    private static readonly string[] LinksUpOrder = new[] { "Links", "Search", "LinkEditor", "Theme", "Settings" };
+    private static readonly string[] SettingsUpOrder = new[] { "Search", "Links", "LinkEditor", "Settings", "Theme" };
 
-        Assert.Equal(
-            new[] { WidgetKind.Search, WidgetKind.Links, WidgetKind.LinkEditor, WidgetKind.Theme, WidgetKind.Settings },
-            layout.Widgets.Select(w => w.Kind));
-        Assert.False(layout.Widgets.Single(w => w.Kind == WidgetKind.LinkEditor).Visible);
-        Assert.True(layout.Widgets.Where(w => w.Kind != WidgetKind.LinkEditor).All(w => w.Visible));
-    }
+    private static PageLayout Sample() => new(new[]
+    {
+        new WidgetPlacement("Search", WidgetZone.Main, true),
+        new WidgetPlacement("Links", WidgetZone.Main, true),
+        new WidgetPlacement("LinkEditor", WidgetZone.Main, false),
+        new WidgetPlacement("Theme", WidgetZone.Cluster, true),
+        new WidgetPlacement("Settings", WidgetZone.Cluster, true),
+    });
 
     [Fact]
     public void Zones_SplitClusterFromMain()
     {
-        var layout = PageLayout.Default();
+        PageLayout layout = Sample();
 
         Assert.Equal(
-            new[] { WidgetKind.Search, WidgetKind.Links, WidgetKind.LinkEditor },
-            layout.MainWidgets().Select(w => w.Kind));
+            MainIds,
+            layout.MainWidgets().Select(w => w.Id));
         Assert.Equal(
-            new[] { WidgetKind.Theme, WidgetKind.Settings },
-            layout.ClusterWidgets().Select(w => w.Kind));
+            ClusterIds,
+            layout.ClusterWidgets().Select(w => w.Id));
     }
 
     [Fact]
     public void MoveUp_SwapsWithSameZoneNeighbourOnly()
     {
-        var layout = PageLayout.Default();
+        PageLayout layout = Sample();
 
         // Links moves above Search (same zone).
         Assert.Equal(
-            new[] { WidgetKind.Links, WidgetKind.Search, WidgetKind.LinkEditor, WidgetKind.Theme, WidgetKind.Settings },
-            layout.MoveUp(WidgetKind.Links).Widgets.Select(w => w.Kind));
+            LinksUpOrder,
+            layout.MoveUp("Links").Widgets.Select(w => w.Id));
 
         // Settings moves above Theme (cluster zone) but never into the main zone.
         Assert.Equal(
-            new[] { WidgetKind.Search, WidgetKind.Links, WidgetKind.LinkEditor, WidgetKind.Settings, WidgetKind.Theme },
-            layout.MoveUp(WidgetKind.Settings).Widgets.Select(w => w.Kind));
+            SettingsUpOrder,
+            layout.MoveUp("Settings").Widgets.Select(w => w.Id));
     }
 
     [Fact]
     public void MoveDown_AtZoneEdge_IsNoOp()
     {
-        var layout = PageLayout.Default();
+        PageLayout layout = Sample();
 
-        Assert.Same(layout, layout.MoveDown(WidgetKind.LinkEditor));
-        Assert.Same(layout, layout.MoveUp(WidgetKind.Search));
-        Assert.Same(layout, layout.MoveDown(WidgetKind.Settings));
+        Assert.Same(layout, layout.MoveDown("LinkEditor"));
+        Assert.Same(layout, layout.MoveUp("Search"));
+        Assert.Same(layout, layout.MoveDown("Settings"));
     }
 
     [Fact]
     public void SetVisible_HidesWithoutLosingPosition()
     {
-        var layout = PageLayout.Default();
-        PageLayout hidden = layout.SetVisible(WidgetKind.Links, false);
+        PageLayout layout = Sample();
+        PageLayout hidden = layout.SetVisible("Links", false);
 
-        Assert.False(hidden.Widgets.Single(w => w.Kind == WidgetKind.Links).Visible);
+        Assert.False(hidden.Widgets.Single(w => w.Id == "Links").Visible);
         Assert.Equal(
-            new[] { WidgetKind.Search, WidgetKind.Links, WidgetKind.LinkEditor, WidgetKind.Theme, WidgetKind.Settings },
-            hidden.Widgets.Select(w => w.Kind));
-        Assert.True(hidden.SetVisible(WidgetKind.Links, true).Widgets.Single(w => w.Kind == WidgetKind.Links).Visible);
+            FullOrder,
+            hidden.Widgets.Select(w => w.Id));
+        Assert.True(hidden.SetVisible("Links", true).Widgets.Single(w => w.Id == "Links").Visible);
     }
 }

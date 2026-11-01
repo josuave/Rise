@@ -4,6 +4,8 @@ using Rise.Application.Ports;
 using Rise.Application.Services;
 using Rise.Domain;
 using Rise.Slices.Links;
+using Rise.Slices.Search;
+using Rise.Slices.Settings;
 using Xunit;
 
 namespace Rise.Slices.Tests;
@@ -26,6 +28,11 @@ public class QuickLinksTests : BunitContext
         Services.AddScoped<ILayoutStore>(_ => _layoutStore);
         Services.AddScoped<StartPageService>();
         Services.AddScoped<LayoutService>();
+        Services.AddSingleton<IWidgetDefinition, SearchWidgetDefinition>();
+        Services.AddSingleton<IWidgetDefinition, LinksWidgetDefinition>();
+        Services.AddSingleton<IWidgetDefinition, LinkEditorWidgetDefinition>();
+        Services.AddSingleton<IWidgetDefinition, ThemeWidgetDefinition>();
+        Services.AddSingleton<IWidgetDefinition, SettingsWidgetDefinition>();
     }
 
     [Fact]
@@ -45,7 +52,7 @@ public class QuickLinksTests : BunitContext
         cut.Find(".calm-edit-toggle").Click();
 
         Assert.NotNull(_layoutStore.StoredLayout);
-        Assert.True(_layoutStore.StoredLayout.Widgets.Single(w => w.Kind == WidgetKind.LinkEditor).Visible);
+        Assert.True(_layoutStore.StoredLayout.Widgets.Single(w => w.Id == LinkEditorWidgetDefinition.WidgetId).Visible);
     }
 
     [Fact]

@@ -3,20 +3,31 @@ using Bunit;
 using Microsoft.Extensions.DependencyInjection;
 using Rise.Application.Ports;
 using Rise.Application.Services;
-using Rise.Domain;
 using Rise.Slices.Layout;
+using Rise.Slices.Links;
+using Rise.Slices.Search;
+using Rise.Slices.Settings;
 using Xunit;
 
 namespace Rise.Slices.Tests;
 
 public class LayoutEditorTests : BunitContext
 {
+    private static readonly string[] DefaultOrder = new[] { "Search", "Links", "LinkEditor", "Theme", "Settings" };
+    private static readonly string[] MovedOrder = new[] { "Links", "Search", "LinkEditor", "Theme", "Settings" };
+    private static readonly bool[] DefaultVisibility = new[] { true, true, false, true, true };
+
     private readonly FakeLayoutStore _layoutStore = new();
 
     public LayoutEditorTests()
     {
         Services.AddScoped<ILayoutStore>(_ => _layoutStore);
         Services.AddScoped<LayoutService>();
+        Services.AddSingleton<IWidgetDefinition, SearchWidgetDefinition>();
+        Services.AddSingleton<IWidgetDefinition, LinksWidgetDefinition>();
+        Services.AddSingleton<IWidgetDefinition, LinkEditorWidgetDefinition>();
+        Services.AddSingleton<IWidgetDefinition, ThemeWidgetDefinition>();
+        Services.AddSingleton<IWidgetDefinition, SettingsWidgetDefinition>();
     }
 
     [Fact]
@@ -38,8 +49,8 @@ public class LayoutEditorTests : BunitContext
 
         Assert.NotNull(_layoutStore.StoredLayout);
         Assert.Equal(
-            new[] { WidgetKind.Links, WidgetKind.Search, WidgetKind.LinkEditor, WidgetKind.Theme, WidgetKind.Settings },
-            _layoutStore.StoredLayout.Widgets.Select(w => w.Kind));
+            MovedOrder,
+            _layoutStore.StoredLayout.Widgets.Select(w => w.Id));
     }
 
     [Fact]
@@ -50,10 +61,10 @@ public class LayoutEditorTests : BunitContext
 
         cut.Find("[aria-label=\"Hide Search\"]").Click();
         Assert.NotNull(_layoutStore.StoredLayout);
-        Assert.False(_layoutStore.StoredLayout.Widgets.Single(w => w.Kind == WidgetKind.Search).Visible);
+        Assert.False(_layoutStore.StoredLayout.Widgets.Single(w => w.Id == "Search").Visible);
 
         cut.Find("[aria-label=\"Show Link editor\"]").Click();
-        Assert.True(_layoutStore.StoredLayout.Widgets.Single(w => w.Kind == WidgetKind.LinkEditor).Visible);
+        Assert.True(_layoutStore.StoredLayout.Widgets.Single(w => w.Id == "LinkEditor").Visible);
     }
 
     [Fact]
@@ -67,10 +78,10 @@ public class LayoutEditorTests : BunitContext
 
         Assert.NotNull(_layoutStore.StoredLayout);
         Assert.Equal(
-            PageLayout.Default().Widgets.Select(w => w.Kind),
-            _layoutStore.StoredLayout.Widgets.Select(w => w.Kind));
+            DefaultOrder,
+            _layoutStore.StoredLayout.Widgets.Select(w => w.Id));
         Assert.Equal(
-            PageLayout.Default().Widgets.Select(w => w.Visible),
+            DefaultVisibility,
             _layoutStore.StoredLayout.Widgets.Select(w => w.Visible));
     }
 }

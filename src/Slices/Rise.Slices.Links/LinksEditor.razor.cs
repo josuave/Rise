@@ -78,7 +78,7 @@ public partial class LinksEditor : IDisposable
     {
         if (LayoutService is not null)
         {
-            await LayoutService.HideWidgetAsync(WidgetKind.LinkEditor);
+            await LayoutService.HideWidgetAsync(LinkEditorWidgetDefinition.WidgetId);
         }
     }
 

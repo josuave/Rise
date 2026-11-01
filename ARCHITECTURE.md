@@ -117,15 +117,34 @@ contributed by other slices), and Layout (the layout editor).
 ## Widgets and layout: the page is a list, not a template
 
 The start page is no longer a hardcoded template. It is a `PageLayout`
-(Domain): an ordered list of `WidgetPlacement`s, one per widget —
-Search, Links, Link editor, Theme switcher, Settings — each with a
-visible flag. Widgets live in two zones: Theme and Settings render in
-the top-right cluster, everything else in the main column, each in
+(Domain): an ordered list of `WidgetPlacement`s — an opaque string
+id, a zone, and a visible flag. The core knows no concrete widgets:
+which ids exist, what they are called, and their default order and
+visibility all come from the registered widget definitions.
+
+A widget definition is the `IWidgetDefinition` contract (Application
+port): Id, Title, Zone, DefaultVisible, Order, ComponentType. Each
+slice owns its definitions and ships a DI extension for them
+(`AddSearchWidget`, `AddLinksWidgets`, `AddSettingsWidgets`), wired
+once in the shell's Program.cs — the same shape as the Settings
+contract, but as a core port, because the layout service genuinely
+needs the metadata (unlike a dialog section, which is purely UI).
+ComponentType is System.Type only, so Application stays free of any
+Blazor reference; the shell renders definitions via DynamicComponent.
+
+Widgets live in two zones: Theme and Settings render in the
+top-right cluster, everything else in the main column, each in
 layout order. Moves only swap within a zone, so a widget can never
 wander into the other zone, and hiding a widget never loses its
-position. The default layout reproduces the old page (Search, Links,
-Theme, Settings visible; Link editor hidden).
+position. The layout service reconciles a stored layout against the
+definitions on load: unknown ids are dropped, zones always come from
+the definition, visibility is kept, and widgets the stored layout
+predates are appended with their defaults. The default layout is
+just the definitions in Order — it reproduces the old page (Search,
+Links, Theme, Settings visible; Link editor hidden).
 
+Adding a widget is a new definition plus one line in Program.cs:
+no change to Domain, the layout service, the editor, or the shell.
 The shell (`Index`) renders widgets from the layout instead of naming
 components directly, and re-renders whenever the layout service's
 `Changed` event fires. The link service has the same event, so tiles
@@ -133,13 +152,17 @@ stay fresh when the editor (a separate widget) saves. Editing is a
 widget too: Links' "Edit links" button shows the Link editor widget,
 whose Done button hides it again. The layout editor itself is a
 widget of last resort in the shell: move up/down, hide/show, reset to
-defaults, all buttons (drag-and-drop is a later step, not v1).
+defaults, all buttons (drag-and-drop is a later step, not v1), with
+titles taken from the definitions. Like the Settings contract, this
+is an extension point for first-party slices, not a plugin loader:
+DynamicComponent only renders components from assemblies the app
+already loads.
 
 Persistence is the same localStorage pattern as links: `LayoutService`
 (Application) over the `ILayoutStore` port, `LocalStorageLayoutStore`
-(Infrastructure) under `rise.layout.v1`, corrupt or missing data
-falling back to defaults, and kinds added by a later version appended
-with default visibility. A theme editor (custom light/dark themes,
+(Infrastructure) under `rise.layout.v1`, storing only ids and
+visibility (zones come from the definitions), corrupt or missing data
+falling back to defaults. A theme editor (custom light/dark themes,
 possibly generated) is the planned Phase 2 on top of this; it is not
 in v1. The shell's
 index.html provides the `window.riseTheme` script block the theme
@@ -208,10 +231,11 @@ its own beyond the clock/greeting shell.
   the PR #9 dead-clicks bug. Slice tests use real application
   services with fake ports (in-memory link store, recording search
   launcher, recording theme store, in-memory layout store), never a
-  browser, JS, or Infrastructure. The widget phase added core layout
-  tests (default, zones, in-zone moves, hide-keeps-position) and
-  bUnit tests for the editor widget, the split-out link editor, and
-  the split-out theme toggle. Both test projects carry `coverlet.collector`;
+  browser, JS, or Infrastructure. The widget phase added bUnit tests
+  for the editor widget, the split-out link editor, and the split-out
+  theme toggle; the registry rework added core layout tests (zones,
+  in-zone moves, hide-keeps-position) and layout service tests
+  (defaults and reconciliation against definitions). Both test projects carry `coverlet.collector`;
   CI collects Cobertura coverage via `coverage.runsettings`
   (test assemblies excluded) and uploads it to Codecov.
 - **New slice:** copy a slice project, depend on Application, add its
