@@ -585,3 +585,53 @@ a, .btn-link {
     opacity: 0.4;
     cursor: default;
 }
+
+/* Loading screen: shown inside #app until Blazor starts, then cleared.
+   Uses the calm variables, so it follows light/dark/system/custom
+   exactly like the app — the before-first-paint script in index.html
+   has already applied the stored theme by the time this paints. */
+.calm-loading {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1.25rem;
+    background: var(--calm-bg);
+    color: var(--calm-text);
+}
+
+.calm-loading-word {
+    font-size: 2rem;
+    font-weight: 300;
+    letter-spacing: 0.04em;
+}
+
+.calm-loading-bar {
+    width: 160px;
+    height: 3px;
+    overflow: hidden;
+    background: var(--calm-border-soft);
+    border-radius: 2px;
+}
+
+.calm-loading-bar-fill {
+    width: 40%;
+    height: 100%;
+    background: var(--calm-muted);
+    border-radius: 2px;
+    animation: calm-loading-slide 1.4s ease-in-out infinite;
+}
+
+@keyframes calm-loading-slide {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(400%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .calm-loading-bar-fill {
+        animation: none;
+        width: 100%;
+    }
+}
