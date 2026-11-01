@@ -1,23 +1,60 @@
 @page "/"
 @implements IDisposable
+@using Microsoft.AspNetCore.Components
 @inject Rise.Application.Ports.IClock Clock
+@inject Rise.Application.Services.LayoutService LayoutService
+@inject IEnumerable<Rise.Application.Ports.IWidgetDefinition> WidgetDefinitions
 
 <PageTitle>Rise</PageTitle>
 
-<Rise.Slices.Settings.SettingsGear />
+<div class="calm-settings-cluster">
+    @foreach (var widget in Layout.ClusterWidgets().Where(w => w.Visible))
+    {
+        @if (ComponentFor(widget.Id) is Type clusterComponent)
+        {
+            <DynamicComponent Type="@clusterComponent" />
+        }
+    }
+</div>
 
 <div class="calm-page">
     <p class="calm-date">@Rise.Domain.Greeting.FormatDate(Clock.Now)</p>
     <h1 class="calm-clock">@Rise.Domain.Greeting.FormatTime(Clock.Now)</h1>
     <p class="calm-greeting">@Rise.Domain.Greeting.For(Clock.Now)</p>
 
-    <Rise.Slices.Search.Search />
+    @foreach (var widget in Layout.MainWidgets().Where(w => w.Visible))
+    {
+        @if (ComponentFor(widget.Id) is Type mainComponent)
+        {
+            <DynamicComponent Type="@mainComponent" />
+        }
+    }
 
-    <Rise.Slices.Links.QuickLinks />
+    <button type="button" class="calm-layout-toggle" @onclick="() => EditingLayout = !EditingLayout">
+        @(EditingLayout ? "Done" : "Edit layout")
+    </button>
+
+    @if (EditingLayout)
+    {
+        <Rise.Slices.Layout.LayoutEditor />
+    }
 </div>
 
 @code {
     private System.Threading.Timer? _timer;
+
+    private Rise.Domain.PageLayout Layout { get; set; } =
+        new Rise.Domain.PageLayout(Array.Empty<Rise.Domain.WidgetPlacement>());
+
+    private bool EditingLayout { get; set; }
+
+    /// <summary>
+    /// The shell knows widgets only through their definitions: no
+    /// switch on widget kinds anywhere in this page. A widget whose
+    /// definition is missing is skipped rather than rendered.
+    /// </summary>
+    private Type? ComponentFor(string id) =>
+        WidgetDefinitions.FirstOrDefault(d => d.Id == id)?.ComponentType;
 
     protected override void OnInitialized()
     {
@@ -28,8 +65,30 @@
             TimeSpan.FromSeconds(30));
     }
 
+    protected override async Task OnInitializedAsync()
+    {
+        Layout = await LayoutService.LoadAsync();
+        LayoutService.Changed += OnLayoutChanged;
+    }
+
+    private async void OnLayoutChanged(object? sender, EventArgs args)
+    {
+        Layout = await LayoutService.LoadAsync();
+        await InvokeAsync(StateHasChanged);
+    }
+
     public void Dispose()
     {
-        _timer?.Dispose();
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
+    protected virtual void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            _timer?.Dispose();
+            LayoutService.Changed -= OnLayoutChanged;
+        }
     }
 }

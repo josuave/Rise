@@ -4,6 +4,8 @@ using Rise.Application.Ports;
 using Rise.Application.Services;
 using Rise.Domain;
 using Rise.Slices.Links;
+using Rise.Slices.Search;
+using Rise.Slices.Settings;
 using Xunit;
 
 namespace Rise.Slices.Tests;
@@ -13,72 +15,55 @@ namespace Rise.Slices.Tests;
 /// _Imports.razor ever loses the Components.Web import again, its
 /// @onclick handlers degrade to literal HTML attributes, clicks do
 /// nothing, and these tests fail — instead of users finding out.
+/// The Links widget is tiles only now; editing moved to LinksEditor.
 /// </summary>
 public class QuickLinksTests : BunitContext
 {
     private readonly FakeLinkStore _store = new();
+    private readonly FakeLayoutStore _layoutStore = new();
 
     public QuickLinksTests()
     {
         Services.AddScoped<ILinkStore>(_ => _store);
+        Services.AddScoped<ILayoutStore>(_ => _layoutStore);
         Services.AddScoped<StartPageService>();
+        Services.AddScoped<LayoutService>();
+        Services.AddSingleton<IWidgetDefinition, SearchWidgetDefinition>();
+        Services.AddSingleton<IWidgetDefinition, LinksWidgetDefinition>();
+        Services.AddSingleton<IWidgetDefinition, LinkEditorWidgetDefinition>();
+        Services.AddSingleton<IWidgetDefinition, ThemeWidgetDefinition>();
+        Services.AddSingleton<IWidgetDefinition, SettingsWidgetDefinition>();
     }
 
     [Fact]
-    public void EditToggle_FlipsToDone_AndShowsAddForm()
+    public void RendersDefaultTiles()
     {
         IRenderedComponent<QuickLinks> cut = Render<QuickLinks>();
         cut.WaitForAssertion(() => Assert.Contains("Google", cut.Markup, StringComparison.Ordinal));
-
-        cut.Find(".calm-edit-toggle").Click();
-
-        Assert.Equal("Done", cut.Find(".calm-edit-toggle").TextContent.Trim());
-        Assert.NotNull(cut.Find(".calm-add-form"));
-    }
-
-    [Fact]
-    public void AddLink_ShowsNewTile_AndPersistsIt()
-    {
-        IRenderedComponent<QuickLinks> cut = Render<QuickLinks>();
-        cut.WaitForAssertion(() => Assert.Contains("Google", cut.Markup, StringComparison.Ordinal));
-        cut.Find(".calm-edit-toggle").Click();
-
-        cut.Find("[aria-label=\"Link name\"]").Change("Example");
-        cut.Find("[aria-label=\"Link URL\"]").Change("https://example.com/");
-        cut.Find(".calm-add-form button").Click();
-
-        cut.WaitForAssertion(() => Assert.Contains("Example", cut.Markup, StringComparison.Ordinal));
-        Assert.Contains(_store.StoredPage!.Links, l => l.Name == "Example");
-    }
-
-    [Fact]
-    public void RemoveLink_RemovesOnlyThatTile()
-    {
-        IRenderedComponent<QuickLinks> cut = Render<QuickLinks>();
-        cut.WaitForAssertion(() => Assert.Contains("Google", cut.Markup, StringComparison.Ordinal));
-        cut.Find(".calm-edit-toggle").Click();
-
-        cut.Find("[aria-label=\"Remove Google\"]").Click();
-
-        cut.WaitForAssertion(() => Assert.DoesNotContain("Google", cut.Markup, StringComparison.Ordinal));
         Assert.Contains("GitHub", cut.Markup, StringComparison.Ordinal);
     }
 
     [Fact]
-    public void AddDuplicate_ShowsError_AndDoesNotPersist()
+    public void EditLinksButton_ShowsLinkEditorWidget()
     {
         IRenderedComponent<QuickLinks> cut = Render<QuickLinks>();
         cut.WaitForAssertion(() => Assert.Contains("Google", cut.Markup, StringComparison.Ordinal));
+
         cut.Find(".calm-edit-toggle").Click();
 
-        cut.Find("[aria-label=\"Link name\"]").Change("Again");
-        cut.Find("[aria-label=\"Link URL\"]").Change("https://www.google.com/");
-        cut.Find(".calm-add-form button").Click();
+        Assert.NotNull(_layoutStore.StoredLayout);
+        Assert.True(_layoutStore.StoredLayout.Widgets.Single(w => w.Id == LinkEditorWidgetDefinition.WidgetId).Visible);
+    }
 
-        cut.WaitForAssertion(() => Assert.Contains("already on the page", cut.Markup, StringComparison.Ordinal));
-        // Nothing is ever persisted on a failed add, so the store may
-        // still be empty (defaults come from the service, not the store).
-        // Either way, "Again" must not be in what was saved.
-        Assert.DoesNotContain(_store.StoredPage?.Links ?? [], l => l.Name == "Again");
+    [Fact]
+    public void TilesRefresh_WhenAnotherWidgetSaves()
+    {
+        IRenderedComponent<QuickLinks> cut = Render<QuickLinks>();
+        cut.WaitForAssertion(() => Assert.Contains("Google", cut.Markup, StringComparison.Ordinal));
+
+        StartPageService service = Services.GetRequiredService<StartPageService>();
+        _ = service.AddLinkAsync(StartPage.Default(), "Example", "https://example.com/");
+
+        cut.WaitForAssertion(() => Assert.Contains("Example", cut.Markup, StringComparison.Ordinal));
     }
 }

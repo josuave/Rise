@@ -14,6 +14,7 @@
     <ProjectReference Include="..\Slices\Rise.Slices.Links\Rise.Slices.Links.csproj" />
     <ProjectReference Include="..\Slices\Rise.Slices.Search\Rise.Slices.Search.csproj" />
     <ProjectReference Include="..\Slices\Rise.Slices.Settings\Rise.Slices.Settings.csproj" />
+    <ProjectReference Include="..\Slices\Rise.Slices.Layout\Rise.Slices.Layout.csproj" />
   </ItemGroup>
 
   <ItemGroup>

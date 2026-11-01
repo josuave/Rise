@@ -1,0 +1,25 @@
+@using Rise.Domain
+
+<div class="calm-link-editor">
+    <div class="calm-add-form">
+        <input type="text" placeholder="Name" aria-label="Link name" @bind="NewName" />
+        <input type="url" placeholder="https://example.com" aria-label="Link URL" @bind="NewUrl" />
+        <button type="button" @onclick="AddAsync">Add link</button>
+    </div>
+    @if (!string.IsNullOrEmpty(FormError))
+    {
+        <p class="calm-form-error">@FormError</p>
+    }
+
+    <div class="calm-link-editor-list">
+        @foreach (var link in Page.Links)
+        {
+            <div class="calm-link-editor-row">
+                <span class="calm-link-name">@link.Name</span>
+                <button type="button" class="calm-link-remove" aria-label="Remove @link.Name" @onclick="() => RemoveAsync(link)">×</button>
+            </div>
+        }
+    </div>
+
+    <button type="button" class="calm-edit-toggle" @onclick="DoneAsync">Done</button>
+</div>

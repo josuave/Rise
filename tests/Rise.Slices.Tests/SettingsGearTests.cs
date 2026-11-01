@@ -63,18 +63,4 @@ public class SettingsGearTests : BunitContext
         Assert.Equal("system", _theme.Stored);
         Assert.Equal("system", _theme.Applied);
     }
-
-    [Fact]
-    public void QuickToggle_FlipsLightToDark_AndBack()
-    {
-        IRenderedComponent<SettingsGear> cut = Render<SettingsGear>();
-
-        // Default is System on a light device, so the toggle shows the moon (to dark).
-        cut.Find(".calm-theme-toggle").Click();
-        Assert.Equal("dark", _theme.Stored);
-
-        // Now dark is showing, so the toggle shows the sun (to light).
-        cut.Find(".calm-theme-toggle").Click();
-        Assert.Equal("light", _theme.Stored);
-    }
 }
