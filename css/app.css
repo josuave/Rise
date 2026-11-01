@@ -386,3 +386,74 @@ a, .btn-link {
     border: none;
     padding: 0;
 }
+
+/* Widget layout editor + link editor widget. */
+.calm-layout-toggle {
+    background: none;
+    border: none;
+    color: var(--calm-faint);
+    cursor: pointer;
+    font-size: 0.9rem;
+    margin-top: 1.5rem;
+}
+
+.calm-layout-editor {
+    margin: 1rem auto 0;
+    max-width: 32rem;
+    text-align: left;
+    border: 1px solid var(--calm-border);
+    border-radius: 12px;
+    padding: 1rem;
+    background: var(--calm-surface);
+}
+
+.calm-layout-editor h3 {
+    margin: 0 0 0.5rem;
+}
+
+.calm-layout-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.35rem 0;
+}
+
+.calm-layout-name {
+    flex: 1;
+}
+
+.calm-layout-zone {
+    color: var(--calm-faint);
+    font-size: 0.8rem;
+}
+
+.calm-layout-row button,
+.calm-layout-reset {
+    border: 1px solid var(--calm-border);
+    border-radius: 8px;
+    padding: 0.35rem 0.75rem;
+    background: var(--calm-surface);
+    color: var(--calm-text);
+    cursor: pointer;
+}
+
+.calm-layout-row button:disabled {
+    opacity: 0.4;
+    cursor: default;
+}
+
+.calm-link-editor {
+    margin-top: 1rem;
+}
+
+.calm-link-editor-list {
+    margin-top: 0.75rem;
+}
+
+.calm-link-editor-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    padding: 0.25rem 0;
+}
