@@ -19,6 +19,22 @@
                     <button type="button" class="calm-theme-option@(StoredTheme == "dark" ? " selected" : "")" aria-pressed="@(StoredTheme == "dark")" @onclick='() => SetThemeAsync("dark")'>Dark</button>
                     <button type="button" class="calm-theme-option@(StoredTheme == "system" ? " selected" : "")" aria-pressed="@(StoredTheme == "system")" @onclick='() => SetThemeAsync("system")'>System</button>
                 </div>
+
+                @foreach (var custom in CustomThemes)
+                {
+                    <div class="calm-theme-custom-row">
+                        <button type="button" class="calm-theme-option@(IsActive(custom) ? " selected" : "")" aria-pressed="@IsActive(custom)" @onclick="() => SetCustomThemeAsync(custom)">@custom.Name</button>
+                        <button type="button" aria-label="Edit @custom.Name" @onclick="() => EditingTheme = custom">Edit</button>
+                        <button type="button" aria-label="Delete @custom.Name" @onclick="() => DeleteThemeAsync(custom.Id)">Delete</button>
+                    </div>
+                }
+
+                <button type="button" class="calm-theme-new" @onclick="CreateThemeAsync">New theme</button>
+
+                @if (EditingTheme is not null)
+                {
+                    <ThemeEditor Theme="EditingTheme" OnSave="SaveThemeAsync" OnCancel="CancelEdit" />
+                }
             </section>
 
             @foreach (var section in Sections.OrderBy(s => s.Order))

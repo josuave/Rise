@@ -39,6 +39,23 @@ internal sealed class FakeClock(DateTime now) : IClock
     public DateTime Now => now;
 }
 
+/// <summary>In-memory custom theme store for slice tests: no localStorage, no JS.</summary>
+internal sealed class FakeCustomThemeStore : ICustomThemeStore
+{
+    public IReadOnlyList<CustomTheme>? StoredThemes { get; set; }
+
+    public FakeCustomThemeStore(IReadOnlyList<CustomTheme>? initial = null) => StoredThemes = initial;
+
+    public Task<IReadOnlyList<CustomTheme>?> LoadAsync(CancellationToken cancellationToken = default) =>
+        Task.FromResult(StoredThemes);
+
+    public Task SaveAsync(IReadOnlyList<CustomTheme> themes, CancellationToken cancellationToken = default)
+    {
+        StoredThemes = themes;
+        return Task.CompletedTask;
+    }
+}
+
 /// <summary>In-memory layout collection store for slice tests: no localStorage, no JS.</summary>
 internal sealed class FakeLayoutCollectionStore : ILayoutCollectionStore
 {
@@ -61,6 +78,7 @@ internal sealed class FakeThemeStore : IThemeStore
 {
     public string? Stored { get; private set; }
     public string? Applied { get; private set; }
+    public ThemePalette? AppliedPalette { get; private set; }
     public bool SystemPrefersDark { get; set; }
 
     public FakeThemeStore(string? stored = null, bool systemPrefersDark = false)
@@ -81,6 +99,12 @@ internal sealed class FakeThemeStore : IThemeStore
     public Task ApplyThemeAsync(string theme, CancellationToken cancellationToken = default)
     {
         Applied = theme;
+        return Task.CompletedTask;
+    }
+
+    public Task ApplyCustomThemeAsync(ThemePalette palette, CancellationToken cancellationToken = default)
+    {
+        AppliedPalette = palette;
         return Task.CompletedTask;
     }
 

@@ -16,6 +16,8 @@ public static class ServiceCollectionExtensions
         services.AddScoped<StartPageService>();
         services.AddScoped<SearchService>();
         services.AddScoped<LayoutService>();
+        services.AddScoped<CustomThemeService>();
+        services.AddScoped<ICustomThemeStore, LocalStorageCustomThemeStore>();
         services.AddScoped<ILayoutCollectionStore, LocalStorageLayoutCollectionStore>();
         services.AddScoped<ILinkStore, LocalStorageLinkStore>();
         services.AddScoped<ISearchLauncher, BrowserSearchLauncher>();

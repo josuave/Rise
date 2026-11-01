@@ -1,0 +1,27 @@
+@using Rise.Domain
+
+<div class="calm-theme-editor">
+    <label class="calm-theme-name">
+        <span>Name</span>
+        <input type="text" aria-label="Theme name" @bind="Draft.Name" />
+    </label>
+
+    @foreach (var group in new[] { ("Light", Draft.Light), ("Dark", Draft.Dark) })
+    {
+        <fieldset class="calm-theme-palette">
+            <legend>@group.Item1</legend>
+            @foreach (var field in PaletteFields)
+            {
+                <label class="calm-theme-field">
+                    <span>@field.Label</span>
+                    <input type="color" aria-label="@group.Item1 @field.Label" @bind:get="field.Get(group.Item2)" @bind:set="value => field.Set(group.Item2, value)" />
+                </label>
+            }
+        </fieldset>
+    }
+
+    <div class="calm-theme-editor-actions">
+        <button type="button" @onclick="SaveAsync" disabled="@string.IsNullOrWhiteSpace(Draft.Name)">Save</button>
+        <button type="button" @onclick="CancelAsync">Cancel</button>
+    </div>
+</div>
