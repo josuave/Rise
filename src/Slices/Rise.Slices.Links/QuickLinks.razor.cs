@@ -5,58 +5,59 @@ using Rise.Domain;
 namespace Rise.Slices.Links;
 
 /// <summary>
-/// Imperative shell for the Links slice: it renders, collects input, and calls the
-/// application service. All link rules (validation, duplicates) live in the pure core;
-/// this component knows nothing about localStorage, JS interop, or JSON.
+/// The Links widget: tiles only. Editing lives in its own widget
+/// (LinksEditor); this button just shows that widget. Tiles stay fresh
+/// because the component reloads whenever the link service saves.
 /// </summary>
-public partial class QuickLinks
+public partial class QuickLinks : IDisposable
 {
     [Inject]
     private StartPageService? StartPageService { get; set; }
 
-    private StartPage Page { get; set; } = StartPage.Default();
+    [Inject]
+    private LayoutService? LayoutService { get; set; }
 
-    private bool Editing { get; set; }
-    private string NewName { get; set; } = string.Empty;
-    private string NewUrl { get; set; } = string.Empty;
-    private string? FormError { get; set; }
+    private StartPage Page { get; set; } = StartPage.Default();
 
     protected override async Task OnInitializedAsync()
     {
         if (StartPageService is not null)
         {
             Page = await StartPageService.LoadAsync();
+            StartPageService.Changed += OnPageChanged;
         }
     }
 
-    private async Task AddAsync()
+    private async void OnPageChanged(object? sender, EventArgs args)
     {
         if (StartPageService is null)
         {
             return;
         }
 
-        Result<StartPage> result = await StartPageService.AddLinkAsync(Page, NewName, NewUrl);
-        if (result.IsSuccess && result.Value is not null)
+        Page = await StartPageService.LoadAsync();
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task ShowEditorAsync()
+    {
+        if (LayoutService is not null)
         {
-            Page = result.Value;
-            NewName = string.Empty;
-            NewUrl = string.Empty;
-            FormError = null;
-        }
-        else
-        {
-            FormError = result.Error;
+            await LayoutService.ShowWidgetAsync(WidgetKind.LinkEditor);
         }
     }
 
-    private async Task RemoveAsync(Link link)
+    public void Dispose()
     {
-        if (StartPageService is null)
-        {
-            return;
-        }
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
 
-        Page = await StartPageService.RemoveLinkAsync(Page, link.Id);
+    protected virtual void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            StartPageService?.Changed -= OnPageChanged;
+        }
     }
 }

@@ -1,23 +1,62 @@
 @page "/"
 @implements IDisposable
 @inject Rise.Application.Ports.IClock Clock
+@inject Rise.Application.Services.LayoutService LayoutService
 
 <PageTitle>Rise</PageTitle>
 
-<Rise.Slices.Settings.SettingsGear />
+<div class="calm-settings-cluster">
+    @foreach (var widget in Layout.ClusterWidgets().Where(w => w.Visible))
+    {
+        @switch (widget.Kind)
+        {
+            case Rise.Domain.WidgetKind.Theme:
+                <Rise.Slices.Settings.ThemeToggle />
+                break;
+            case Rise.Domain.WidgetKind.Settings:
+                <Rise.Slices.Settings.SettingsGear />
+                break;
+        }
+    }
+</div>
 
 <div class="calm-page">
     <p class="calm-date">@Rise.Domain.Greeting.FormatDate(Clock.Now)</p>
     <h1 class="calm-clock">@Rise.Domain.Greeting.FormatTime(Clock.Now)</h1>
     <p class="calm-greeting">@Rise.Domain.Greeting.For(Clock.Now)</p>
 
-    <Rise.Slices.Search.Search />
+    @foreach (var widget in Layout.MainWidgets().Where(w => w.Visible))
+    {
+        @switch (widget.Kind)
+        {
+            case Rise.Domain.WidgetKind.Search:
+                <Rise.Slices.Search.Search />
+                break;
+            case Rise.Domain.WidgetKind.Links:
+                <Rise.Slices.Links.QuickLinks />
+                break;
+            case Rise.Domain.WidgetKind.LinkEditor:
+                <Rise.Slices.Links.LinksEditor />
+                break;
+        }
+    }
 
-    <Rise.Slices.Links.QuickLinks />
+    <button type="button" class="calm-layout-toggle" @onclick="() => EditingLayout = !EditingLayout">
+        @(EditingLayout ? "Done" : "Edit layout")
+    </button>
+
+    @if (EditingLayout)
+    {
+        <Rise.Slices.Layout.LayoutEditor />
+    }
 </div>
 
 @code {
     private System.Threading.Timer? _timer;
+
+    private Rise.Domain.PageLayout Layout { get; set; } = Rise.Domain.PageLayout.Default();
+
+    private bool EditingLayout { get; set; }
 
     protected override void OnInitialized()
     {
@@ -28,8 +67,30 @@
             TimeSpan.FromSeconds(30));
     }
 
+    protected override async Task OnInitializedAsync()
+    {
+        Layout = await LayoutService.LoadAsync();
+        LayoutService.Changed += OnLayoutChanged;
+    }
+
+    private async void OnLayoutChanged(object? sender, EventArgs args)
+    {
+        Layout = await LayoutService.LoadAsync();
+        await InvokeAsync(StateHasChanged);
+    }
+
     public void Dispose()
     {
-        _timer?.Dispose();
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
+    protected virtual void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            _timer?.Dispose();
+            LayoutService.Changed -= OnLayoutChanged;
+        }
     }
 }

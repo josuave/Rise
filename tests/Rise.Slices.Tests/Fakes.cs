@@ -33,6 +33,23 @@ internal sealed class FakeSearchLauncher : ISearchLauncher
     }
 }
 
+/// <summary>In-memory layout store for slice tests: no localStorage, no JS.</summary>
+internal sealed class FakeLayoutStore : ILayoutStore
+{
+    public PageLayout? StoredLayout { get; private set; }
+
+    public FakeLayoutStore(PageLayout? initial = null) => StoredLayout = initial;
+
+    public Task<PageLayout?> LoadAsync(CancellationToken cancellationToken = default) =>
+        Task.FromResult(StoredLayout);
+
+    public Task SaveAsync(PageLayout layout, CancellationToken cancellationToken = default)
+    {
+        StoredLayout = layout;
+        return Task.CompletedTask;
+    }
+}
+
 /// <summary>Theme store that records preference/apply calls instead of touching the DOM.</summary>
 internal sealed class FakeThemeStore : IThemeStore
 {

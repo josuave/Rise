@@ -1,0 +1,21 @@
+@using Rise.Domain
+
+<div class="calm-layout-editor">
+    <h3>Layout</h3>
+    <p class="calm-dialog-note">Move widgets within their area, hide the ones you don't want, or reset to defaults. Changes save automatically.</p>
+
+    @foreach (var placement in Layout.Widgets)
+    {
+        <div class="calm-layout-row">
+            <span class="calm-layout-name">@DisplayName(placement.Kind)</span>
+            <span class="calm-layout-zone">@(PageLayout.ZoneOf(placement.Kind) == WidgetZone.Cluster ? "Top-right" : "Main")</span>
+            <button type="button" aria-label="Move @DisplayName(placement.Kind) up" disabled="@IsFirstInZone(placement.Kind)" @onclick="() => MoveUpAsync(placement.Kind)">↑</button>
+            <button type="button" aria-label="Move @DisplayName(placement.Kind) down" disabled="@IsLastInZone(placement.Kind)" @onclick="() => MoveDownAsync(placement.Kind)">↓</button>
+            <button type="button" aria-label="@(placement.Visible ? "Hide" : "Show") @DisplayName(placement.Kind)" @onclick="() => ToggleVisibleAsync(placement)">
+                @(placement.Visible ? "Hide" : "Show")
+            </button>
+        </div>
+    }
+
+    <button type="button" class="calm-layout-reset" @onclick="ResetAsync">Reset to defaults</button>
+</div>

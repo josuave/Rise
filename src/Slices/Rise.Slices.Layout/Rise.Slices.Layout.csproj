@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+  <ItemGroup>
+    <SupportedPlatform Include="browser" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Components.Web" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Slice depends only on the core's ports/services, never on Infrastructure (the adapters). -->
+    <ProjectReference Include="..\..\Rise.Application\Rise.Application.csproj" />
+  </ItemGroup>
+
+</Project>

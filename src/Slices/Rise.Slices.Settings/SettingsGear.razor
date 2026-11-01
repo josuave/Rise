@@ -1,9 +1,6 @@
 @using Microsoft.AspNetCore.Components
 
-<div class="calm-settings-cluster">
-    <button type="button" class="calm-theme-toggle" aria-label="@ToggleLabel" title="@ToggleLabel" @onclick="ToggleThemeAsync">@ToggleGlyph</button>
-    <button type="button" class="calm-settings-gear" aria-label="Settings" @onclick="Open">&#9881;</button>
-</div>
+<button type="button" class="calm-settings-gear" aria-label="Settings" @onclick="Open">&#9881;</button>
 
 @if (IsOpen)
 {

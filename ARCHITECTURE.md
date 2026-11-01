@@ -77,6 +77,7 @@ src/Slices/
   Rise.Slices.Links/    QuickLinks.razor (+ code-behind shell)
   Rise.Slices.Search/   Search.razor (+ code-behind shell)
   Rise.Slices.Settings/ SettingsGear.razor (+ code-behind shell)
+  Rise.Slices.Layout/   LayoutEditor.razor (+ code-behind shell)
 ```
 
 Rules for a slice:
@@ -107,11 +108,40 @@ Rules for a slice:
    stays coherent. A slice may add component-scoped CSS for its own
    layout, but the theme is not duplicated per slice.
 
-Current slices: Links (editable tiles, persisted via `ILinkStore`),
-Search (query box, launched via `ISearchLauncher`), and Settings
-(theme toggle + gear button cluster and a Settings dialog: a built-in
-Theme section — Light / Dark / System, persisted via the `IThemeStore`
-port — plus sections contributed by other slices). The shell's
+Current slices: Links (tiles, persisted via `ILinkStore`), Search
+(query box, launched via `ISearchLauncher`), Settings (gear button
+and a Settings dialog: a built-in Theme section — Light / Dark /
+System, persisted via the `IThemeStore` port — plus sections
+contributed by other slices), and Layout (the layout editor).
+
+## Widgets and layout: the page is a list, not a template
+
+The start page is no longer a hardcoded template. It is a `PageLayout`
+(Domain): an ordered list of `WidgetPlacement`s, one per widget —
+Search, Links, Link editor, Theme switcher, Settings — each with a
+visible flag. Widgets live in two zones: Theme and Settings render in
+the top-right cluster, everything else in the main column, each in
+layout order. Moves only swap within a zone, so a widget can never
+wander into the other zone, and hiding a widget never loses its
+position. The default layout reproduces the old page (Search, Links,
+Theme, Settings visible; Link editor hidden).
+
+The shell (`Index`) renders widgets from the layout instead of naming
+components directly, and re-renders whenever the layout service's
+`Changed` event fires. The link service has the same event, so tiles
+stay fresh when the editor (a separate widget) saves. Editing is a
+widget too: Links' "Edit links" button shows the Link editor widget,
+whose Done button hides it again. The layout editor itself is a
+widget of last resort in the shell: move up/down, hide/show, reset to
+defaults, all buttons (drag-and-drop is a later step, not v1).
+
+Persistence is the same localStorage pattern as links: `LayoutService`
+(Application) over the `ILayoutStore` port, `LocalStorageLayoutStore`
+(Infrastructure) under `rise.layout.v1`, corrupt or missing data
+falling back to defaults, and kinds added by a later version appended
+with default visibility. A theme editor (custom light/dark themes,
+possibly generated) is the planned Phase 2 on top of this; it is not
+in v1. The shell's
 index.html provides the `window.riseTheme` script block the theme
 adapter calls (localStorage, the page's data-theme attribute,
 matchMedia), the same way it provides `window.riseStorage` for links,
@@ -177,8 +207,11 @@ its own beyond the clock/greeting shell.
   including the Edit-links regression test that would have caught
   the PR #9 dead-clicks bug. Slice tests use real application
   services with fake ports (in-memory link store, recording search
-  launcher, recording theme store), never a browser, JS, or
-  Infrastructure. Both test projects carry `coverlet.collector`;
+  launcher, recording theme store, in-memory layout store), never a
+  browser, JS, or Infrastructure. The widget phase added core layout
+  tests (default, zones, in-zone moves, hide-keeps-position) and
+  bUnit tests for the editor widget, the split-out link editor, and
+  the split-out theme toggle. Both test projects carry `coverlet.collector`;
   CI collects Cobertura coverage via `coverage.runsettings`
   (test assemblies excluded) and uploads it to Codecov.
 - **New slice:** copy a slice project, depend on Application, add its
