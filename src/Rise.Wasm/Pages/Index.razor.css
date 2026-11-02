@@ -1,0 +1,26 @@
+.calm-page {
+    width: 100%;
+    max-width: 620px;
+    text-align: center;
+}
+
+/* Settings cluster (kept subtle so the Calm page stays calm): theme
+   toggle immediately left of the gear, fixed top-right. */
+.calm-settings-cluster {
+    position: fixed;
+    top: 1rem;
+    right: 1rem;
+    display: flex;
+    gap: 0.25rem;
+    align-items: center;
+    z-index: 10;
+}
+
+.calm-layout-toggle {
+    background: none;
+    border: none;
+    color: var(--calm-faint);
+    cursor: pointer;
+    font-size: 0.9rem;
+    margin-top: 1.5rem;
+}

@@ -1,0 +1,16 @@
+.calm-date {
+    color: var(--calm-faint);
+    font-size: 0.9rem;
+    margin: 0;
+}
+
+.calm-clock {
+    font-size: 3.5rem;
+    font-weight: 300;
+    margin: 0.25rem 0 0;
+}
+
+.calm-greeting {
+    color: var(--calm-muted);
+    margin: 0 0 2rem;
+}

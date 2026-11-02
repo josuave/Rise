@@ -1,0 +1,38 @@
+.calm-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    justify-content: center;
+    margin-top: 2.5rem;
+}
+
+.calm-link {
+    position: relative;
+    background: var(--calm-surface);
+    border: 1px solid var(--calm-border-soft);
+    border-radius: 14px;
+    width: 76px;
+    padding: 0.75rem 0.25rem;
+    box-sizing: border-box;
+}
+
+.calm-link-target {
+    color: var(--calm-text);
+    text-decoration: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.calm-link-initials {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: var(--calm-tile-bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.9rem;
+}
