@@ -1,0 +1,62 @@
+.calm-link-editor {
+    margin-top: 1rem;
+}
+
+.calm-link-editor-list {
+    margin-top: 0.75rem;
+}
+
+.calm-link-editor-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    padding: 0.25rem 0;
+}
+
+.calm-link-remove {
+    /* Flows as the right-hand item of its editor row (which already
+       lays out name left, button right). It must not be absolute:
+       the row has no positioned ancestor, so an absolute button
+       anchored to the viewport and all four stacked at the top
+       right of the page instead of on their own rows. */
+    width: 22px;
+    height: 22px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    border: 1px solid var(--calm-border);
+    background: var(--calm-surface);
+    color: var(--calm-faint);
+    cursor: pointer;
+    line-height: 1;
+}
+
+.calm-add-form {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    justify-content: center;
+    margin-top: 1rem;
+}
+
+.calm-add-form input {
+    border: 1px solid var(--calm-border);
+    border-radius: 8px;
+    padding: 0.5rem 0.75rem;
+    background: var(--calm-surface);
+    color: var(--calm-text);
+}
+
+.calm-add-form button {
+    border: 1px solid var(--calm-border);
+    border-radius: 8px;
+    padding: 0.5rem 1rem;
+    background: var(--calm-surface);
+    color: var(--calm-text);
+    cursor: pointer;
+}
+
+.calm-form-error {
+    color: var(--calm-error);
+    font-size: 0.85rem;
+}

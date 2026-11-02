@@ -1,0 +1,8 @@
+.calm-theme-toggle {
+    background: none;
+    border: none;
+    color: var(--calm-faint);
+    cursor: pointer;
+    font-size: 1.25rem;
+    line-height: 1;
+}

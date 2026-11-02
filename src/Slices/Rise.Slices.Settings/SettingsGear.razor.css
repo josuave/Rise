@@ -1,0 +1,104 @@
+.calm-settings-gear {
+    background: none;
+    border: none;
+    color: var(--calm-faint);
+    cursor: pointer;
+    font-size: 1.25rem;
+    line-height: 1;
+}
+
+.calm-dialog-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.35);
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 2rem 1rem;
+    box-sizing: border-box;
+    overflow-y: auto;
+    z-index: 20;
+}
+
+.calm-dialog {
+    background: var(--calm-surface);
+    border: 1px solid var(--calm-border-soft);
+    border-radius: 14px;
+    width: 100%;
+    max-width: 560px;
+    padding: 1.25rem 1.5rem;
+    box-sizing: border-box;
+    text-align: left;
+    color: var(--calm-text);
+}
+
+.calm-dialog-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.calm-dialog-header h2 {
+    margin: 0;
+    font-weight: 300;
+}
+
+.calm-dialog-close {
+    background: none;
+    border: none;
+    color: var(--calm-faint);
+    cursor: pointer;
+    font-size: 1.5rem;
+    line-height: 1;
+}
+
+.calm-dialog h3 {
+    font-weight: 400;
+    margin: 1.25rem 0 0.5rem;
+}
+
+.calm-dialog .calm-dialog-close {
+    background: none;
+    border: none;
+    padding: 0;
+}
+
+.calm-theme-options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.calm-theme-option.selected {
+    background: var(--calm-tile-bg);
+    font-weight: 700;
+}
+
+.calm-theme-custom-row {
+    display: flex;
+    gap: 0.5rem;
+    margin: 0.5rem 0;
+}
+
+.calm-theme-custom-row .calm-theme-option {
+    flex: 1;
+}
+
+.calm-theme-custom-row button:not(.calm-theme-option) {
+    border: 1px solid var(--calm-border);
+    border-radius: 8px;
+    padding: 0.35rem 0.75rem;
+    background: var(--calm-surface);
+    color: var(--calm-text);
+    cursor: pointer;
+}
+
+.calm-theme-new {
+    border: 1px solid var(--calm-border);
+    border-radius: 8px;
+    padding: 0.35rem 0.75rem;
+    margin-top: 0.5rem;
+    background: var(--calm-surface);
+    color: var(--calm-text);
+    cursor: pointer;
+}

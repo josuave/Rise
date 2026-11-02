@@ -103,10 +103,16 @@ Rules for a slice:
    Use that when a slice gets complex enough to earn it (its own
    rules, its own storage, its own tests); don't pay for it on a
    slice that is one component and one service call.
-5. **The shell owns the theme.** Calm styling lives in the Wasm
-   app's CSS, so slices render with shared class names and the look
-   stays coherent. A slice may add component-scoped CSS for its own
-   layout, but the theme is not duplicated per slice.
+5. **The shell owns the theme.** The calm CSS variables and the
+   classes shared by more than one component live in the Wasm app's
+   global `app.css`; each component's own styles live in a colocated
+   `.razor.css` file next to it (Blazor scopes them to that component
+   and bundles RCL styles into the app's stylesheet automatically).
+   Rules that style markup rendered by another component stay global:
+   the settings dialog's buttons belong to sections from other slices,
+   and scoped CSS cannot reach into a child component's markup. The
+   theme is never duplicated per slice: scoped files reference the
+   shared variables.
 
 Current slices: Links (tiles, persisted via `ILinkStore`), Search
 (query box, launched via `ISearchLauncher`), Settings (gear button

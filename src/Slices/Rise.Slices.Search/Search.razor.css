@@ -1,0 +1,26 @@
+.calm-search {
+    display: flex;
+    gap: 0.5rem;
+    max-width: 480px;
+    margin: 0 auto;
+}
+
+.calm-search-input {
+    flex: 1;
+    border: 1px solid var(--calm-border);
+    border-radius: 999px;
+    padding: 0.75rem 1.25rem;
+    font-size: 1rem;
+    background: var(--calm-surface);
+    color: var(--calm-text);
+    min-width: 0;
+}
+
+.calm-search-button {
+    border: 1px solid var(--calm-border);
+    border-radius: 999px;
+    padding: 0.75rem 1.25rem;
+    background: var(--calm-surface);
+    color: var(--calm-text);
+    cursor: pointer;
+}
