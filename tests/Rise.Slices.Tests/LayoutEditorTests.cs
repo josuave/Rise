@@ -15,9 +15,9 @@ namespace Rise.Slices.Tests;
 
 public class LayoutEditorTests : BunitContext
 {
-    private static readonly string[] DefaultOrder = new[] { "Header", "Search", "Links", "LinkEditor", "Theme", "Settings" };
-    private static readonly string[] MovedOrder = new[] { "Header", "Links", "Search", "LinkEditor", "Theme", "Settings" };
-    private static readonly bool[] DefaultVisibility = new[] { true, true, true, false, true, true };
+    private static readonly string[] DefaultOrder = new[] { "Date", "Clock", "Greeting", "Search", "Links", "LinkEditor", "Theme", "Settings" };
+    private static readonly string[] MovedOrder = new[] { "Date", "Clock", "Greeting", "Links", "Search", "LinkEditor", "Theme", "Settings" };
+    private static readonly bool[] DefaultVisibility = new[] { true, true, true, true, true, false, true, true };
 
     private readonly FakeLayoutCollectionStore _layoutStore = new();
 
@@ -25,7 +25,9 @@ public class LayoutEditorTests : BunitContext
     {
         Services.AddScoped<ILayoutCollectionStore>(_ => _layoutStore);
         Services.AddScoped<LayoutService>();
-        Services.AddSingleton<IWidgetDefinition, HeaderWidgetDefinition>();
+        Services.AddSingleton<IWidgetDefinition, DateWidgetDefinition>();
+        Services.AddSingleton<IWidgetDefinition, ClockWidgetDefinition>();
+        Services.AddSingleton<IWidgetDefinition, GreetingWidgetDefinition>();
         Services.AddSingleton<IWidgetDefinition, SearchWidgetDefinition>();
         Services.AddSingleton<IWidgetDefinition, LinksWidgetDefinition>();
         Services.AddSingleton<IWidgetDefinition, LinkEditorWidgetDefinition>();
@@ -51,7 +53,25 @@ public class LayoutEditorTests : BunitContext
 
         cut.WaitForAssertion(() => Assert.Contains("Link editor", cut.Markup, StringComparison.Ordinal));
         Assert.Contains("Default", cut.Markup, StringComparison.Ordinal);
-        Assert.Equal(12, cut.FindAll("[aria-label^=\"Move\"]").Count);
+        Assert.Equal(16, cut.FindAll("[aria-label^=\"Move\"]").Count);
+    }
+
+    [Fact]
+    public void Configure_ExpandsWidgetConfigEditor()
+    {
+        Services.AddScoped<IWidgetConfigStore>(_ => new FakeWidgetConfigStore());
+        Services.AddScoped<WidgetConfigService>();
+
+        IRenderedComponent<LayoutEditor> cut = Render<LayoutEditor>();
+        cut.WaitForAssertion(() => Assert.Contains("Link editor", cut.Markup, StringComparison.Ordinal));
+
+        Assert.Equal(2, cut.FindAll("[aria-label^=\"Configure\"]").Count);
+
+        cut.Find("[aria-label=\"Configure Clock\"]").Click();
+        cut.WaitForAssertion(() => Assert.Contains("24-hour clock", cut.Markup, StringComparison.Ordinal));
+
+        cut.Find("[aria-label=\"Configure Clock\"]").Click();
+        cut.WaitForAssertion(() => Assert.DoesNotContain("24-hour clock", cut.Markup, StringComparison.Ordinal));
     }
 
     [Fact]

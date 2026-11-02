@@ -46,7 +46,8 @@
     /// switch on widget kinds anywhere in this page. A widget whose
     /// definition is missing is skipped rather than rendered. The
     /// shell re-renders only when the layout changes; each widget
-    /// owns its own refresh (the header owns the clock tick).
+    /// owns its own refresh (the date, clock, and greeting widgets
+    /// each own a timer).
     /// </summary>
     private Type? ComponentFor(string id) =>
         WidgetDefinitions.FirstOrDefault(d => d.Id == id)?.ComponentType;

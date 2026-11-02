@@ -149,14 +149,22 @@ predates slot in by definition Order, ahead of every widget ordered
 after them — so a new widget lands where its Order puts it instead
 of last, and the stored relative order of existing widgets is never
 disturbed. The default layout is just the definitions in Order —
-it reproduces the old page (Header, Search, Links, Theme, Settings
-visible; Link editor hidden).
+it reproduces the old page (Date, Clock, Greeting, Search, Links,
+Theme, Settings visible; Link editor hidden).
 
-The header itself is a widget: the Header slice renders date, clock,
-and greeting and owns the refresh timer, so the shell re-renders
-only when the layout changes instead of on every clock tick. The
-"Edit layout" button and the editor stay shell-rendered, not widgets:
-an editor you could hide would strand the user with no way back.
+The header is three widgets, not one: the Header slice renders
+date, clock, and greeting as separate widgets, each owning its own
+refresh timer, so the shell re-renders only when the layout changes
+instead of on every clock tick. Widgets may also carry settings: a
+definition that implements `IConfigurableWidgetDefinition` names a
+config component, and the layout editor renders it behind a
+Configure button on that widget's row. Config is stored per widget
+id (key `rise.widgets.v1`), not per layout, so switching layouts
+keeps a widget's settings; the config shapes belong to the slices
+that own the widgets, and the core only ever sees JSON strings.
+The "Edit layout" button and the editor stay shell-rendered, not
+widgets: an editor you could hide would strand the user with no
+way back.
 
 Adding a widget is a new definition plus one line in Program.cs:
 no change to Domain, the layout service, the editor, or the shell.

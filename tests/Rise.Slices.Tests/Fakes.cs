@@ -111,3 +111,29 @@ internal sealed class FakeThemeStore : IThemeStore
     public Task<bool> PrefersDarkAsync(CancellationToken cancellationToken = default) =>
         Task.FromResult(SystemPrefersDark);
 }
+
+/// <summary>In-memory widget config store for slice tests: no localStorage, no JS.</summary>
+internal sealed class FakeWidgetConfigStore : IWidgetConfigStore
+{
+    public Dictionary<string, string> Stored { get; } = new();
+
+    public FakeWidgetConfigStore(Dictionary<string, string>? initial = null)
+    {
+        if (initial is not null)
+        {
+            foreach (KeyValuePair<string, string> pair in initial)
+            {
+                Stored[pair.Key] = pair.Value;
+            }
+        }
+    }
+
+    public Task<string?> GetAsync(string widgetId, CancellationToken cancellationToken = default) =>
+        Task.FromResult(Stored.TryGetValue(widgetId, out string? json) ? json : null);
+
+    public Task SetAsync(string widgetId, string json, CancellationToken cancellationToken = default)
+    {
+        Stored[widgetId] = json;
+        return Task.CompletedTask;
+    }
+}

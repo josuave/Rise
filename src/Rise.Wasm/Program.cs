@@ -21,7 +21,7 @@ builder.Services.AddLinksSettings();
 
 // Widget definitions, wired here: adding a widget is a new definition
 // plus one line here, never a change to the layout model or the shell.
-builder.Services.AddHeaderWidget();
+builder.Services.AddHeaderWidgets();
 builder.Services.AddSearchWidget();
 builder.Services.AddLinksWidgets();
 builder.Services.AddSettingsWidgets();

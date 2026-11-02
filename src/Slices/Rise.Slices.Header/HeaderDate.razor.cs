@@ -4,13 +4,11 @@ using Rise.Application.Ports;
 namespace Rise.Slices.Header;
 
 /// <summary>
-/// The header widget: date, clock, and greeting, previously rendered
-/// directly by the shell. It owns the refresh timer now, so the shell
-/// no longer re-renders on a clock tick — it re-renders only when the
-/// layout changes. The clock text has minute precision, so a 30-second
-/// tick is plenty; the first tick fires after one second.
+/// The date widget: the current date, refreshed once a minute.
+/// Split from the old combined header so it moves and hides on
+/// its own.
 /// </summary>
-public partial class Header : IDisposable
+public partial class HeaderDate : IDisposable
 {
     [Inject]
     private IClock Clock { get; set; } = null!;
@@ -21,7 +19,7 @@ public partial class Header : IDisposable
         _ => InvokeAsync(StateHasChanged),
         null,
         TimeSpan.FromSeconds(1),
-        TimeSpan.FromSeconds(30));
+        TimeSpan.FromMinutes(1));
 
     public void Dispose()
     {
