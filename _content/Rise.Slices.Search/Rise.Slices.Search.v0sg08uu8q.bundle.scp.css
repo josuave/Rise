@@ -1,0 +1,27 @@
+/* _content/Rise.Slices.Search/Search.razor.rz.scp.css */
+.calm-search[b-behmd5vukq] {
+    display: flex;
+    gap: 0.5rem;
+    max-width: 480px;
+    margin: 0 auto;
+}
+
+.calm-search-input[b-behmd5vukq] {
+    flex: 1;
+    border: 1px solid var(--calm-border);
+    border-radius: 999px;
+    padding: 0.75rem 1.25rem;
+    font-size: 1rem;
+    background: var(--calm-surface);
+    color: var(--calm-text);
+    min-width: 0;
+}
+
+.calm-search-button[b-behmd5vukq] {
+    border: 1px solid var(--calm-border);
+    border-radius: 999px;
+    padding: 0.75rem 1.25rem;
+    background: var(--calm-surface);
+    color: var(--calm-text);
+    cursor: pointer;
+}

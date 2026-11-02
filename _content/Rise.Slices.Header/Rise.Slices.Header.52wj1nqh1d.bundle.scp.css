@@ -1,0 +1,17 @@
+/* _content/Rise.Slices.Header/Header.razor.rz.scp.css */
+.calm-date[b-o21fc44eu8] {
+    color: var(--calm-faint);
+    font-size: 0.9rem;
+    margin: 0;
+}
+
+.calm-clock[b-o21fc44eu8] {
+    font-size: 3.5rem;
+    font-weight: 300;
+    margin: 0.25rem 0 0;
+}
+
+.calm-greeting[b-o21fc44eu8] {
+    color: var(--calm-muted);
+    margin: 0 0 2rem;
+}

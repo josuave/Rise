@@ -1,0 +1,79 @@
+/* _content/Rise.Slices.Layout/LayoutEditor.razor.rz.scp.css */
+/* Widget layout editor + link editor widget. */
+.calm-layout-editor[b-hjfgza7mfg] {
+    margin: 1rem auto 0;
+    max-width: 32rem;
+    text-align: left;
+    border: 1px solid var(--calm-border);
+    border-radius: 12px;
+    padding: 1rem;
+    background: var(--calm-surface);
+}
+
+.calm-layout-editor h3[b-hjfgza7mfg] {
+    margin: 0 0 0.5rem;
+}
+
+.calm-layout-row[b-hjfgza7mfg] {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.35rem 0;
+}
+
+.calm-layout-name[b-hjfgza7mfg] {
+    flex: 1;
+}
+
+.calm-layout-zone[b-hjfgza7mfg] {
+    color: var(--calm-faint);
+    font-size: 0.8rem;
+}
+
+.calm-layout-row button[b-hjfgza7mfg],
+.calm-layout-reset[b-hjfgza7mfg] {
+    border: 1px solid var(--calm-border);
+    border-radius: 8px;
+    padding: 0.35rem 0.75rem;
+    background: var(--calm-surface);
+    color: var(--calm-text);
+    cursor: pointer;
+}
+
+.calm-layout-row button:disabled[b-hjfgza7mfg] {
+    opacity: 0.4;
+    cursor: default;
+}
+
+.calm-layout-save-as[b-hjfgza7mfg],
+.calm-layout-rename[b-hjfgza7mfg] {
+    display: flex;
+    gap: 0.5rem;
+    margin: 0.5rem 0;
+}
+
+.calm-layout-save-as input[b-hjfgza7mfg],
+.calm-layout-rename input[b-hjfgza7mfg] {
+    flex: 1;
+    border: 1px solid var(--calm-border);
+    border-radius: 8px;
+    padding: 0.35rem 0.75rem;
+    background: var(--calm-surface);
+    color: var(--calm-text);
+}
+
+.calm-layout-save-as button[b-hjfgza7mfg],
+.calm-layout-rename button[b-hjfgza7mfg] {
+    border: 1px solid var(--calm-border);
+    border-radius: 8px;
+    padding: 0.35rem 0.75rem;
+    background: var(--calm-surface);
+    color: var(--calm-text);
+    cursor: pointer;
+}
+
+.calm-layout-save-as button:disabled[b-hjfgza7mfg],
+.calm-layout-rename button:disabled[b-hjfgza7mfg] {
+    opacity: 0.4;
+    cursor: default;
+}
