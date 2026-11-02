@@ -100,6 +100,14 @@ public class DomainTests
         Assert.Equal(expected, Greeting.For(new DateTime(2026, 10, 31, hour, 0, 0)));
 
     [Theory]
+    [InlineData(false, false, "9:30 AM")]
+    [InlineData(false, true, "9:30:07 AM")]
+    [InlineData(true, false, "09:30")]
+    [InlineData(true, true, "09:30:07")]
+    public void Greeting_FormatTime_RespectsOptions(bool use24Hour, bool showSeconds, string expected) =>
+        Assert.Equal(expected, Greeting.FormatTime(new DateTime(2026, 11, 1, 9, 30, 7), use24Hour, showSeconds));
+
+    [Theory]
     [InlineData("GitHub", "GI")]
     [InlineData("Google", "GO")]
     [InlineData("My Cool Site", "MC")]

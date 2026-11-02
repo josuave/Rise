@@ -10,8 +10,11 @@ namespace Rise.Slices.Layout;
 /// layout's widgets, plus manage the saved layouts themselves (switch,
 /// save the current arrangement as new, rename, delete). Titles come
 /// from the registered definitions, so the editor never names a
-/// concrete widget. Every change goes through the layout service,
-/// which persists it and notifies the shell to re-render.
+/// concrete widget. Widgets that carry settings show a Configure
+/// button that expands their slice-owned config component inline;
+/// the editor only renders it, never knows what it edits. Every
+/// change goes through the layout service, which persists it and
+/// notifies the shell to re-render.
 /// </summary>
 public partial class LayoutEditor : IDisposable
 {
@@ -30,6 +33,8 @@ public partial class LayoutEditor : IDisposable
     private string NewLayoutName { get; set; } = string.Empty;
 
     private string RenameName { get; set; } = string.Empty;
+
+    private string? ExpandedConfigId { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
@@ -64,6 +69,12 @@ public partial class LayoutEditor : IDisposable
 
     private string TitleOf(WidgetPlacement placement) =>
         Definitions.FirstOrDefault(d => d.Id == placement.Id)?.Title ?? placement.Id;
+
+    private Type? ConfigComponentFor(WidgetPlacement placement) =>
+        (Definitions.FirstOrDefault(d => d.Id == placement.Id) as IConfigurableWidgetDefinition)?.ConfigComponentType;
+
+    private void ToggleConfig(WidgetPlacement placement) =>
+        ExpandedConfigId = ExpandedConfigId == placement.Id ? null : placement.Id;
 
     private bool IsFirstInZone(WidgetPlacement placement)
     {

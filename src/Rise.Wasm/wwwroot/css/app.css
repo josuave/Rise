@@ -135,6 +135,27 @@ a, .btn-link {
     font-size: 0.85rem;
 }
 
+/* Widget config rows, shared by every widget's config editor:
+   scoped CSS cannot be shared, so rows all editors render live
+   here. */
+.calm-widget-config-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.25rem 0;
+    font-size: 0.9rem;
+}
+
+.calm-widget-config-row input[type="text"] {
+    flex: 1;
+    border: 1px solid var(--calm-border);
+    border-radius: 8px;
+    padding: 0.35rem 0.75rem;
+    background: var(--calm-surface);
+    color: var(--calm-text);
+    min-width: 0;
+}
+
 /* The dialog button rule also stays global: the settings dialog
    renders sections from other slices (DynamicComponent), and scoped
    CSS cannot reach into a child component's markup. */

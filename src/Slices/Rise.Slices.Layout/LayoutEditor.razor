@@ -46,7 +46,19 @@
             <button type="button" aria-label="@(placement.Visible ? "Hide" : "Show") @TitleOf(placement)" @onclick="() => ToggleVisibleAsync(placement)">
                 @(placement.Visible ? "Hide" : "Show")
             </button>
+            @if (ConfigComponentFor(placement) is not null)
+            {
+                <button type="button" aria-label="Configure @TitleOf(placement)" @onclick="() => ToggleConfig(placement)">
+                    @(ExpandedConfigId == placement.Id ? "Done" : "Configure")
+                </button>
+            }
         </div>
+        @if (ExpandedConfigId == placement.Id && ConfigComponentFor(placement) is Type configType)
+        {
+            <div class="calm-layout-config-panel">
+                <DynamicComponent Type="@configType" />
+            </div>
+        }
     }
 
     <button type="button" class="calm-layout-reset" @onclick="ResetAsync">Reset to defaults</button>
