@@ -63,6 +63,8 @@ public class LayoutEditorTests : BunitContext
     {
         Services.AddScoped<IWidgetConfigStore>(_ => new FakeWidgetConfigStore());
         Services.AddScoped<WidgetConfigService>();
+        Services.AddScoped<ClockConfig>();
+        Services.AddScoped<GreetingConfig>();
 
         IRenderedComponent<LayoutEditor> cut = Render<LayoutEditor>();
         cut.WaitForAssertion(() => Assert.Contains("Link editor", cut.Markup, StringComparison.Ordinal));
