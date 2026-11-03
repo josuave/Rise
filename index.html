@@ -131,6 +131,19 @@
                 return window.matchMedia('(prefers-color-scheme: dark)').matches;
             }
         };
+        // Download helper for the Backup slice. Kept in the shell
+        // (not in a component) so slices stay free of JS interop.
+        window.riseDownload = {
+            save: function (filename, content) {
+                var blob = new Blob([content], { type: 'application/json' });
+                var url = URL.createObjectURL(blob);
+                var a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                a.click();
+                URL.revokeObjectURL(url);
+            }
+        };
         // When the device flips light/dark, a custom theme follows it
         // by re-applying the matching half.
         window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function () {

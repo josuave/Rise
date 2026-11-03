@@ -1,0 +1,36 @@
+/* _content/Rise.Slices.Backup/BackupControls.razor.rz.scp.css */
+.calm-backup-section[b-s0n4wc4mlp] {
+    margin: 0 0 1rem;
+}
+
+.calm-backup-section h4[b-s0n4wc4mlp] {
+    margin: 0 0 0.25rem;
+}
+
+.calm-backup-section button[b-s0n4wc4mlp] {
+    border: 1px solid var(--calm-border);
+    border-radius: 8px;
+    padding: 0.5rem 1rem;
+    background: var(--calm-surface);
+    color: var(--calm-text);
+    cursor: pointer;
+    margin-top: 0.5rem;
+}
+
+.calm-backup-section button:disabled[b-s0n4wc4mlp] {
+    opacity: 0.4;
+    cursor: default;
+}
+
+.calm-backup-section select[b-s0n4wc4mlp] {
+    border: 1px solid var(--calm-border);
+    border-radius: 8px;
+    padding: 0.35rem 0.75rem;
+    background: var(--calm-surface);
+    color: var(--calm-text);
+}
+
+.calm-backup-status[b-s0n4wc4mlp] {
+    color: var(--calm-muted);
+    font-size: 0.9rem;
+}
