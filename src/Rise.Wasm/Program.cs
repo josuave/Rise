@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Rise.Infrastructure;
 using Rise.Slices.Backup;
 using Rise.Slices.Header;
+using Rise.Slices.Layout;
 using Rise.Slices.Links;
 using Rise.Slices.Search;
 using Rise.Slices.Settings;
@@ -27,6 +28,7 @@ builder.Services.AddHeaderWidgets();
 builder.Services.AddBackupWidgets();
 builder.Services.AddSearchWidget();
 builder.Services.AddLinksWidgets();
+builder.Services.AddLayoutWidgets();
 builder.Services.AddSettingsWidgets();
 
 await builder.Build().RunAsync();

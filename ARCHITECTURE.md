@@ -213,6 +213,32 @@ new widgets with defaults just like the default one does. The
 single-layout operations (move, hide, reset, show/hide widget) always
 act on the active layout, so the shell and the other widgets did not
 change: they render the active layout and re-render on `Changed`.
+
+Groups: the page has one group (v1), a Main container that hosts
+other widgets inside it. Grouping is deliberately not a property on
+placements — every widget would carry a field that only matters to
+grouped ones. Instead the layout carries the group's member list
+(`PageLayout.GroupChildren`: widget ids in group order), and grouped
+widgets stay in the flat list too, so ungrouping one loses nothing:
+it renders at its flat position again. The group is a widget
+definition like any other (Id `Group`, Main, hidden by default,
+Order 45, configurable name stored per widget id like every other
+config), marked with `IsGroup` on the definition contract — the one
+layout-level concept the contract names, so the shell knows to
+render its members inside the shell instead of on their own, and
+the layout service knows to filter membership to known Main widgets
+that aren't groups themselves. Moves respect containers: a grouped
+widget moves within the group, a top-level widget moves past
+top-level neighbours only. The layout editor shows group members
+indented beneath the group row, with a per-row action to move a Main
+widget in or out (moving one in also shows the group), and deleting
+a group asks whether its member widgets go with it; without that,
+they return to the top level and the group itself is hidden. Going
+with it means hidden, not removed: reconcile re-adds a widget
+missing from a layout, so a removed member would come straight
+back — a hidden one stays hidden until the editor shows it again.
+No nesting and Cluster members in v1; both are open follow-ups, not
+v1 scope.
 The layout editor adds a layouts section above the widget rows:
 switch, save the current arrangement as new, rename the active
 layout, delete (never the default).

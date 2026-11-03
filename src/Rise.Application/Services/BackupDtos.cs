@@ -27,8 +27,12 @@ public sealed record BackupThemeDto(string Id, string Name, BackupPaletteDto Lig
 /// <summary>One widget's slot in a backup layout: id and visibility. Zones come from the definitions on load.</summary>
 public sealed record BackupWidgetDto(string Id, bool Visible);
 
-/// <summary>One saved layout in a backup: a name over widget slots.</summary>
-public sealed record BackupLayoutDto(string Id, string Name, IReadOnlyList<BackupWidgetDto> Widgets);
+/// <summary>
+/// One saved layout in a backup: a name over widget slots, plus the
+/// group's member ids as one layout-level list (absent in files that
+/// predate groups, which reads as empty on import).
+/// </summary>
+public sealed record BackupLayoutDto(string Id, string Name, IReadOnlyList<BackupWidgetDto> Widgets, IReadOnlyList<string>? GroupChildren);
 
 /// <summary>The saved layout set in a backup: the active layout id and every layout.</summary>
 public sealed record BackupLayoutsDto(string ActiveId, IReadOnlyList<BackupLayoutDto> Layouts);

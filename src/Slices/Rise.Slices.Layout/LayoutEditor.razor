@@ -36,7 +36,7 @@
     <h3>Widgets in this layout</h3>
     <p class="calm-dialog-note">Move widgets within their area, hide the ones you don't want, or reset to defaults. Changes save automatically.</p>
 
-    @foreach (var placement in Layout.Widgets)
+    @foreach (var placement in Layout.TopLevelWidgets())
     {
         <div class="calm-layout-row">
             <span class="calm-layout-name">@TitleOf(placement)</span>
@@ -52,12 +52,45 @@
                     @(ExpandedConfigId == placement.Id ? "Done" : "Configure")
                 </button>
             }
+            @if (IsGroup(placement))
+            {
+                @if (ConfirmingGroupDelete)
+                {
+                    <button type="button" aria-label="Delete group only" @onclick="DeleteGroupOnlyAsync">Delete group only</button>
+                    <button type="button" aria-label="Delete group and widgets" @onclick="DeleteGroupAndWidgetsAsync">Delete group and widgets</button>
+                    <button type="button" aria-label="Cancel group delete" @onclick="() => ConfirmingGroupDelete = false">Cancel</button>
+                }
+                else
+                {
+                    <button type="button" aria-label="Delete group" @onclick="() => ConfirmingGroupDelete = true">Delete</button>
+                }
+            }
+            else if (placement.Zone == WidgetZone.Main)
+            {
+                <button type="button" aria-label="Add @TitleOf(placement) to group" @onclick="() => AddToGroupAsync(placement)">Into group</button>
+            }
         </div>
         @if (ExpandedConfigId == placement.Id && ConfigComponentFor(placement) is Type configType)
         {
             <div class="calm-layout-config-panel">
                 <DynamicComponent Type="@configType" />
             </div>
+        }
+        @if (IsGroup(placement))
+        {
+            @foreach (var child in Layout.GroupedWidgets())
+            {
+                <div class="calm-layout-row calm-layout-child">
+                    <span class="calm-layout-name">@TitleOf(child)</span>
+                    <span class="calm-layout-zone">Main</span>
+                    <button type="button" aria-label="Move @TitleOf(child) up" disabled="@IsFirstInGroup(child)" @onclick="() => MoveUpAsync(child)">↑</button>
+                    <button type="button" aria-label="Move @TitleOf(child) down" disabled="@IsLastInGroup(child)" @onclick="() => MoveDownAsync(child)">↓</button>
+                    <button type="button" aria-label="@(child.Visible ? "Hide" : "Show") @TitleOf(child)" @onclick="() => ToggleVisibleAsync(child)">
+                        @(child.Visible ? "Hide" : "Show")
+                    </button>
+                    <button type="button" aria-label="Remove @TitleOf(child) from group" @onclick="() => RemoveFromGroupAsync(child)">Out of group</button>
+                </div>
+            }
         }
     }
 

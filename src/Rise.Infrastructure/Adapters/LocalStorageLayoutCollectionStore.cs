@@ -12,8 +12,11 @@ namespace Rise.Infrastructure.Adapters;
 /// visibility are stored — zones come from the definitions, so this
 /// adapter never needs to know them. Zones here are placeholders
 /// (Main); the layout service reconciles them against the registered
-/// definitions on load. Corrupt or unavailable storage returns null
-/// and the caller falls back to the default collection.
+/// definitions on load. The group's member ids ride along as one
+/// layout-level list, not a per-widget field; a stored layout that
+/// predates groups simply has no list, which reads as empty. Corrupt
+/// or unavailable storage returns null and the caller falls back to
+/// the default collection.
 /// </summary>
 public sealed class LocalStorageLayoutCollectionStore(IJSRuntime js) : ILayoutCollectionStore
 {
@@ -21,7 +24,7 @@ public sealed class LocalStorageLayoutCollectionStore(IJSRuntime js) : ILayoutCo
 
     private sealed record StoredWidget(string Id, bool Visible);
 
-    private sealed record StoredLayout(string Id, string Name, List<StoredWidget> Widgets);
+    private sealed record StoredLayout(string Id, string Name, List<StoredWidget> Widgets, List<string>? GroupChildren);
 
     private sealed record StoredCollection(string ActiveId, List<StoredLayout> Layouts);
 
@@ -48,11 +51,13 @@ public sealed class LocalStorageLayoutCollectionStore(IJSRuntime js) : ILayoutCo
                 .Select(layout => new NamedLayout(
                     layout.Id,
                     layout.Name,
-                    new PageLayout(layout.Widgets
-                        .Where(widget => !string.IsNullOrWhiteSpace(widget.Id))
-                        .GroupBy(widget => widget.Id)
-                        .Select(widgetGroup => new WidgetPlacement(widgetGroup.Key, WidgetZone.Main, widgetGroup.First().Visible))
-                        .ToList())))
+                    new PageLayout(
+                        layout.Widgets
+                            .Where(widget => !string.IsNullOrWhiteSpace(widget.Id))
+                            .GroupBy(widget => widget.Id)
+                            .Select(widgetGroup => new WidgetPlacement(widgetGroup.Key, WidgetZone.Main, widgetGroup.First().Visible))
+                            .ToList(),
+                        layout.GroupChildren ?? new List<string>())))
                 .ToList();
 
             return layouts.Count == 0 ? null : new LayoutCollection(parsed.ActiveId, layouts);
@@ -76,7 +81,8 @@ public sealed class LocalStorageLayoutCollectionStore(IJSRuntime js) : ILayoutCo
                         layout.Name,
                         layout.Layout.Widgets
                             .Select(widget => new StoredWidget(widget.Id, widget.Visible))
-                            .ToList()))
+                            .ToList(),
+                        layout.Layout.GroupChildren.ToList()))
                     .ToList());
             await js.InvokeVoidAsync("riseStorage.set", cancellationToken, StorageKey, JsonSerializer.Serialize(stored));
         }

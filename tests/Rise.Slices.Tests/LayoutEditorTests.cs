@@ -16,9 +16,10 @@ namespace Rise.Slices.Tests;
 
 public class LayoutEditorTests : BunitContext
 {
-    private static readonly string[] DefaultOrder = new[] { "Date", "Clock", "Greeting", "Search", "Links", "LinkEditor", "Backup", "Theme", "Settings" };
-    private static readonly string[] MovedOrder = new[] { "Date", "Clock", "Greeting", "Links", "Search", "LinkEditor", "Backup", "Theme", "Settings" };
-    private static readonly bool[] DefaultVisibility = new[] { true, true, true, true, true, false, false, true, true };
+    private static readonly string[] DefaultOrder = new[] { "Date", "Clock", "Greeting", "Search", "Links", "LinkEditor", "Backup", "Theme", "Group", "Settings" };
+    private static readonly string[] MovedOrder = new[] { "Date", "Clock", "Greeting", "Links", "Search", "LinkEditor", "Backup", "Theme", "Group", "Settings" };
+    private static readonly bool[] DefaultVisibility = new[] { true, true, true, true, true, false, false, true, false, true };
+    private static readonly string[] GroupedLinksSearch = new[] { "Links", "Search" };
 
     private readonly FakeLayoutCollectionStore _layoutStore = new();
 
@@ -34,6 +35,7 @@ public class LayoutEditorTests : BunitContext
         Services.AddSingleton<IWidgetDefinition, LinksWidgetDefinition>();
         Services.AddSingleton<IWidgetDefinition, LinkEditorWidgetDefinition>();
         Services.AddSingleton<IWidgetDefinition, ThemeWidgetDefinition>();
+        Services.AddSingleton<IWidgetDefinition, GroupWidgetDefinition>();
         Services.AddSingleton<IWidgetDefinition, SettingsWidgetDefinition>();
     }
 
@@ -55,7 +57,7 @@ public class LayoutEditorTests : BunitContext
 
         cut.WaitForAssertion(() => Assert.Contains("Link editor", cut.Markup, StringComparison.Ordinal));
         Assert.Contains("Default", cut.Markup, StringComparison.Ordinal);
-        Assert.Equal(18, cut.FindAll("[aria-label^=\"Move\"]").Count);
+        Assert.Equal(20, cut.FindAll("[aria-label^=\"Move\"]").Count);
     }
 
     [Fact]
@@ -69,7 +71,7 @@ public class LayoutEditorTests : BunitContext
         IRenderedComponent<LayoutEditor> cut = Render<LayoutEditor>();
         cut.WaitForAssertion(() => Assert.Contains("Link editor", cut.Markup, StringComparison.Ordinal));
 
-        Assert.Equal(2, cut.FindAll("[aria-label^=\"Configure\"]").Count);
+        Assert.Equal(3, cut.FindAll("[aria-label^=\"Configure\"]").Count);
 
         cut.Find("[aria-label=\"Configure Clock\"]").Click();
         cut.WaitForAssertion(() => Assert.Contains("24-hour clock", cut.Markup, StringComparison.Ordinal));
@@ -172,5 +174,106 @@ public class LayoutEditorTests : BunitContext
         ButtonWithText(cut, "Rename active").Click();
 
         Assert.Equal("Morning", ActiveOf(_layoutStore.StoredCollection).Name);
+    }
+
+    private static void AddToGroup(IRenderedComponent<LayoutEditor> cut, string title)
+    {
+        cut.Find($"[aria-label=\"Add {title} to group\"]").Click();
+        cut.WaitForAssertion(() => Assert.Contains($"Remove {title} from group", cut.Markup, StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void Group_MoveIntoGroup_ShowsChildRow_AndShowsGroup()
+    {
+        IRenderedComponent<LayoutEditor> cut = Render<LayoutEditor>();
+        cut.WaitForAssertion(() => Assert.Contains("Link editor", cut.Markup, StringComparison.Ordinal));
+
+        AddToGroup(cut, "Search");
+
+        PageLayout active = ActiveOf(_layoutStore.StoredCollection).Layout;
+        Assert.Single(active.GroupChildren);
+        Assert.Equal("Search", active.GroupChildren[0]);
+        Assert.True(active.Widgets.Single(w => w.Id == "Group").Visible);
+    }
+
+    [Fact]
+    public void Group_MoveWithinGroup_ReordersMembers()
+    {
+        IRenderedComponent<LayoutEditor> cut = Render<LayoutEditor>();
+        cut.WaitForAssertion(() => Assert.Contains("Link editor", cut.Markup, StringComparison.Ordinal));
+
+        AddToGroup(cut, "Search");
+        AddToGroup(cut, "Links");
+
+        cut.Find("[aria-label=\"Move Links up\"]").Click();
+
+        Assert.Equal(GroupedLinksSearch, ActiveOf(_layoutStore.StoredCollection).Layout.GroupChildren);
+    }
+
+    [Fact]
+    public void Group_RemoveFromGroup_ReturnsWidgetToTopLevel()
+    {
+        IRenderedComponent<LayoutEditor> cut = Render<LayoutEditor>();
+        cut.WaitForAssertion(() => Assert.Contains("Link editor", cut.Markup, StringComparison.Ordinal));
+
+        AddToGroup(cut, "Search");
+
+        cut.Find("[aria-label=\"Remove Search from group\"]").Click();
+
+        PageLayout active = ActiveOf(_layoutStore.StoredCollection).Layout;
+        Assert.Empty(active.GroupChildren);
+        Assert.Contains("Search", active.Widgets.Select(w => w.Id));
+    }
+
+    [Fact]
+    public void Group_DeleteOnly_KeepsWidgets_AndHidesGroup()
+    {
+        IRenderedComponent<LayoutEditor> cut = Render<LayoutEditor>();
+        cut.WaitForAssertion(() => Assert.Contains("Link editor", cut.Markup, StringComparison.Ordinal));
+
+        AddToGroup(cut, "Search");
+
+        cut.Find("[aria-label=\"Delete group\"]").Click();
+        cut.Find("[aria-label=\"Delete group only\"]").Click();
+
+        PageLayout active = ActiveOf(_layoutStore.StoredCollection).Layout;
+        Assert.Empty(active.GroupChildren);
+        Assert.Contains("Search", active.Widgets.Select(w => w.Id));
+        Assert.False(active.Widgets.Single(w => w.Id == "Group").Visible);
+    }
+
+    [Fact]
+    public void Group_DeleteWithWidgets_HidesMembers()
+    {
+        IRenderedComponent<LayoutEditor> cut = Render<LayoutEditor>();
+        cut.WaitForAssertion(() => Assert.Contains("Link editor", cut.Markup, StringComparison.Ordinal));
+
+        AddToGroup(cut, "Search");
+
+        cut.Find("[aria-label=\"Delete group\"]").Click();
+        cut.Find("[aria-label=\"Delete group and widgets\"]").Click();
+
+        PageLayout active = ActiveOf(_layoutStore.StoredCollection).Layout;
+        Assert.Empty(active.GroupChildren);
+        Assert.False(active.Widgets.Single(w => w.Id == "Search").Visible);
+        Assert.False(active.Widgets.Single(w => w.Id == "Group").Visible);
+    }
+
+    [Fact]
+    public void Group_Configure_ExpandsNameEditor_AndSaves()
+    {
+        var store = new FakeWidgetConfigStore();
+        Services.AddScoped<IWidgetConfigStore>(_ => store);
+        Services.AddScoped<WidgetConfigService>();
+        Services.AddScoped<GroupConfig>();
+
+        IRenderedComponent<LayoutEditor> cut = Render<LayoutEditor>();
+        cut.WaitForAssertion(() => Assert.Contains("Link editor", cut.Markup, StringComparison.Ordinal));
+
+        cut.Find("[aria-label=\"Configure Group\"]").Click();
+        cut.WaitForAssertion(() => Assert.Contains("Group name", cut.Markup, StringComparison.Ordinal));
+
+        cut.Find("[aria-label=\"Group name\"]").Change("Morning");
+        Assert.Equal("{\"Name\":\"Morning\"}", store.Stored["Group"]);
     }
 }

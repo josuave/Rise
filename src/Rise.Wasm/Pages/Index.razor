@@ -17,9 +17,23 @@
 </div>
 
 <div class="calm-page">
-    @foreach (var widget in Layout.MainWidgets().Where(w => w.Visible))
+    @foreach (string id in MainTopLevelIds())
     {
-        @if (ComponentFor(widget.Id) is Type mainComponent)
+        @if (IsGroup(id))
+        {
+            <Rise.Slices.Layout.GroupWidget>
+                <ChildContent>
+                    @foreach (var child in Layout.GroupedWidgets().Where(w => w.Visible))
+                    {
+                        @if (ComponentFor(child.Id) is Type childComponent)
+                        {
+                            <DynamicComponent Type="@childComponent" />
+                        }
+                    }
+                </ChildContent>
+            </Rise.Slices.Layout.GroupWidget>
+        }
+        else if (ComponentFor(id) is Type mainComponent)
         {
             <DynamicComponent Type="@mainComponent" />
         }
@@ -44,13 +58,21 @@
     /// <summary>
     /// The shell knows widgets only through their definitions: no
     /// switch on widget kinds anywhere in this page. A widget whose
-    /// definition is missing is skipped rather than rendered. The
-    /// shell re-renders only when the layout changes; each widget
-    /// owns its own refresh (the date, clock, and greeting widgets
-    /// each own a timer).
+    /// definition is missing is skipped rather than rendered. A group
+    /// renders its member widgets inside its shell; every other widget
+    /// renders on its own. The shell re-renders only when the layout
+    /// changes; each widget owns its own refresh (the date, clock, and
+    /// greeting widgets each own a timer).
     /// </summary>
     private Type? ComponentFor(string id) =>
         WidgetDefinitions.FirstOrDefault(d => d.Id == id)?.ComponentType;
+
+    /// <summary>Ids of visible Main widgets that aren't inside the group: the page's top-level Main rows.</summary>
+    private IEnumerable<string> MainTopLevelIds() =>
+        Layout.TopLevelWidgets().Where(w => w.Zone == Rise.Domain.WidgetZone.Main && w.Visible).Select(w => w.Id);
+
+    private bool IsGroup(string id) =>
+        WidgetDefinitions.FirstOrDefault(d => d.Id == id)?.IsGroup ?? false;
 
     protected override async Task OnInitializedAsync()
     {

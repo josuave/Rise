@@ -11,17 +11,37 @@ public enum WidgetZone
 public sealed record WidgetPlacement(string Id, WidgetZone Zone, bool Visible);
 
 /// <summary>
-/// Pure layout model: an ordered list of widget placements. The core
-/// knows no concrete widgets — which ids exist, what they are called,
-/// and their default order and visibility all come from the registered
-/// widget definitions (see IWidgetDefinition), and the layout service
-/// reconciles stored layouts against them. Moves only swap a widget
-/// with a neighbour in its own zone, so a widget can never wander into
-/// the other zone by reordering. Visibility is separate from order, so
+/// Pure layout model: an ordered list of widget placements, plus the
+/// group overlay: the ids of the widgets contained in the page's group,
+/// in the order they render inside it. Grouping is deliberately NOT a
+/// property on placements — every widget would carry a field that only
+/// matters to grouped ones. Instead the layout carries the group's
+/// member list, and grouped widgets stay in the flat list too, so
+/// ungrouping one loses nothing: it renders at its flat position again.
+/// The core knows no concrete widgets — which ids exist, what they are
+/// called, and their default order and visibility all come from the
+/// registered widget definitions (see IWidgetDefinition), and the
+/// layout service reconciles stored layouts against them. Moves only
+/// swap a widget with a neighbour in its own zone and container, so a
+/// widget can never wander into the other zone, or across a group
+/// boundary, by reordering. Visibility is separate from order, so
 /// hiding a widget never loses its position.
 /// </summary>
-public sealed record PageLayout(IReadOnlyList<WidgetPlacement> Widgets)
+public sealed record PageLayout(IReadOnlyList<WidgetPlacement> Widgets, IReadOnlyList<string> GroupChildren)
 {
+    public PageLayout(IReadOnlyList<WidgetPlacement> widgets)
+        : this(widgets, Array.Empty<string>())
+    {
+    }
+
+    /// <summary>Placements not inside the group, in flat order: what the shell and editor render as top-level rows.</summary>
+    public IReadOnlyList<WidgetPlacement> TopLevelWidgets() =>
+        Widgets.Where(w => !GroupChildren.Contains(w.Id)).ToList();
+
+    /// <summary>Grouped placements, in group order: what renders inside the group shell.</summary>
+    public IReadOnlyList<WidgetPlacement> GroupedWidgets() =>
+        GroupChildren.Join(Widgets, id => id, w => w.Id, (_, w) => w).ToList();
+
     public IReadOnlyList<WidgetPlacement> MainWidgets() =>
         Widgets.Where(w => w.Zone == WidgetZone.Main).ToList();
 
@@ -40,9 +60,28 @@ public sealed record PageLayout(IReadOnlyList<WidgetPlacement> Widgets)
             return this;
         }
 
+        // A grouped widget moves within the group, never in the flat
+        // list: its render order is the group list's order.
+        if (GroupChildren.Contains(id))
+        {
+            var children = GroupChildren.ToList();
+            int ci = children.IndexOf(id);
+            int cj = ci + delta;
+            if (cj < 0 || cj >= children.Count)
+            {
+                return this;
+            }
+
+            (children[ci], children[cj]) = (children[cj], children[ci]);
+            return new PageLayout(Widgets, children);
+        }
+
+        // A top-level widget moves past top-level neighbours only:
+        // grouped widgets are invisible at top level, so swapping with
+        // one would be a button that appears to do nothing.
         WidgetZone zone = Widgets[i].Zone;
         int j = i + delta;
-        while (j >= 0 && j < Widgets.Count && Widgets[j].Zone != zone)
+        while (j >= 0 && j < Widgets.Count && (Widgets[j].Zone != zone || GroupChildren.Contains(Widgets[j].Id)))
         {
             j += delta;
         }
@@ -53,7 +92,7 @@ public sealed record PageLayout(IReadOnlyList<WidgetPlacement> Widgets)
 
         var next = Widgets.ToList();
         (next[i], next[j]) = (next[j], next[i]);
-        return new PageLayout(next);
+        return new PageLayout(next, GroupChildren);
     }
 
     public PageLayout SetVisible(string id, bool visible)
@@ -61,6 +100,19 @@ public sealed record PageLayout(IReadOnlyList<WidgetPlacement> Widgets)
         var next = Widgets
             .Select(w => w.Id == id ? new WidgetPlacement(w.Id, w.Zone, visible) : w)
             .ToList();
-        return new PageLayout(next);
+        return new PageLayout(next, GroupChildren);
     }
+
+    public PageLayout AddToGroup(string id) =>
+        GroupChildren.Contains(id)
+            ? this
+            : new PageLayout(Widgets, GroupChildren.Append(id).ToList());
+
+    public PageLayout RemoveFromGroup(string id) =>
+        GroupChildren.Contains(id)
+            ? new PageLayout(Widgets, GroupChildren.Where(c => c != id).ToList())
+            : this;
+
+    public PageLayout ClearGroup() =>
+        GroupChildren.Count == 0 ? this : new PageLayout(Widgets, Array.Empty<string>());
 }
