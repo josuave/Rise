@@ -73,6 +73,8 @@ public static class HeaderWidgetExtensions
         services.AddSingleton<IWidgetDefinition, DateWidgetDefinition>();
         services.AddSingleton<IWidgetDefinition, ClockWidgetDefinition>();
         services.AddSingleton<IWidgetDefinition, GreetingWidgetDefinition>();
+        services.AddScoped<ClockConfig>();
+        services.AddScoped<GreetingConfig>();
         return services;
     }
 }

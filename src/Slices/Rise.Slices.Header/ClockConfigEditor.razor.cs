@@ -1,5 +1,4 @@
 using Microsoft.AspNetCore.Components;
-using Rise.Application.Services;
 
 namespace Rise.Slices.Header;
 
@@ -10,12 +9,10 @@ namespace Rise.Slices.Header;
 public partial class ClockConfigEditor
 {
     [Inject]
-    private WidgetConfigService ConfigService { get; set; } = null!;
-
-    private WidgetConfig.ClockConfig Config { get; set; } = WidgetConfig.ClockConfig.Default;
+    private ClockConfig Config { get; set; } = null!;
 
     protected override async Task OnInitializedAsync() =>
-        Config = await WidgetConfig.LoadClockAsync(ConfigService);
+        await Config.LoadAsync();
 
     private async Task Set24HourAsync(ChangeEventArgs args)
     {
@@ -24,8 +21,8 @@ public partial class ClockConfigEditor
             return;
         }
 
-        Config = Config with { Use24Hour = use24Hour };
-        await WidgetConfig.SaveClockAsync(ConfigService, Config);
+        Config.Use24Hour = use24Hour;
+        await Config.SaveAsync();
     }
 
     private async Task SetSecondsAsync(ChangeEventArgs args)
@@ -35,7 +32,7 @@ public partial class ClockConfigEditor
             return;
         }
 
-        Config = Config with { ShowSeconds = showSeconds };
-        await WidgetConfig.SaveClockAsync(ConfigService, Config);
+        Config.ShowSeconds = showSeconds;
+        await Config.SaveAsync();
     }
 }

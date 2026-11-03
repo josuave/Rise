@@ -5,6 +5,7 @@ using Rise.Application.Ports;
 using Rise.Application.Services;
 using Rise.Domain;
 using Rise.Slices.Layout;
+using Rise.Slices.Backup;
 using Rise.Slices.Header;
 using Rise.Slices.Links;
 using Rise.Slices.Search;
@@ -15,9 +16,9 @@ namespace Rise.Slices.Tests;
 
 public class LayoutEditorTests : BunitContext
 {
-    private static readonly string[] DefaultOrder = new[] { "Date", "Clock", "Greeting", "Search", "Links", "LinkEditor", "Theme", "Settings" };
-    private static readonly string[] MovedOrder = new[] { "Date", "Clock", "Greeting", "Links", "Search", "LinkEditor", "Theme", "Settings" };
-    private static readonly bool[] DefaultVisibility = new[] { true, true, true, true, true, false, true, true };
+    private static readonly string[] DefaultOrder = new[] { "Date", "Clock", "Greeting", "Search", "Links", "LinkEditor", "Backup", "Theme", "Settings" };
+    private static readonly string[] MovedOrder = new[] { "Date", "Clock", "Greeting", "Links", "Search", "LinkEditor", "Backup", "Theme", "Settings" };
+    private static readonly bool[] DefaultVisibility = new[] { true, true, true, true, true, false, false, true, true };
 
     private readonly FakeLayoutCollectionStore _layoutStore = new();
 
@@ -28,6 +29,7 @@ public class LayoutEditorTests : BunitContext
         Services.AddSingleton<IWidgetDefinition, DateWidgetDefinition>();
         Services.AddSingleton<IWidgetDefinition, ClockWidgetDefinition>();
         Services.AddSingleton<IWidgetDefinition, GreetingWidgetDefinition>();
+        Services.AddSingleton<IWidgetDefinition, BackupWidgetDefinition>();
         Services.AddSingleton<IWidgetDefinition, SearchWidgetDefinition>();
         Services.AddSingleton<IWidgetDefinition, LinksWidgetDefinition>();
         Services.AddSingleton<IWidgetDefinition, LinkEditorWidgetDefinition>();
@@ -53,7 +55,7 @@ public class LayoutEditorTests : BunitContext
 
         cut.WaitForAssertion(() => Assert.Contains("Link editor", cut.Markup, StringComparison.Ordinal));
         Assert.Contains("Default", cut.Markup, StringComparison.Ordinal);
-        Assert.Equal(16, cut.FindAll("[aria-label^=\"Move\"]").Count);
+        Assert.Equal(18, cut.FindAll("[aria-label^=\"Move\"]").Count);
     }
 
     [Fact]

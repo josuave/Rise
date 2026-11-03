@@ -19,7 +19,8 @@ public partial class HeaderGreeting : IDisposable
     [Inject]
     private WidgetConfigService ConfigService { get; set; } = null!;
 
-    private WidgetConfig.GreetingConfig Config { get; set; } = WidgetConfig.GreetingConfig.Default;
+    [Inject]
+    private GreetingConfig Config { get; set; } = null!;
 
     private System.Threading.Timer? _timer;
 
@@ -34,7 +35,7 @@ public partial class HeaderGreeting : IDisposable
 
     protected override async Task OnInitializedAsync()
     {
-        Config = await WidgetConfig.LoadGreetingAsync(ConfigService);
+        await Config.LoadAsync();
         ConfigService.ConfigChanged += OnConfigChanged;
 
         _timer = new System.Threading.Timer(
@@ -51,7 +52,7 @@ public partial class HeaderGreeting : IDisposable
             return;
         }
 
-        Config = await WidgetConfig.LoadGreetingAsync(ConfigService);
+        await Config.LoadAsync();
         await InvokeAsync(StateHasChanged);
     }
 

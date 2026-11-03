@@ -1,7 +1,9 @@
+using System.Text.Json.Nodes;
 using Bunit;
 using Microsoft.Extensions.DependencyInjection;
 using Rise.Application.Ports;
 using Rise.Application.Services;
+using Rise.Slices.Header;
 using Xunit;
 using ClockEditor = Rise.Slices.Header.ClockConfigEditor;
 using GreetingEditor = Rise.Slices.Header.GreetingConfigEditor;
@@ -15,6 +17,7 @@ public class WidgetConfigEditorTests : BunitContext
     {
         Services.AddScoped<IWidgetConfigStore>(_ => new FakeWidgetConfigStore());
         Services.AddScoped<WidgetConfigService>();
+        Services.AddScoped<ClockConfig>();
 
         IRenderedComponent<ClockEditor> cut = Render<ClockEditor>();
 
@@ -29,14 +32,19 @@ public class WidgetConfigEditorTests : BunitContext
         var store = new FakeWidgetConfigStore();
         Services.AddScoped<IWidgetConfigStore>(_ => store);
         Services.AddScoped<WidgetConfigService>();
+        Services.AddScoped<ClockConfig>();
 
         IRenderedComponent<ClockEditor> cut = Render<ClockEditor>();
 
         cut.Find("[aria-label=\"24-hour clock\"]").Change(true);
-        Assert.Equal("{\"Use24Hour\":true,\"ShowSeconds\":false}", store.Stored["Clock"]);
+        JsonObject saved = JsonNode.Parse(store.Stored["Clock"])!.AsObject();
+        Assert.True(saved["Use24Hour"]?.GetValue<bool>() ?? false);
+        Assert.False(saved["ShowSeconds"]?.GetValue<bool>() ?? false);
 
         cut.Find("[aria-label=\"Show seconds\"]").Change(true);
-        Assert.Equal("{\"Use24Hour\":true,\"ShowSeconds\":true}", store.Stored["Clock"]);
+        saved = JsonNode.Parse(store.Stored["Clock"])!.AsObject();
+        Assert.True(saved["Use24Hour"]?.GetValue<bool>() ?? false);
+        Assert.True(saved["ShowSeconds"]?.GetValue<bool>() ?? false);
     }
 
     [Fact]
@@ -45,6 +53,7 @@ public class WidgetConfigEditorTests : BunitContext
         var store = new FakeWidgetConfigStore();
         Services.AddScoped<IWidgetConfigStore>(_ => store);
         Services.AddScoped<WidgetConfigService>();
+        Services.AddScoped<GreetingConfig>();
 
         IRenderedComponent<GreetingEditor> cut = Render<GreetingEditor>();
 
@@ -53,7 +62,7 @@ public class WidgetConfigEditorTests : BunitContext
     }
 
     [Fact]
-    public void GreetingEditor_ClearingText_SavesNull()
+    public void GreetingEditor_ClearingText_RemovesCustomText()
     {
         var store = new FakeWidgetConfigStore(new Dictionary<string, string>
         {
@@ -61,10 +70,12 @@ public class WidgetConfigEditorTests : BunitContext
         });
         Services.AddScoped<IWidgetConfigStore>(_ => store);
         Services.AddScoped<WidgetConfigService>();
+        Services.AddScoped<GreetingConfig>();
 
         IRenderedComponent<GreetingEditor> cut = Render<GreetingEditor>();
 
         cut.Find("[aria-label=\"Custom greeting\"]").Change("   ");
-        Assert.Equal("{\"CustomText\":null}", store.Stored["Greeting"]);
+        JsonObject saved = JsonNode.Parse(store.Stored["Greeting"])!.AsObject();
+        Assert.Null(saved["CustomText"]);
     }
 }

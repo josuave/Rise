@@ -1,5 +1,4 @@
 using Microsoft.AspNetCore.Components;
-using Rise.Application.Services;
 
 namespace Rise.Slices.Header;
 
@@ -11,17 +10,15 @@ namespace Rise.Slices.Header;
 public partial class GreetingConfigEditor
 {
     [Inject]
-    private WidgetConfigService ConfigService { get; set; } = null!;
-
-    private WidgetConfig.GreetingConfig Config { get; set; } = WidgetConfig.GreetingConfig.Default;
+    private GreetingConfig Config { get; set; } = null!;
 
     protected override async Task OnInitializedAsync() =>
-        Config = await WidgetConfig.LoadGreetingAsync(ConfigService);
+        await Config.LoadAsync();
 
     private async Task SetCustomTextAsync(ChangeEventArgs args)
     {
         string? text = args.Value as string;
-        Config = Config with { CustomText = string.IsNullOrWhiteSpace(text) ? null : text };
-        await WidgetConfig.SaveGreetingAsync(ConfigService, Config);
+        Config.CustomText = string.IsNullOrWhiteSpace(text) ? null : text;
+        await Config.SaveAsync();
     }
 }
