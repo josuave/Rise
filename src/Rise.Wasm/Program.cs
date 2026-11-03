@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.JSInterop;
 using Rise.Infrastructure;
 using Rise.Slices.Backup;
 using Rise.Slices.Header;
@@ -17,6 +19,12 @@ builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.
 
 // Composition root: the shell is the only place that wires core services to their adapters.
 builder.Services.AddRiseCore();
+
+// Rise is WebAssembly-only, so the JS runtime is always the in-process
+// one. Register it directly so components inject IJSInProcessRuntime
+// instead of casting IJSRuntime themselves.
+builder.Services.AddScoped<IJSInProcessRuntime>(sp =>
+    (IJSInProcessRuntime)sp.GetRequiredService<IJSRuntime>());
 
 // Slice contributions to Settings, wired here so slices never depend on each other.
 builder.Services.AddLinksSettings();
