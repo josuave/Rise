@@ -4,7 +4,7 @@
 @using Microsoft.JSInterop
 @inject Rise.Application.Services.LayoutService LayoutService
 @inject IEnumerable<Rise.Application.Ports.IWidgetDefinition> WidgetDefinitions
-@inject IJSRuntime JSRuntime
+@inject IJSInProcessRuntime JSInProcess
 
 <PageTitle>Rise</PageTitle>
 
@@ -69,10 +69,6 @@
     private bool ShowHint { get; set; }
 
     private const string HintDismissedKey = "rise.hint.v1";
-
-    // Rise is WebAssembly-only, so the injected runtime is always the
-    // in-process one: flag reads/writes are synchronous, no Task.
-    private IJSInProcessRuntime JSInProcess => (IJSInProcessRuntime)JSRuntime;
 
     /// <summary>
     /// The shell knows widgets only through their definitions: no
