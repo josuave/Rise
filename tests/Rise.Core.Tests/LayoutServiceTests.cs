@@ -161,4 +161,120 @@ public class LayoutServiceTests
         Assert.True(notified);
         Assert.NotNull(store.StoredCollection);
     }
+
+    private sealed record TestGroupDefinition(
+        string Id,
+        string Title,
+        WidgetZone Zone,
+        bool DefaultVisible,
+        int Order,
+        Type ComponentType) : IWidgetDefinition
+    {
+        public bool IsGroup => true;
+    }
+
+    private static readonly string[] StoredGroupMembers = new[] { "Links", "Ghost", "Theme", "Group" };
+    private static readonly string[] ReconciledGroupMembers = new[] { "Links" };
+    private static readonly string[] SearchGrouped = new[] { "Search" };
+    private static readonly string[] DefaultOrderWithGroup = new[] { "Header", "Search", "Links", "LinkEditor", "Theme", "Group", "Settings" };
+
+    private static IWidgetDefinition[] DefinitionsWithGroup() => Definitions().Append(
+        new TestGroupDefinition("Group", "Group", WidgetZone.Main, false, 45, typeof(object))).ToArray();
+
+    private static LayoutCollection GroupedCollection(bool groupVisible) => new("default", new[]
+    {
+        new NamedLayout("default", "Default", new PageLayout(
+            new[]
+            {
+                new WidgetPlacement("Header", WidgetZone.Main, true),
+                new WidgetPlacement("Search", WidgetZone.Main, true),
+                new WidgetPlacement("Links", WidgetZone.Main, true),
+                new WidgetPlacement("LinkEditor", WidgetZone.Main, false),
+                new WidgetPlacement("Theme", WidgetZone.Cluster, true),
+                new WidgetPlacement("Group", WidgetZone.Main, groupVisible),
+                new WidgetPlacement("Settings", WidgetZone.Cluster, true),
+            },
+            SearchGrouped)),
+    });
+
+    [Fact]
+    public async Task LoadCollection_Reconcile_FiltersGroupMembers()
+    {
+        var stored = new LayoutCollection("default", new[]
+        {
+            new NamedLayout("default", "Default", new PageLayout(
+                new[]
+                {
+                    new WidgetPlacement("Search", WidgetZone.Main, true),
+                    new WidgetPlacement("Links", WidgetZone.Main, true),
+                    new WidgetPlacement("Theme", WidgetZone.Main, true),
+                    new WidgetPlacement("Group", WidgetZone.Main, false),
+                },
+                StoredGroupMembers)),
+        });
+        var service = new LayoutService(new FakeLayoutCollectionStore(stored), DefinitionsWithGroup());
+
+        LayoutCollection collection = await service.LoadCollectionAsync();
+
+        NamedLayout? active = collection.Active;
+        Assert.NotNull(active);
+
+        // Ghost is unknown, Theme is Cluster, Group can't contain itself.
+        Assert.Equal(ReconciledGroupMembers, active.Layout.GroupChildren);
+        Assert.True(active.Layout.Widgets.Any(w => w.Id == "Group"));
+    }
+
+    [Fact]
+    public async Task AddToGroup_ShowsGroup_AndRejectsClusterAndGroup()
+    {
+        var service = new LayoutService(new FakeLayoutCollectionStore(), DefinitionsWithGroup());
+        PageLayout layout = await service.LoadAsync();
+
+        PageLayout grouped = await service.AddToGroupAsync(layout, "Search");
+        Assert.Equal(SearchGrouped, grouped.GroupChildren);
+        Assert.True(grouped.Widgets.Single(w => w.Id == "Group").Visible);
+
+        Assert.Same(layout, await service.AddToGroupAsync(layout, "Theme"));
+        Assert.Same(layout, await service.AddToGroupAsync(layout, "Group"));
+    }
+
+    [Fact]
+    public async Task RemoveFromGroup_RestoresTopLevelPosition()
+    {
+        var service = new LayoutService(new FakeLayoutCollectionStore(GroupedCollection(groupVisible: true)), DefinitionsWithGroup());
+        PageLayout layout = await service.LoadAsync();
+
+        PageLayout removed = await service.RemoveFromGroupAsync(layout, "Search");
+
+        Assert.Empty(removed.GroupChildren);
+        Assert.Equal(DefaultOrderWithGroup, removed.Widgets.Select(w => w.Id));
+    }
+
+    [Fact]
+    public async Task DeleteGroup_Only_ReturnsMembers_AndHidesGroup()
+    {
+        var service = new LayoutService(new FakeLayoutCollectionStore(GroupedCollection(groupVisible: true)), DefinitionsWithGroup());
+
+        PageLayout result = await service.DeleteGroupAsync(deleteWidgets: false);
+
+        Assert.Empty(result.GroupChildren);
+        Assert.False(result.Widgets.Single(w => w.Id == "Group").Visible);
+        Assert.Contains("Search", result.Widgets.Select(w => w.Id));
+    }
+
+    [Fact]
+    public async Task DeleteGroup_WithWidgets_HidesMembers()
+    {
+        var service = new LayoutService(new FakeLayoutCollectionStore(GroupedCollection(groupVisible: true)), DefinitionsWithGroup());
+
+        PageLayout result = await service.DeleteGroupAsync(deleteWidgets: true);
+
+        Assert.Empty(result.GroupChildren);
+        Assert.False(result.Widgets.Single(w => w.Id == "Group").Visible);
+
+        // Hidden, not removed: reconcile would re-add a missing widget,
+        // so a deleted member stays in the layout, hidden, until the
+        // editor shows it again.
+        Assert.False(result.Widgets.Single(w => w.Id == "Search").Visible);
+    }
 }

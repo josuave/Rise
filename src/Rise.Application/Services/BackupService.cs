@@ -44,7 +44,8 @@ public sealed class BackupService(
                 layouts.Layouts.Select(layout => new BackupLayoutDto(
                     layout.Id,
                     layout.Name,
-                    layout.Layout.Widgets.Select(widget => new BackupWidgetDto(widget.Id, widget.Visible)).ToList())).ToList()),
+                    layout.Layout.Widgets.Select(widget => new BackupWidgetDto(widget.Id, widget.Visible)).ToList(),
+                    layout.Layout.GroupChildren.ToList())).ToList()),
             widgetConfigs);
         JsonObject stateJson = JsonSerializer.SerializeToNode(state)!.AsObject();
         return BackupFormat.Serialize(new BackupEnvelope(
@@ -187,7 +188,14 @@ public sealed class BackupService(
                 widgets.Add(new WidgetPlacement(widget.Id, WidgetZone.Main, widget.Visible));
             }
 
-            layouts.Add(new NamedLayout(dto.Id, dto.Name ?? string.Empty, new PageLayout(widgets)));
+            // Group members are an overlay, not structure: blank ids
+            // are dropped, and the layout service reconciles the rest
+            // against the registered widgets on load.
+            List<string> groupChildren = dto.GroupChildren?
+                .Where(id => !string.IsNullOrWhiteSpace(id))
+                .ToList() ?? new List<string>();
+
+            layouts.Add(new NamedLayout(dto.Id, dto.Name ?? string.Empty, new PageLayout(widgets, groupChildren)));
         }
 
         if (state.WidgetConfigs.Any(pair => string.IsNullOrWhiteSpace(pair.Key) || pair.Value is null))

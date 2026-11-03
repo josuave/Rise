@@ -36,7 +36,9 @@ public sealed class LayoutService(ILayoutCollectionStore store, IEnumerable<IWid
     /// Brings a stored collection up to date with the registered
     /// widgets: per layout, unknown widget ids are dropped, zones come
     /// from the definitions, and visibility is kept; widgets a layout
-    /// predates slot in by definition Order. Blank layout names become
+    /// predates slot in by definition Order; group membership is kept
+    /// only for known Main widgets that aren't groups themselves.
+    /// Blank layout names become
     /// "Untitled", duplicate names are made unique, and the default
     /// layout is always present; the active id falls back to it when
     /// it points nowhere. A null stored collection reconciles to a
@@ -114,7 +116,16 @@ public sealed class LayoutService(ILayoutCollectionStore store, IEnumerable<IWid
             placements.Insert(index, new WidgetPlacement(definition.Id, definition.Zone, definition.DefaultVisible));
         }
 
-        return new PageLayout(placements);
+        // Group membership survives only for widgets that are still
+        // known, Main-zone, and not groups themselves; anything else is
+        // dropped, so an old layout's stale member ids never render.
+        var groupChildren = saved.GroupChildren
+            .Distinct()
+            .Where(id => placements.Any(p => p.Id == id && p.Zone == WidgetZone.Main)
+                && _definitions.FirstOrDefault(d => d.Id == id)?.IsGroup != true)
+            .ToList();
+
+        return new PageLayout(placements, groupChildren);
     }
 
     private int DefinitionOrder(string id) =>
@@ -132,6 +143,65 @@ public sealed class LayoutService(ILayoutCollectionStore store, IEnumerable<IWid
 
     public async Task<PageLayout> SetVisibleAsync(PageLayout layout, string id, bool visible, CancellationToken cancellationToken = default) =>
         await ApplyToActiveAsync(layout.SetVisible(id, visible), cancellationToken);
+
+    /// <summary>
+    /// Moves a widget into the page's group: it renders inside the
+    /// group shell from then on, and the group itself is shown so the
+    /// result is visible. Only Main widgets can join (groups are
+    /// Main-only in v1); groups can't join themselves. A no-op for
+    /// anything else.
+    /// </summary>
+    public async Task<PageLayout> AddToGroupAsync(PageLayout layout, string id, CancellationToken cancellationToken = default)
+    {
+        IWidgetDefinition? definition = _definitions.FirstOrDefault(d => d.Id == id);
+        if (definition is null || definition.IsGroup || definition.Zone != WidgetZone.Main)
+        {
+            return layout;
+        }
+
+        PageLayout next = layout.AddToGroup(id);
+        string? groupId = _definitions.FirstOrDefault(d => d.IsGroup)?.Id;
+        if (groupId is not null)
+        {
+            next = next.SetVisible(groupId, true);
+        }
+
+        return await ApplyToActiveAsync(next, cancellationToken);
+    }
+
+    public async Task<PageLayout> RemoveFromGroupAsync(PageLayout layout, string id, CancellationToken cancellationToken = default) =>
+        await ApplyToActiveAsync(layout.RemoveFromGroup(id), cancellationToken);
+
+    /// <summary>
+    /// Deletes the page's group: its member list is cleared and the
+    /// group itself is hidden (it stays available in the editor to
+    /// show again). With <paramref name="deleteWidgets"/>, the member
+    /// widgets are hidden too; without it, they return to the top
+    /// level at their flat positions. Hiding, not removing: reconcile
+    /// re-adds a widget missing from a layout, so a removed widget
+    /// would come straight back — a hidden one stays hidden until the
+    /// editor shows it again.
+    /// </summary>
+    public async Task<PageLayout> DeleteGroupAsync(bool deleteWidgets, CancellationToken cancellationToken = default)
+    {
+        PageLayout layout = await LoadAsync(cancellationToken);
+        PageLayout next = layout.ClearGroup();
+        if (deleteWidgets)
+        {
+            foreach (string childId in layout.GroupChildren)
+            {
+                next = next.SetVisible(childId, false);
+            }
+        }
+
+        string? groupId = _definitions.FirstOrDefault(d => d.IsGroup)?.Id;
+        if (groupId is not null)
+        {
+            next = next.SetVisible(groupId, false);
+        }
+
+        return await ApplyToActiveAsync(next, cancellationToken);
+    }
 
     public async Task<PageLayout> ResetAsync(CancellationToken cancellationToken = default)
     {

@@ -9,7 +9,10 @@ namespace Rise.Application.Ports;
 /// definition registered by its slice, never a change to this contract,
 /// to the layout model, or to the shell. ComponentType is System.Type
 /// only, so this contract keeps Application free of any Blazor
-/// reference; the shell renders it via DynamicComponent.
+/// reference; the shell renders it via DynamicComponent. Group
+/// containers are the one layout-level exception: they are a layout
+/// concept, so the contract marks them with IsGroup and the layout
+/// model carries their membership (see PageLayout.GroupChildren).
 /// </summary>
 public interface IWidgetDefinition
 {
@@ -28,4 +31,12 @@ public interface IWidgetDefinition
     int Order { get; }
 
     Type ComponentType { get; }
+
+    /// <summary>
+    /// Whether this widget is a group container: the shell renders its
+    /// member widgets inside it, and the layout model carries its member
+    /// ids on the layout rather than on placements. Opt-in; every
+    /// existing definition is not a group.
+    /// </summary>
+    bool IsGroup => false;
 }

@@ -1,0 +1,19 @@
+/* Group widget: a titled container for its member widgets. */
+.calm-group {
+    border: 1px solid var(--calm-border);
+    border-radius: 12px;
+    padding: 1rem;
+    background: var(--calm-surface);
+}
+
+.calm-group-title {
+    margin: 0 0 0.75rem;
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.calm-group-children {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}

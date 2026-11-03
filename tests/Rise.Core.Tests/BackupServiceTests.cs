@@ -98,6 +98,19 @@ public class BackupServiceTests
             Task.FromResult(Stored.ToDictionary(pair => pair.Key, pair => pair.Value));
     }
 
+    private sealed record TestGroupDefinition(
+        string Id,
+        string Title,
+        WidgetZone Zone,
+        bool DefaultVisible,
+        int Order,
+        Type ComponentType) : IWidgetDefinition
+    {
+        public bool IsGroup => true;
+    }
+
+    private static readonly string[] GroupedLinks = new[] { "Links" };
+
     private sealed class Fixture
     {
         public FakeLinkStore Links { get; } = new();
@@ -112,11 +125,11 @@ public class BackupServiceTests
 
         public BackupService Service { get; }
 
-        public Fixture()
+        public Fixture(IWidgetDefinition[]? definitions = null)
         {
             var pageService = new StartPageService(Links);
             var themeService = new CustomThemeService(Themes, Theme);
-            var layoutService = new LayoutService(Layouts, new[]
+            var layoutService = new LayoutService(Layouts, definitions ?? new IWidgetDefinition[]
             {
                 new TestDefinition("Search", "Search", WidgetZone.Main, true, 10, typeof(object)),
                 new TestDefinition("Links", "Links", WidgetZone.Main, true, 20, typeof(object)),
@@ -167,6 +180,7 @@ public class BackupServiceTests
         Assert.Equal("Mine", state.Themes[0].Name);
         Assert.Equal("default", state.Layouts.ActiveId);
         Assert.Equal(2, state.Layouts.Layouts[0].Widgets.Count);
+        Assert.Empty(state.Layouts.Layouts[0].GroupChildren);
         Assert.Equal("{\"Use24Hour\":true,\"ShowSeconds\":false}", state.WidgetConfigs["Clock"]);
     }
 
@@ -238,6 +252,55 @@ public class BackupServiceTests
         Assert.False(result.IsSuccess);
         Assert.Null(target.Links.Stored);
         Assert.Null(target.Theme.Stored);
+    }
+
+    [Fact]
+    public async Task Import_RoundTrip_PreservesGroupMembership()
+    {
+        var definitions = new IWidgetDefinition[]
+        {
+            new TestDefinition("Search", "Search", WidgetZone.Main, true, 10, typeof(object)),
+            new TestDefinition("Links", "Links", WidgetZone.Main, true, 20, typeof(object)),
+            new TestGroupDefinition("Group", "Group", WidgetZone.Main, false, 45, typeof(object)),
+        };
+        var source = new Fixture(definitions);
+        await source.Layouts.SaveAsync(new LayoutCollection("default", new[]
+        {
+            new NamedLayout("default", "Default", new PageLayout(
+                new[]
+                {
+                    new WidgetPlacement("Search", WidgetZone.Main, true),
+                    new WidgetPlacement("Links", WidgetZone.Main, true),
+                    new WidgetPlacement("Group", WidgetZone.Main, false),
+                },
+                GroupedLinks)),
+        }));
+        string json = await source.Service.ExportAsync();
+        var target = new Fixture(definitions);
+
+        Result<BackupEnvelope> result = await target.Service.ImportAsync(json);
+
+        Assert.True(result.IsSuccess);
+        Assert.NotNull(target.Layouts.Stored);
+        PageLayout imported = target.Layouts.Stored.Layouts[0].Layout;
+        Assert.Equal(GroupedLinks, imported.GroupChildren);
+        Assert.Equal(3, imported.Widgets.Count);
+    }
+
+    [Fact]
+    public async Task Import_FileWithoutGroupChildren_ReadsAsEmpty()
+    {
+        var source = new Fixture();
+        await SeedAsync(source);
+        JsonObject root = JsonNode.Parse(await source.Service.ExportAsync())!.AsObject();
+        root["State"]!.AsObject()["Layouts"]!.AsObject()["Layouts"]!.AsArray()[0]!.AsObject().Remove("GroupChildren");
+        var target = new Fixture();
+
+        Result<BackupEnvelope> result = await target.Service.ImportAsync(root.ToJsonString());
+
+        Assert.True(result.IsSuccess);
+        Assert.NotNull(target.Layouts.Stored);
+        Assert.Empty(target.Layouts.Stored.Layouts[0].Layout.GroupChildren);
     }
 
     [Fact]

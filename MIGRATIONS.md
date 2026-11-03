@@ -74,6 +74,16 @@ No migrations exist yet: v1 is the first versioned format, so
 migrating a v1 file to v1 is an identity, and the migrate button's
 version list holds just v1 until a shape changes.
 
+v1 extension — groups (compatible, no version bump): each layout
+may carry `GroupChildren`, an array of widget ids in group order
+(one layout-level list, not a per-widget field). A file that
+predates groups simply has no list, which reads as empty on import;
+blank ids are dropped; the layout service reconciles the rest
+against the registered definitions on load (known Main widgets
+that aren't groups themselves). Adding an optional field does not
+bump the version: old files still parse, and the v1 identity
+migration keeps the field when present.
+
 ## Adding a version (v2 and beyond)
 
 1. Bump `BackupFormat.CurrentVersion` and document the new shape

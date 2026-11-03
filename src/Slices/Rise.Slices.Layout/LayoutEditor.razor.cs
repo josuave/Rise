@@ -12,9 +12,11 @@ namespace Rise.Slices.Layout;
 /// from the registered definitions, so the editor never names a
 /// concrete widget. Widgets that carry settings show a Configure
 /// button that expands their slice-owned config component inline;
-/// the editor only renders it, never knows what it edits. Every
-/// change goes through the layout service, which persists it and
-/// notifies the shell to re-render.
+/// the editor only renders it, never knows what it edits. A group row
+/// expands to its member widgets, indented, with moves inside the
+/// group and a way back out; deleting a group asks whether its member
+/// widgets go with it. Every change goes through the layout service,
+/// which persists it and notifies the shell to re-render.
 /// </summary>
 public partial class LayoutEditor : IDisposable
 {
@@ -35,6 +37,8 @@ public partial class LayoutEditor : IDisposable
     private string RenameName { get; set; } = string.Empty;
 
     private string? ExpandedConfigId { get; set; }
+
+    private bool ConfirmingGroupDelete { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
@@ -76,9 +80,12 @@ public partial class LayoutEditor : IDisposable
     private void ToggleConfig(WidgetPlacement placement) =>
         ExpandedConfigId = ExpandedConfigId == placement.Id ? null : placement.Id;
 
+    private bool IsGroup(WidgetPlacement placement) =>
+        Definitions.FirstOrDefault(d => d.Id == placement.Id)?.IsGroup ?? false;
+
     private bool IsFirstInZone(WidgetPlacement placement)
     {
-        var zone = Layout.Widgets
+        var zone = Layout.TopLevelWidgets()
             .Where(w => w.Zone == placement.Zone)
             .ToList();
         return zone.Count == 0 || zone[0].Id == placement.Id;
@@ -86,10 +93,22 @@ public partial class LayoutEditor : IDisposable
 
     private bool IsLastInZone(WidgetPlacement placement)
     {
-        var zone = Layout.Widgets
+        var zone = Layout.TopLevelWidgets()
             .Where(w => w.Zone == placement.Zone)
             .ToList();
         return zone.Count == 0 || zone[^1].Id == placement.Id;
+    }
+
+    private bool IsFirstInGroup(WidgetPlacement child)
+    {
+        var children = Layout.GroupChildren.ToList();
+        return children.Count == 0 || children[0] == child.Id;
+    }
+
+    private bool IsLastInGroup(WidgetPlacement child)
+    {
+        var children = Layout.GroupChildren.ToList();
+        return children.Count == 0 || children[^1] == child.Id;
     }
 
     private async Task MoveUpAsync(WidgetPlacement placement)
@@ -113,6 +132,40 @@ public partial class LayoutEditor : IDisposable
         if (LayoutService is not null)
         {
             await LayoutService.SetVisibleAsync(Layout, placement.Id, !placement.Visible);
+        }
+    }
+
+    private async Task AddToGroupAsync(WidgetPlacement placement)
+    {
+        if (LayoutService is not null)
+        {
+            await LayoutService.AddToGroupAsync(Layout, placement.Id);
+        }
+    }
+
+    private async Task RemoveFromGroupAsync(WidgetPlacement placement)
+    {
+        if (LayoutService is not null)
+        {
+            await LayoutService.RemoveFromGroupAsync(Layout, placement.Id);
+        }
+    }
+
+    private async Task DeleteGroupOnlyAsync()
+    {
+        if (LayoutService is not null)
+        {
+            await LayoutService.DeleteGroupAsync(deleteWidgets: false);
+            ConfirmingGroupDelete = false;
+        }
+    }
+
+    private async Task DeleteGroupAndWidgetsAsync()
+    {
+        if (LayoutService is not null)
+        {
+            await LayoutService.DeleteGroupAsync(deleteWidgets: true);
+            ConfirmingGroupDelete = false;
         }
     }
 
