@@ -70,6 +70,10 @@
 
     private const string HintDismissedKey = "rise.hint.v1";
 
+    // Rise is WebAssembly-only, so the injected runtime is always the
+    // in-process one: flag reads/writes are synchronous, no Task.
+    private IJSInProcessRuntime JSInProcess => (IJSInProcessRuntime)JSRuntime;
+
     /// <summary>
     /// The shell knows widgets only through their definitions: no
     /// switch on widget kinds anywhere in this page. A widget whose
@@ -93,15 +97,15 @@
     {
         Layout = await LayoutService.LoadAsync();
         LayoutService.Changed += OnLayoutChanged;
-        ShowHint = !await IsHintDismissedAsync();
+        ShowHint = !IsHintDismissed();
     }
 
     /// <summary>Reads the dismiss flag through the shell's riseStorage helper.</summary>
-    private async Task<bool> IsHintDismissedAsync()
+    private bool IsHintDismissed()
     {
         try
         {
-            return await JSRuntime.InvokeAsync<string?>("riseStorage.get", HintDismissedKey) is not null;
+            return JSInProcess.Invoke<string?>("riseStorage.get", HintDismissedKey) is not null;
         }
         catch (JSException)
         {
@@ -110,11 +114,11 @@
         }
     }
 
-    private async Task DismissHint()
+    private void DismissHint()
     {
         try
         {
-            await JSRuntime.InvokeVoidAsync("riseStorage.set", HintDismissedKey, "1");
+            JSInProcess.InvokeVoid("riseStorage.set", HintDismissedKey, "1");
         }
         catch (JSException)
         {
