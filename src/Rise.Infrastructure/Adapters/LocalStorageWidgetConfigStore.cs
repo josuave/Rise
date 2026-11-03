@@ -40,6 +40,24 @@ public sealed class LocalStorageWidgetConfigStore(IJSRuntime js) : IWidgetConfig
         }
     }
 
+    public async Task<Dictionary<string, string>> GetAllAsync(CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            string? stored = await js.InvokeAsync<string?>("riseStorage.get", cancellationToken, StorageKey);
+            if (string.IsNullOrWhiteSpace(stored))
+            {
+                return new Dictionary<string, string>();
+            }
+
+            return JsonSerializer.Deserialize<Dictionary<string, string>>(stored) ?? new Dictionary<string, string>();
+        }
+        catch (Exception ex) when (ex is JSException or JsonException or InvalidOperationException)
+        {
+            return new Dictionary<string, string>();
+        }
+    }
+
     public async Task SetAsync(string widgetId, string json, CancellationToken cancellationToken = default)
     {
         Dictionary<string, string> configs;

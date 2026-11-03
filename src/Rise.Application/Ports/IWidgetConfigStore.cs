@@ -11,4 +11,7 @@ public interface IWidgetConfigStore
     Task<string?> GetAsync(string widgetId, CancellationToken cancellationToken = default);
 
     Task SetAsync(string widgetId, string json, CancellationToken cancellationToken = default);
+
+    /// <summary>Every widget's saved config JSON, keyed by widget id. Empty when nothing is stored or storage is corrupt.</summary>
+    Task<Dictionary<string, string>> GetAllAsync(CancellationToken cancellationToken = default);
 }

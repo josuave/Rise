@@ -136,4 +136,19 @@ internal sealed class FakeWidgetConfigStore : IWidgetConfigStore
         Stored[widgetId] = json;
         return Task.CompletedTask;
     }
+
+    public Task<Dictionary<string, string>> GetAllAsync(CancellationToken cancellationToken = default) =>
+        Task.FromResult(Stored.ToDictionary(pair => pair.Key, pair => pair.Value));
+}
+
+/// <summary>In-memory file downloader for slice tests: records downloads instead of saving files.</summary>
+internal sealed class FakeFileDownloader : IFileDownloader
+{
+    public List<(string Filename, string Content)> Downloads { get; } = new();
+
+    public Task DownloadAsync(string filename, string content, CancellationToken cancellationToken = default)
+    {
+        Downloads.Add((filename, content));
+        return Task.CompletedTask;
+    }
 }

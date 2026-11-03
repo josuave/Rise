@@ -1,58 +1,84 @@
-using System.Text.Json;
+using System.Text.Json.Nodes;
 using Rise.Application.Services;
+using Rise.Slices.Settings.Abstractions;
 
 namespace Rise.Slices.Header;
 
 /// <summary>
-/// The header widgets' config shapes and their JSON round-trip
-/// through the generic widget-config service. The service stores
-/// strings keyed by widget id; only this slice knows what those
-/// strings mean. Corrupt or absent JSON falls back to defaults.
+/// The clock widget's configuration: a self-managing object over
+/// its JSON. It owns its schema (24-hour format, seconds) and its
+/// evolution (currently v1: no migrations yet, so Migrate is an
+/// identity); the widget-config service runs the migration on load
+/// and saves the migrated JSON back. Missing keys read as defaults.
 /// </summary>
-internal static class WidgetConfig
+public sealed class ClockConfig(WidgetConfigService service) : SelfMigratingWidgetConfig
 {
-    internal sealed record ClockConfig(bool Use24Hour, bool ShowSeconds)
+    public override string WidgetId => ClockWidgetDefinition.WidgetId;
+
+    public override int CurrentVersion => 1;
+
+    public override JsonObject Migrate(JsonObject data, int fromVersion) => data;
+
+    /// <summary>The loaded config JSON. Empty until LoadAsync runs; missing keys read as defaults.</summary>
+    public JsonObject Data { get; private set; } = new();
+
+    public bool Use24Hour
     {
-        internal static ClockConfig Default => new(false, false);
+        get => WidgetConfigJson.GetBool(Data, nameof(Use24Hour));
+        set => Data[nameof(Use24Hour)] = value;
     }
 
-    internal sealed record GreetingConfig(string? CustomText)
+    public bool ShowSeconds
     {
-        internal static GreetingConfig Default => new((string?)null);
+        get => WidgetConfigJson.GetBool(Data, nameof(ShowSeconds));
+        set => Data[nameof(ShowSeconds)] = value;
     }
 
-    internal static async Task<ClockConfig> LoadClockAsync(WidgetConfigService service, CancellationToken cancellationToken = default)
+    public async Task LoadAsync(CancellationToken cancellationToken = default) =>
+        Data = await service.LoadMigratedAsync(WidgetId, CurrentVersion, Migrate, cancellationToken);
+
+    public async Task SaveAsync(CancellationToken cancellationToken = default) =>
+        await service.SetJsonAsync(WidgetId, Data.ToJsonString(), cancellationToken);
+}
+
+/// <summary>
+/// The greeting widget's configuration: a self-managing object over
+/// its JSON. It owns its schema (custom text, blank meaning the
+/// automatic time-based greeting) and its evolution (currently v1:
+/// no migrations yet, so Migrate is an identity); the widget-config
+/// service runs the migration on load and saves the migrated JSON
+/// back. A missing key reads as the default.
+/// </summary>
+public sealed class GreetingConfig(WidgetConfigService service) : SelfMigratingWidgetConfig
+{
+    public override string WidgetId => GreetingWidgetDefinition.WidgetId;
+
+    public override int CurrentVersion => 1;
+
+    public override JsonObject Migrate(JsonObject data, int fromVersion) => data;
+
+    /// <summary>The loaded config JSON. Empty until LoadAsync runs; a missing key reads as the default.</summary>
+    public JsonObject Data { get; private set; } = new();
+
+    public string? CustomText
     {
-        string? json = await service.GetJsonAsync(ClockWidgetDefinition.WidgetId, cancellationToken);
-        return Parse(json, ClockConfig.Default);
-    }
-
-    internal static Task SaveClockAsync(WidgetConfigService service, ClockConfig config, CancellationToken cancellationToken = default) =>
-        service.SetJsonAsync(ClockWidgetDefinition.WidgetId, JsonSerializer.Serialize(config), cancellationToken);
-
-    internal static async Task<GreetingConfig> LoadGreetingAsync(WidgetConfigService service, CancellationToken cancellationToken = default)
-    {
-        string? json = await service.GetJsonAsync(GreetingWidgetDefinition.WidgetId, cancellationToken);
-        return Parse(json, GreetingConfig.Default);
-    }
-
-    internal static Task SaveGreetingAsync(WidgetConfigService service, GreetingConfig config, CancellationToken cancellationToken = default) =>
-        service.SetJsonAsync(GreetingWidgetDefinition.WidgetId, JsonSerializer.Serialize(config), cancellationToken);
-
-    private static T Parse<T>(string? json, T fallback) where T : class
-    {
-        if (string.IsNullOrWhiteSpace(json))
+        get => WidgetConfigJson.GetString(Data, nameof(CustomText));
+        set
         {
-            return fallback;
-        }
-
-        try
-        {
-            return JsonSerializer.Deserialize<T>(json) ?? fallback;
-        }
-        catch (JsonException)
-        {
-            return fallback;
+            if (value is null)
+            {
+                Data.Remove(nameof(CustomText));
+            }
+            else
+            {
+                Data[nameof(CustomText)] = value;
+            }
         }
     }
+
+    public async Task LoadAsync(CancellationToken cancellationToken = default) =>
+        Data = await service.LoadMigratedAsync(WidgetId, CurrentVersion, Migrate, cancellationToken);
+
+    public async Task SaveAsync(CancellationToken cancellationToken = default) =>
+        await service.SetJsonAsync(WidgetId, Data.ToJsonString(), cancellationToken);
 }

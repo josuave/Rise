@@ -18,7 +18,9 @@ public static class ServiceCollectionExtensions
         services.AddScoped<LayoutService>();
         services.AddScoped<CustomThemeService>();
         services.AddScoped<WidgetConfigService>();
+        services.AddScoped<BackupService>();
         services.AddScoped<IWidgetConfigStore, LocalStorageWidgetConfigStore>();
+        services.AddScoped<IFileDownloader, BrowserFileDownloader>();
         services.AddScoped<ICustomThemeStore, LocalStorageCustomThemeStore>();
         services.AddScoped<ILayoutCollectionStore, LocalStorageLayoutCollectionStore>();
         services.AddScoped<ILinkStore, LocalStorageLinkStore>();

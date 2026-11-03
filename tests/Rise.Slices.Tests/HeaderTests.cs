@@ -3,6 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Rise.Application.Ports;
 using Rise.Application.Services;
 using Rise.Domain;
+using Rise.Slices.Header;
 using Xunit;
 using DateComponent = Rise.Slices.Header.HeaderDate;
 using ClockComponent = Rise.Slices.Header.HeaderClock;
@@ -31,6 +32,8 @@ public class HeaderTests : BunitContext
         Services.AddSingleton<IClock>(_ => new FakeClock(moment));
         Services.AddScoped<IWidgetConfigStore>(_ => new FakeWidgetConfigStore());
         Services.AddScoped<WidgetConfigService>();
+        Services.AddScoped<ClockConfig>();
+        Services.AddScoped<GreetingConfig>();
 
         IRenderedComponent<ClockComponent> cut = Render<ClockComponent>();
 
@@ -48,6 +51,8 @@ public class HeaderTests : BunitContext
             ["Clock"] = "{\"Use24Hour\":true,\"ShowSeconds\":true}",
         }));
         Services.AddScoped<WidgetConfigService>();
+        Services.AddScoped<ClockConfig>();
+        Services.AddScoped<GreetingConfig>();
 
         IRenderedComponent<ClockComponent> cut = Render<ClockComponent>();
 
@@ -61,6 +66,8 @@ public class HeaderTests : BunitContext
         Services.AddSingleton<IClock>(_ => new FakeClock(moment));
         Services.AddScoped<IWidgetConfigStore>(_ => new FakeWidgetConfigStore());
         Services.AddScoped<WidgetConfigService>();
+        Services.AddScoped<ClockConfig>();
+        Services.AddScoped<GreetingConfig>();
 
         IRenderedComponent<GreetingComponent> cut = Render<GreetingComponent>();
 
@@ -78,6 +85,8 @@ public class HeaderTests : BunitContext
             ["Greeting"] = "{\"CustomText\":\"Hey there.\"}",
         }));
         Services.AddScoped<WidgetConfigService>();
+        Services.AddScoped<ClockConfig>();
+        Services.AddScoped<GreetingConfig>();
 
         IRenderedComponent<GreetingComponent> cut = Render<GreetingComponent>();
 

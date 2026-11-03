@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Rise.Infrastructure;
+using Rise.Slices.Backup;
 using Rise.Slices.Header;
 using Rise.Slices.Links;
 using Rise.Slices.Search;
@@ -18,10 +19,12 @@ builder.Services.AddRiseCore();
 
 // Slice contributions to Settings, wired here so slices never depend on each other.
 builder.Services.AddLinksSettings();
+builder.Services.AddBackupSettings();
 
 // Widget definitions, wired here: adding a widget is a new definition
 // plus one line here, never a change to the layout model or the shell.
 builder.Services.AddHeaderWidgets();
+builder.Services.AddBackupWidgets();
 builder.Services.AddSearchWidget();
 builder.Services.AddLinksWidgets();
 builder.Services.AddSettingsWidgets();

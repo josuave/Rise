@@ -17,13 +17,14 @@ public partial class HeaderClock : IDisposable
     [Inject]
     private WidgetConfigService ConfigService { get; set; } = null!;
 
-    private WidgetConfig.ClockConfig Config { get; set; } = WidgetConfig.ClockConfig.Default;
+    [Inject]
+    private ClockConfig Config { get; set; } = null!;
 
     private System.Threading.Timer? _timer;
 
     protected override async Task OnInitializedAsync()
     {
-        Config = await WidgetConfig.LoadClockAsync(ConfigService);
+        await Config.LoadAsync();
         ConfigService.ConfigChanged += OnConfigChanged;
 
         StartTimer();
@@ -46,7 +47,7 @@ public partial class HeaderClock : IDisposable
             return;
         }
 
-        Config = await WidgetConfig.LoadClockAsync(ConfigService);
+        await Config.LoadAsync();
         StartTimer();
         await InvokeAsync(StateHasChanged);
     }

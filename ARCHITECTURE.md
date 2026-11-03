@@ -160,8 +160,28 @@ definition that implements `IConfigurableWidgetDefinition` names a
 config component, and the layout editor renders it behind a
 Configure button on that widget's row. Config is stored per widget
 id (key `rise.widgets.v1`), not per layout, so switching layouts
-keeps a widget's settings; the config shapes belong to the slices
-that own the widgets, and the core only ever sees JSON strings.
+keeps a widget's settings. Configs are self-managing objects:
+each widget's config derives from the SelfMigratingWidgetConfig
+base in the Settings abstractions (widget id, current version, a
+Migrate step), owns its schema as typed properties over its JSON,
+and the widget-config service runs the migration on load and saves
+the migrated JSON back; a missing version field means v1, and a
+version newer than the app knows passes through untouched. The
+service takes the Migrate method as a delegate, so the core only
+ever sees JSON strings and never references a config type. The
+config objects follow the options pattern (per-widget named
+options, JSON binding, change notifications through the service's
+ConfigChanged event) rather than implementing IOptionsMonitor,
+whose CurrentValue is synchronous while browser storage reads are
+async.
+State is also portable: the Backup slice exports all five stores
+(links, theme choice, custom themes, layouts, widget configs) as
+one versioned JSON file, imports a file (validating it fully and
+migrating it to the current version first, then reloading the
+page), and migrates an older file to a chosen version for download
+without touching state. Versions and migration rules live in
+`MIGRATIONS.md`; the Backup controls render both as a Settings
+section and as a page widget.
 The "Edit layout" button and the editor stay shell-rendered, not
 widgets: an editor you could hide would strand the user with no
 way back.

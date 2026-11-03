@@ -1,0 +1,38 @@
+<div class="calm-backup">
+    <div class="calm-backup-section">
+        <h4>Export</h4>
+        <p class="calm-dialog-note">Download your links, themes, layouts, and widget settings as one versioned file.</p>
+        <button type="button" @onclick="ExportAsync">Export state</button>
+    </div>
+
+    <div class="calm-backup-section">
+        <h4>Import</h4>
+        <p class="calm-dialog-note">Replaces your current state with the file's state, then reloads the page.</p>
+        <InputFile accept=".json" OnChange="ImportFileSelected" aria-label="Import file" />
+        <button type="button" disabled="@(ImportJson is null)" @onclick="ImportAsync">Import</button>
+    </div>
+
+    <div class="calm-backup-section">
+        <h4>Migrate</h4>
+        <p class="calm-dialog-note">Converts an older backup to a newer version and downloads the result. It doesn't change this page.</p>
+        <InputFile accept=".json" OnChange="MigrateFileSelected" aria-label="Migrate file" />
+        @if (MigrateEnvelope is not null)
+        {
+            <label class="calm-widget-config-row">
+                Migrate to version
+                <select aria-label="Migrate to version" @bind="MigrateTargetVersion">
+                    @for (int version = MigrateEnvelope.FormatVersion; version <= BackupFormat.CurrentVersion; version++)
+                    {
+                        <option value="@version">v@(version)</option>
+                    }
+                </select>
+            </label>
+            <button type="button" @onclick="MigrateAsync">Migrate and download</button>
+        }
+    </div>
+
+    @if (!string.IsNullOrEmpty(Status))
+    {
+        <p class="calm-backup-status" role="status">@Status</p>
+    }
+</div>
