@@ -24,6 +24,25 @@
     z-index: 10;
 }
 
+/* First-run hint: one muted line above Edit layout, dismissed once
+   via a rise.hint.v1 flag. Shell-rendered, never a widget, so it
+   can't be hidden away before a new user ever sees it. */
+.calm-hint[b-cw8acn2iox] {
+    color: var(--calm-muted);
+    font-size: 0.9rem;
+    margin-top: 1.5rem;
+}
+
+.calm-hint-dismiss[b-cw8acn2iox] {
+    background: none;
+    border: none;
+    color: var(--calm-muted);
+    cursor: pointer;
+    font-size: 0.9rem;
+    margin-left: 0.5rem;
+    padding: 0;
+}
+
 .calm-layout-toggle[b-cw8acn2iox] {
     background: none;
     border: none;
