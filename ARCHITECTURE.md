@@ -261,6 +261,21 @@ them reads their sections as empty, and blank text is an import
 error, mirroring links. No encryption in v1: the lists are plain
 storage like links, and password protection stays an open
 follow-up, not v1 scope.
+
+Weather is a Main widget (Order 8, between Greeting and Search),
+hidden by default: current conditions plus optional daily rows
+from Open-Meteo, no key. The core carries the forecast model
+(`WeatherForecast`, `DailyForecast`, `WeatherCode` descriptions)
+and two outbound ports — `IWeatherClient` and `IPlaceGeocoder` —
+with a thin `WeatherService` over them; the Infrastructure
+adapters call Open-Meteo's forecast and geocoding APIs. The
+place is typed, never geolocated: the widget resolves a place
+without coordinates on first load, and the Settings section
+(Order 150) resolves on save, showing an error when nothing
+matches. The place, forecast toggle, and day count live in a
+self-managing `WeatherConfig` under `rise.widgets.v1`, so they
+ride the backup envelope with the other widget configs. The
+widget refreshes on load and every 30 minutes.
 The layout editor adds a layouts section above the widget rows:
 switch, save the current arrangement as new, rename the active
 layout, delete (never the default).

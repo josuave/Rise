@@ -19,6 +19,7 @@
     <ProjectReference Include="..\Slices\Rise.Slices.Backup\Rise.Slices.Backup.csproj" />
     <ProjectReference Include="..\Slices\Rise.Slices.Todo\Rise.Slices.Todo.csproj" />
     <ProjectReference Include="..\Slices\Rise.Slices.Notes\Rise.Slices.Notes.csproj" />
+    <ProjectReference Include="..\Slices\Rise.Slices.Weather\Rise.Slices.Weather.csproj" />
   </ItemGroup>
 
   <ItemGroup>

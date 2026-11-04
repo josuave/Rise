@@ -27,6 +27,7 @@
     <ProjectReference Include="..\..\src\Slices\Rise.Slices.Backup\Rise.Slices.Backup.csproj" />
     <ProjectReference Include="..\..\src\Slices\Rise.Slices.Todo\Rise.Slices.Todo.csproj" />
     <ProjectReference Include="..\..\src\Slices\Rise.Slices.Notes\Rise.Slices.Notes.csproj" />
+    <ProjectReference Include="..\..\src\Slices\Rise.Slices.Weather\Rise.Slices.Weather.csproj" />
     <ProjectReference Include="..\..\src\Slices\Rise.Slices.Settings.Abstractions\Rise.Slices.Settings.Abstractions.csproj" />
   </ItemGroup>
 
