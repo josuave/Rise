@@ -1,0 +1,205 @@
+/* _content/Rise.Slices.Notes/NotesWidget.razor.rz.scp.css */
+/* Notes widget: open list in the page's calm language — no card, rows
+   divided by hairlines, actions as quiet text buttons. */
+.calm-notes-title[b-olnuqwbtar] {
+    margin: 0 0 0.75rem;
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.calm-notes-list[b-olnuqwbtar] {
+    margin-top: 0.75rem;
+}
+
+.calm-note-row[b-olnuqwbtar] {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    padding: 0.5rem 0.25rem;
+    border-bottom: 1px solid var(--calm-border-soft);
+}
+
+.calm-note-row:last-child[b-olnuqwbtar] {
+    border-bottom: none;
+}
+
+.calm-note-row:hover[b-olnuqwbtar] {
+    background: var(--calm-tile-bg);
+}
+
+.calm-note-text[b-olnuqwbtar] {
+    flex: 1;
+    text-align: left;
+    white-space: pre-wrap;
+}
+
+.calm-note-row textarea[b-olnuqwbtar] {
+    flex: 1;
+    min-width: 0;
+    border: 1px solid var(--calm-border);
+    border-radius: 8px;
+    padding: 0.5rem 0.75rem;
+    background: var(--calm-surface);
+    color: var(--calm-text);
+    resize: vertical;
+}
+
+.calm-note-action[b-olnuqwbtar] {
+    background: none;
+    border: none;
+    color: var(--calm-faint);
+    cursor: pointer;
+    font-size: 0.9rem;
+    padding: 0.25rem 0;
+    flex-shrink: 0;
+}
+
+.calm-note-save[b-olnuqwbtar] {
+    border: 1px solid var(--calm-border);
+    border-radius: 8px;
+    padding: 0.25rem 0.75rem;
+    background: var(--calm-surface);
+    color: var(--calm-text);
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.calm-note-remove[b-olnuqwbtar] {
+    width: 22px;
+    height: 22px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    border: 1px solid var(--calm-border);
+    background: var(--calm-surface);
+    color: var(--calm-faint);
+    cursor: pointer;
+    line-height: 1;
+}
+
+.calm-add-form[b-olnuqwbtar] {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-top: 1rem;
+}
+
+.calm-add-form textarea[b-olnuqwbtar] {
+    width: 100%;
+    box-sizing: border-box;
+    min-height: 4.5rem;
+    border: 1px solid var(--calm-border);
+    border-radius: 8px;
+    padding: 0.5rem 0.75rem;
+    background: var(--calm-surface);
+    color: var(--calm-text);
+    resize: vertical;
+}
+
+.calm-add-form button[b-olnuqwbtar] {
+    align-self: flex-end;
+    border: 1px solid var(--calm-border);
+    border-radius: 8px;
+    padding: 0.5rem 1rem;
+    background: var(--calm-surface);
+    color: var(--calm-text);
+    cursor: pointer;
+}
+
+.calm-form-error[b-olnuqwbtar] {
+    color: var(--calm-error);
+    font-size: 0.85rem;
+}
+
+.calm-notes-header[b-olnuqwbtar] {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+}
+
+.calm-notes-header .calm-notes-title[b-olnuqwbtar] {
+    flex: 1;
+}
+
+.calm-notes-view-toggle[b-olnuqwbtar] {
+    background: none;
+    border: none;
+    color: var(--calm-faint);
+    cursor: pointer;
+    font-size: 0.9rem;
+    padding: 0;
+    flex-shrink: 0;
+}
+
+.calm-notes-postits[b-olnuqwbtar] {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-top: 1rem;
+    justify-content: center;
+}
+
+.calm-note-postit[b-olnuqwbtar] {
+    width: 10rem;
+    min-height: 9rem;
+    padding: 0.75rem;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+    font-family: "Segoe Print", "Bradley Hand", "Comic Sans MS", cursive;
+    color: #33302b;
+    text-align: left;
+}
+
+.calm-note-postit:nth-child(3n)[b-olnuqwbtar] {
+    transform: rotate(-1deg);
+}
+
+.calm-note-postit:nth-child(3n+1)[b-olnuqwbtar] {
+    transform: rotate(1deg);
+}
+
+.calm-pastel-0[b-olnuqwbtar] {
+    background: #fff9c4;
+}
+
+.calm-pastel-1[b-olnuqwbtar] {
+    background: #ffd9e8;
+}
+
+.calm-pastel-2[b-olnuqwbtar] {
+    background: #d2f0d8;
+}
+
+.calm-pastel-3[b-olnuqwbtar] {
+    background: #d6e8ff;
+}
+
+.calm-pastel-4[b-olnuqwbtar] {
+    background: #e6dcff;
+}
+
+.calm-note-postit-text[b-olnuqwbtar] {
+    flex: 1;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+.calm-note-postit-actions[b-olnuqwbtar] {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+}
+
+.calm-note-postit-edit[b-olnuqwbtar] {
+    flex: 1;
+    min-width: 0;
+    border: 1px solid var(--calm-border);
+    border-radius: 8px;
+    padding: 0.5rem;
+    background: var(--calm-surface);
+    color: var(--calm-text);
+    font-family: inherit;
+    resize: vertical;
+}
