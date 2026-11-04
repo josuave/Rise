@@ -19,9 +19,13 @@ public class BackupControlsTests : BunitContext
         Services.AddScoped<ICustomThemeStore>(_ => new FakeCustomThemeStore());
         Services.AddScoped<ILayoutCollectionStore>(_ => new FakeLayoutCollectionStore());
         Services.AddScoped<IWidgetConfigStore>(_ => new FakeWidgetConfigStore());
+        Services.AddScoped<ITodoStore>(_ => new FakeTodoStore());
+        Services.AddScoped<INoteStore>(_ => new FakeNoteStore());
         Services.AddScoped<StartPageService>();
         Services.AddScoped<CustomThemeService>();
         Services.AddScoped<LayoutService>();
+        Services.AddScoped<TodoService>();
+        Services.AddScoped<NotesService>();
         Services.AddScoped<BackupService>();
         Services.AddScoped<IFileDownloader>(_ => _downloader);
         Services.AddSingleton<IClock>(_ => new FakeClock(new DateTime(2026, 11, 2, 18, 0, 0)));
