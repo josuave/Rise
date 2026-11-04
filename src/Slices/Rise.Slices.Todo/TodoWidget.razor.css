@@ -1,11 +1,5 @@
-/* Todo widget: a titled container for the list. */
-.calm-todo {
-    border: 1px solid var(--calm-border);
-    border-radius: 12px;
-    padding: 1rem;
-    background: var(--calm-surface);
-}
-
+/* To-do widget: open list in the page's calm language — no card, rows
+   divided by hairlines, controls tinted rather than boxed. */
 .calm-todo-title {
     margin: 0 0 0.75rem;
     font-size: 1.1rem;
@@ -20,7 +14,24 @@
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    padding: 0.25rem 0;
+    padding: 0.5rem 0.25rem;
+    border-bottom: 1px solid var(--calm-border-soft);
+}
+
+.calm-todo-row:last-child {
+    border-bottom: none;
+}
+
+.calm-todo-row:hover {
+    background: var(--calm-tile-bg);
+}
+
+.calm-todo-row input[type="checkbox"] {
+    accent-color: var(--calm-muted);
+    width: 1.1rem;
+    height: 1.1rem;
+    flex-shrink: 0;
+    cursor: pointer;
 }
 
 .calm-todo-text {
@@ -56,13 +67,13 @@
 
 .calm-add-form {
     display: flex;
-    flex-wrap: wrap;
     gap: 0.5rem;
-    justify-content: center;
     margin-top: 1rem;
 }
 
 .calm-add-form input {
+    flex: 1;
+    min-width: 0;
     border: 1px solid var(--calm-border);
     border-radius: 8px;
     padding: 0.5rem 0.75rem;
@@ -77,6 +88,7 @@
     background: var(--calm-surface);
     color: var(--calm-text);
     cursor: pointer;
+    flex-shrink: 0;
 }
 
 .calm-form-error {

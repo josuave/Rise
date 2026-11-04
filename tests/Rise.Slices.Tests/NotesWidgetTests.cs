@@ -12,10 +12,28 @@ public class NotesWidgetTests : BunitContext
 {
     private readonly FakeNoteStore _store = new();
 
+    private readonly FakeWidgetConfigStore _configStore = new();
+
     public NotesWidgetTests()
     {
         Services.AddScoped<INoteStore>(_ => _store);
         Services.AddScoped<NotesService>();
+        Services.AddScoped<IWidgetConfigStore>(_ => _configStore);
+        Services.AddScoped<WidgetConfigService>();
+        Services.AddScoped<NotesViewConfig>();
+    }
+
+    [Fact]
+    public void ToggleView_SwitchesToPostItView_AndPersistsIt()
+    {
+        IRenderedComponent<NotesWidget> cut = Render<NotesWidget>();
+        cut.WaitForAssertion(() => Assert.Contains("Notes", cut.Markup, StringComparison.Ordinal));
+
+        cut.Find("[aria-label=\"Switch to post-it view\"]").Click();
+
+        cut.WaitForAssertion(() => Assert.Contains("calm-notes-postits", cut.Markup, StringComparison.Ordinal));
+        Assert.True(_configStore.Stored.TryGetValue("Notes", out string? json));
+        Assert.Contains("PostItView\":true", json, StringComparison.Ordinal);
     }
 
     [Fact]

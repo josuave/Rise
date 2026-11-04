@@ -14,7 +14,12 @@ public partial class NotesWidget : IDisposable
     [Inject]
     private NotesService NotesService { get; set; } = null!;
 
+    [Inject]
+    private NotesViewConfig ViewConfig { get; set; } = null!;
+
     private NoteList List { get; set; } = NoteList.Empty();
+
+    private bool PostItView => ViewConfig.PostItView;
 
     private string NewText { get; set; } = string.Empty;
 
@@ -27,6 +32,7 @@ public partial class NotesWidget : IDisposable
     protected override async Task OnInitializedAsync()
     {
         List = await NotesService.LoadAsync();
+        await ViewConfig.LoadAsync();
         NotesService.Changed += OnListChanged;
     }
 
@@ -82,6 +88,22 @@ public partial class NotesWidget : IDisposable
 
     private async Task DeleteAsync(Note note) =>
         List = await NotesService.DeleteNoteAsync(List, note.Id);
+
+    private async Task ToggleViewAsync()
+    {
+        ViewConfig.PostItView = !ViewConfig.PostItView;
+        await ViewConfig.SaveAsync();
+    }
+
+    /// <summary>
+    /// A note's pastel by its id, stable across reloads and reorders:
+    /// the id hash cycles through the five pastel classes.
+    /// </summary>
+    private static string PastelClass(Note note)
+    {
+        int index = (note.Id.GetHashCode() % 5 + 5) % 5;
+        return $"calm-pastel-{index}";
+    }
 
     public void Dispose()
     {
