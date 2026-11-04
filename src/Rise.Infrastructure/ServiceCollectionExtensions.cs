@@ -19,11 +19,15 @@ public static class ServiceCollectionExtensions
         services.AddScoped<CustomThemeService>();
         services.AddScoped<WidgetConfigService>();
         services.AddScoped<BackupService>();
+        services.AddScoped<TodoService>();
+        services.AddScoped<NotesService>();
         services.AddScoped<IWidgetConfigStore, LocalStorageWidgetConfigStore>();
         services.AddScoped<IFileDownloader, BrowserFileDownloader>();
         services.AddScoped<ICustomThemeStore, LocalStorageCustomThemeStore>();
         services.AddScoped<ILayoutCollectionStore, LocalStorageLayoutCollectionStore>();
         services.AddScoped<ILinkStore, LocalStorageLinkStore>();
+        services.AddScoped<ITodoStore, LocalStorageTodoStore>();
+        services.AddScoped<INoteStore, LocalStorageNoteStore>();
         services.AddScoped<ISearchLauncher, BrowserSearchLauncher>();
         services.AddScoped<IThemeStore, ThemeStore>();
         services.AddSingleton<IClock, SystemClock>();

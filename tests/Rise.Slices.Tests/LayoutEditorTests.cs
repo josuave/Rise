@@ -8,17 +8,19 @@ using Rise.Slices.Layout;
 using Rise.Slices.Backup;
 using Rise.Slices.Header;
 using Rise.Slices.Links;
+using Rise.Slices.Notes;
 using Rise.Slices.Search;
 using Rise.Slices.Settings;
+using Rise.Slices.Todo;
 using Xunit;
 
 namespace Rise.Slices.Tests;
 
 public class LayoutEditorTests : BunitContext
 {
-    private static readonly string[] DefaultOrder = new[] { "Date", "Clock", "Greeting", "Search", "Links", "LinkEditor", "Backup", "Theme", "Group", "Settings" };
-    private static readonly string[] MovedOrder = new[] { "Date", "Clock", "Greeting", "Links", "Search", "LinkEditor", "Backup", "Theme", "Group", "Settings" };
-    private static readonly bool[] DefaultVisibility = new[] { true, true, true, true, true, false, false, true, false, true };
+    private static readonly string[] DefaultOrder = new[] { "Date", "Clock", "Greeting", "Search", "Links", "LinkEditor", "Backup", "Todo", "Notes", "Theme", "Group", "Settings" };
+    private static readonly string[] MovedOrder = new[] { "Date", "Clock", "Greeting", "Links", "Search", "LinkEditor", "Backup", "Todo", "Notes", "Theme", "Group", "Settings" };
+    private static readonly bool[] DefaultVisibility = new[] { true, true, true, true, true, false, false, false, false, true, false, true };
     private static readonly string[] GroupedLinksSearch = new[] { "Links", "Search" };
 
     private readonly FakeLayoutCollectionStore _layoutStore = new();
@@ -35,6 +37,8 @@ public class LayoutEditorTests : BunitContext
         Services.AddSingleton<IWidgetDefinition, LinksWidgetDefinition>();
         Services.AddSingleton<IWidgetDefinition, LinkEditorWidgetDefinition>();
         Services.AddSingleton<IWidgetDefinition, ThemeWidgetDefinition>();
+        Services.AddSingleton<IWidgetDefinition, TodoWidgetDefinition>();
+        Services.AddSingleton<IWidgetDefinition, NotesWidgetDefinition>();
         Services.AddSingleton<IWidgetDefinition, GroupWidgetDefinition>();
         Services.AddSingleton<IWidgetDefinition, SettingsWidgetDefinition>();
     }
@@ -57,7 +61,7 @@ public class LayoutEditorTests : BunitContext
 
         cut.WaitForAssertion(() => Assert.Contains("Link editor", cut.Markup, StringComparison.Ordinal));
         Assert.Contains("Default", cut.Markup, StringComparison.Ordinal);
-        Assert.Equal(20, cut.FindAll("[aria-label^=\"Move\"]").Count);
+        Assert.Equal(24, cut.FindAll("[aria-label^=\"Move\"]").Count);
     }
 
     [Fact]

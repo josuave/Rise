@@ -37,13 +37,25 @@ public sealed record BackupLayoutDto(string Id, string Name, IReadOnlyList<Backu
 /// <summary>The saved layout set in a backup: the active layout id and every layout.</summary>
 public sealed record BackupLayoutsDto(string ActiveId, IReadOnlyList<BackupLayoutDto> Layouts);
 
-/// <summary>The saved state in a backup: links, theme choice, custom themes, layouts, and per-widget config JSON.</summary>
+/// <summary>One to-do in a backup: id, text, and done flag.</summary>
+public sealed record BackupTodoDto(Guid Id, string Text, bool Done);
+
+/// <summary>One note in a backup: id and text.</summary>
+public sealed record BackupNoteDto(Guid Id, string Text);
+
+/// <summary>
+/// The saved state in a backup: links, theme choice, custom themes,
+/// layouts, per-widget config JSON, and the to-do and note lists
+/// (absent in files that predate them, which read as empty on import).
+/// </summary>
 public sealed record BackupStateDto(
     IReadOnlyList<BackupLinkDto> Links,
     string Theme,
     IReadOnlyList<BackupThemeDto> Themes,
     BackupLayoutsDto Layouts,
-    Dictionary<string, string> WidgetConfigs);
+    Dictionary<string, string> WidgetConfigs,
+    IReadOnlyList<BackupTodoDto>? Todos,
+    IReadOnlyList<BackupNoteDto>? Notes);
 
 /// <summary>A parsed backup file: its version, its export date (ISO 8601), and its state JSON.</summary>
 public sealed record BackupEnvelope(int FormatVersion, string ExportedAt, System.Text.Json.Nodes.JsonObject State);

@@ -8,30 +8,36 @@ namespace Rise.Application.Services;
 /// <summary>
 /// Imperative shell for backups. Export reads the effective state —
 /// through the services where they normalize (links, custom themes,
-/// layouts) and through the ports where no service getter exists
-/// (theme choice, widget configs) — and writes the current-version
-/// envelope. Import validates a file completely before saving
-/// anything, migrates it to the current version first, then saves
-/// through the stores; the caller reloads the page after import so
-/// every widget re-reads the restored state. The migrate button only
-/// converts a file (see <see cref="BackupFormat.Migrate"/>) and never
-/// touches state.
+/// layouts, todos, notes) and through the ports where no service
+/// getter exists (theme choice, widget configs) — and writes the
+/// current-version envelope. Import validates a file completely
+/// before saving anything, migrates it to the current version first,
+/// then saves through the stores; the caller reloads the page after
+/// import so every widget re-reads the restored state. The migrate
+/// button only converts a file (see <see cref="BackupFormat.Migrate"/>)
+/// and never touches state.
 /// </summary>
 public sealed class BackupService(
     StartPageService pageService,
     CustomThemeService themeService,
     LayoutService layoutService,
+    TodoService todoService,
+    NotesService notesService,
     ILinkStore linkStore,
     IThemeStore themeStore,
     ICustomThemeStore customThemeStore,
     ILayoutCollectionStore layoutStore,
-    IWidgetConfigStore widgetConfigStore)
+    IWidgetConfigStore widgetConfigStore,
+    ITodoStore todoStore,
+    INoteStore noteStore)
 {
     public async Task<string> ExportAsync(CancellationToken cancellationToken = default)
     {
         StartPage page = await pageService.LoadAsync(cancellationToken);
         IReadOnlyList<CustomTheme> themes = await themeService.LoadAsync(cancellationToken);
         LayoutCollection layouts = await layoutService.LoadCollectionAsync(cancellationToken);
+        TodoList todos = await todoService.LoadAsync(cancellationToken);
+        NoteList notes = await notesService.LoadAsync(cancellationToken);
         string theme = await themeStore.GetStoredThemeAsync(cancellationToken) ?? "system";
         Dictionary<string, string> widgetConfigs = await widgetConfigStore.GetAllAsync(cancellationToken);
 
@@ -46,7 +52,9 @@ public sealed class BackupService(
                     layout.Name,
                     layout.Layout.Widgets.Select(widget => new BackupWidgetDto(widget.Id, widget.Visible)).ToList(),
                     layout.Layout.GroupChildren.ToList())).ToList()),
-            widgetConfigs);
+            widgetConfigs,
+            todos.Items.Select(item => new BackupTodoDto(item.Id, item.Text, item.Done)).ToList(),
+            notes.Items.Select(note => new BackupNoteDto(note.Id, note.Text)).ToList());
         JsonObject stateJson = JsonSerializer.SerializeToNode(state)!.AsObject();
         return BackupFormat.Serialize(new BackupEnvelope(
             BackupFormat.CurrentVersion,
@@ -85,6 +93,8 @@ public sealed class BackupService(
         await themeStore.SetStoredThemeAsync(state.Theme, cancellationToken);
         await customThemeStore.SaveAsync(state.Themes, cancellationToken);
         await layoutStore.SaveAsync(state.Layouts, cancellationToken);
+        await todoStore.SaveAsync(state.Todos, cancellationToken);
+        await noteStore.SaveAsync(state.Notes, cancellationToken);
         foreach (KeyValuePair<string, string> pair in state.WidgetConfigs)
         {
             await widgetConfigStore.SetAsync(pair.Key, pair.Value, cancellationToken);
@@ -203,12 +213,40 @@ public sealed class BackupService(
             return Result<ImportedState>.Failure("That backup has a widget setting without a name.");
         }
 
+        // Todos and notes are a compatible v1 extension: a file that
+        // predates them has no sections, which read as empty, and
+        // blank text is an import error (never silently dropped),
+        // mirroring links.
+        var todos = new List<TodoItem>();
+        foreach (BackupTodoDto dto in state.Todos ?? new List<BackupTodoDto>())
+        {
+            if (dto.Id == Guid.Empty || string.IsNullOrWhiteSpace(dto.Text))
+            {
+                return Result<ImportedState>.Failure("That backup has a todo without valid text.");
+            }
+
+            todos.Add(new TodoItem(dto.Id, dto.Text.Trim(), dto.Done));
+        }
+
+        var notes = new List<Note>();
+        foreach (BackupNoteDto dto in state.Notes ?? new List<BackupNoteDto>())
+        {
+            if (dto.Id == Guid.Empty || string.IsNullOrWhiteSpace(dto.Text))
+            {
+                return Result<ImportedState>.Failure("That backup has a note without valid text.");
+            }
+
+            notes.Add(new Note(dto.Id, dto.Text.Trim()));
+        }
+
         return Result<ImportedState>.Success(new ImportedState(
             new StartPage(links),
             theme,
             themes,
             new LayoutCollection(state.Layouts.ActiveId, layouts),
-            state.WidgetConfigs));
+            state.WidgetConfigs,
+            new TodoList(todos),
+            new NoteList(notes)));
     }
 
     private static BackupThemeDto ToTheme(CustomTheme theme) => new(
@@ -254,5 +292,7 @@ public sealed class BackupService(
         string Theme,
         List<CustomTheme> Themes,
         LayoutCollection Layouts,
-        Dictionary<string, string> WidgetConfigs);
+        Dictionary<string, string> WidgetConfigs,
+        TodoList Todos,
+        NoteList Notes);
 }

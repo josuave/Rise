@@ -7,8 +7,10 @@ using Rise.Slices.Backup;
 using Rise.Slices.Header;
 using Rise.Slices.Layout;
 using Rise.Slices.Links;
+using Rise.Slices.Notes;
 using Rise.Slices.Search;
 using Rise.Slices.Settings;
+using Rise.Slices.Todo;
 using Rise.Wasm;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
@@ -37,6 +39,8 @@ builder.Services.AddBackupWidgets();
 builder.Services.AddSearchWidget();
 builder.Services.AddLinksWidgets();
 builder.Services.AddLayoutWidgets();
+builder.Services.AddTodoWidgets();
+builder.Services.AddNotesWidgets();
 builder.Services.AddSettingsWidgets();
 
 await builder.Build().RunAsync();

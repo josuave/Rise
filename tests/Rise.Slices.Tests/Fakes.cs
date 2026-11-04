@@ -21,6 +21,40 @@ internal sealed class FakeLinkStore : ILinkStore
     }
 }
 
+/// <summary>In-memory to-do store for slice tests: no localStorage, no JS.</summary>
+internal sealed class FakeTodoStore : ITodoStore
+{
+    public TodoList? StoredList { get; private set; }
+
+    public FakeTodoStore(TodoList? initial = null) => StoredList = initial;
+
+    public Task<TodoList?> LoadAsync(CancellationToken cancellationToken = default) =>
+        Task.FromResult(StoredList);
+
+    public Task SaveAsync(TodoList list, CancellationToken cancellationToken = default)
+    {
+        StoredList = list;
+        return Task.CompletedTask;
+    }
+}
+
+/// <summary>In-memory note store for slice tests: no localStorage, no JS.</summary>
+internal sealed class FakeNoteStore : INoteStore
+{
+    public NoteList? StoredList { get; private set; }
+
+    public FakeNoteStore(NoteList? initial = null) => StoredList = initial;
+
+    public Task<NoteList?> LoadAsync(CancellationToken cancellationToken = default) =>
+        Task.FromResult(StoredList);
+
+    public Task SaveAsync(NoteList list, CancellationToken cancellationToken = default)
+    {
+        StoredList = list;
+        return Task.CompletedTask;
+    }
+}
+
 /// <summary>Search launcher that records URLs instead of opening tabs.</summary>
 internal sealed class FakeSearchLauncher : ISearchLauncher
 {

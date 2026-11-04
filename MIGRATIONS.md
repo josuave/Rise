@@ -84,6 +84,13 @@ that aren't groups themselves). Adding an optional field does not
 bump the version: old files still parse, and the v1 identity
 migration keeps the field when present.
 
+v1 extension — todos and notes (compatible, no version bump): the
+state gains `Todos` (array of `{ "Id", "Text", "Done" }`) and `Notes`
+(array of `{ "Id", "Text" }`). A file that predates them simply has
+no sections, which read as empty on import; blank text is an import
+error, never silently dropped, mirroring links. Same rule as groups:
+adding optional sections does not bump the version.
+
 ## Adding a version (v2 and beyond)
 
 1. Bump `BackupFormat.CurrentVersion` and document the new shape

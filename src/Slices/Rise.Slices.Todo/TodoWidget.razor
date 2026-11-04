@@ -1,0 +1,29 @@
+@using Rise.Domain
+
+<div class="calm-todo">
+    <h2 class="calm-todo-title">Todo</h2>
+    <div class="calm-add-form">
+        <input type="text" placeholder="Something to do" aria-label="New todo" @bind="NewText" />
+        <button type="button" @onclick="AddAsync">Add</button>
+    </div>
+    @if (!string.IsNullOrEmpty(FormError))
+    {
+        <p class="calm-form-error">@FormError</p>
+    }
+
+    <div class="calm-todo-list">
+        @foreach (var item in List.Items)
+        {
+            <div class="calm-todo-row">
+                <input type="checkbox" aria-label="Toggle @item.Text" checked="@item.Done" @onchange="args => ToggleAsync(item, args)" />
+                <span class="@(item.Done ? "calm-todo-text calm-todo-text-done" : "calm-todo-text")">@item.Text</span>
+                <button type="button" class="calm-todo-remove" aria-label="Delete @item.Text" @onclick="() => DeleteAsync(item)">×</button>
+            </div>
+        }
+    </div>
+
+    @if (List.Items.Any(item => item.Done))
+    {
+        <button type="button" class="calm-todo-clear" @onclick="ClearCompletedAsync">Clear completed</button>
+    }
+</div>
