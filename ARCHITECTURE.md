@@ -250,7 +250,12 @@ toggle, delete, clear completed (no due dates, reminders, or
 priorities); notes are a list of plain-text notes (add, edit,
 delete), deliberately no markdown editor — that would be the heavy
 library that reopens the parked lazy-loading decision. Neither
-widget is configurable in v1. Both lists join the backup envelope
+widget has a config editor; Notes instead carries one self-managing
+config, `NotesViewConfig` (v1, under `rise.widgets.v1` like the header
+configs): a toggle on the widget switches between the list view and
+an optional post-it view — pastel cards (one of five, by note id),
+a handwritten font stack, a slight tilt — and the choice persists.
+Both lists join the backup envelope
 unconditionally, as a compatible v1 extension: a file that predates
 them reads their sections as empty, and blank text is an import
 error, mirroring links. No encryption in v1: the lists are plain

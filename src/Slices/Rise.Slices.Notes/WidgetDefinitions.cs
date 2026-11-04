@@ -32,6 +32,7 @@ public static class NotesWidgetExtensions
     public static IServiceCollection AddNotesWidgets(this IServiceCollection services)
     {
         services.AddSingleton<IWidgetDefinition, NotesWidgetDefinition>();
+        services.AddScoped<NotesViewConfig>();
         return services;
     }
 }
