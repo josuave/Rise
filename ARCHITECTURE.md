@@ -239,6 +239,23 @@ missing from a layout, so a removed member would come straight
 back — a hidden one stays hidden until the editor shows it again.
 No nesting and Cluster members in v1; both are open follow-ups, not
 v1 scope.
+Todo and Notes are two separate slices, one PR: each owns its
+definition (Id `Todo`/`Notes`, Main, hidden by default, Orders 36/37)
+and its widget, following the same shape as links — a Domain list
+(`TodoList`/`NoteList`) with pure add/toggle/delete (and
+clear-completed for todos, edit for notes), an Application service
+over a store port, and a LocalStorage adapter under `rise.todos.v1`
+/ `rise.notes.v1`. Both widgets are minimal v1: todos are add,
+toggle, delete, clear completed (no due dates, reminders, or
+priorities); notes are a list of plain-text notes (add, edit,
+delete), deliberately no markdown editor — that would be the heavy
+library that reopens the parked lazy-loading decision. Neither
+widget is configurable in v1. Both lists join the backup envelope
+unconditionally, as a compatible v1 extension: a file that predates
+them reads their sections as empty, and blank text is an import
+error, mirroring links. No encryption in v1: the lists are plain
+storage like links, and password protection stays an open
+follow-up, not v1 scope.
 The layout editor adds a layouts section above the widget rows:
 switch, save the current arrangement as new, rename the active
 layout, delete (never the default).

@@ -1,0 +1,33 @@
+@using Rise.Domain
+
+<div class="calm-notes">
+    <h2 class="calm-notes-title">Notes</h2>
+    <div class="calm-add-form">
+        <textarea placeholder="Write a note" aria-label="New note" @bind="NewText"></textarea>
+        <button type="button" @onclick="AddAsync">Add note</button>
+    </div>
+    @if (!string.IsNullOrEmpty(FormError))
+    {
+        <p class="calm-form-error">@FormError</p>
+    }
+
+    <div class="calm-notes-list">
+        @foreach (var note in List.Items)
+        {
+            <div class="calm-note-row">
+                @if (EditingId == note.Id)
+                {
+                    <textarea aria-label="Edit note" @bind="EditText"></textarea>
+                    <button type="button" @onclick="SaveEditAsync">Save</button>
+                    <button type="button" @onclick="CancelEdit">Cancel</button>
+                }
+                else
+                {
+                    <span class="calm-note-text">@note.Text</span>
+                    <button type="button" aria-label="Edit @note.Text" @onclick="() => StartEdit(note)">Edit</button>
+                    <button type="button" class="calm-note-remove" aria-label="Delete @note.Text" @onclick="() => DeleteAsync(note)">×</button>
+                }
+            </div>
+        }
+    </div>
+</div>

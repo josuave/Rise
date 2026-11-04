@@ -98,6 +98,34 @@ public class BackupServiceTests
             Task.FromResult(Stored.ToDictionary(pair => pair.Key, pair => pair.Value));
     }
 
+    private sealed class FakeTodoStore : ITodoStore
+    {
+        public TodoList? Stored { get; private set; }
+
+        public Task<TodoList?> LoadAsync(CancellationToken cancellationToken = default) =>
+            Task.FromResult(Stored);
+
+        public Task SaveAsync(TodoList list, CancellationToken cancellationToken = default)
+        {
+            Stored = list;
+            return Task.CompletedTask;
+        }
+    }
+
+    private sealed class FakeNoteStore : INoteStore
+    {
+        public NoteList? Stored { get; private set; }
+
+        public Task<NoteList?> LoadAsync(CancellationToken cancellationToken = default) =>
+            Task.FromResult(Stored);
+
+        public Task SaveAsync(NoteList list, CancellationToken cancellationToken = default)
+        {
+            Stored = list;
+            return Task.CompletedTask;
+        }
+    }
+
     private sealed record TestGroupDefinition(
         string Id,
         string Title,
@@ -123,6 +151,10 @@ public class BackupServiceTests
 
         public FakeWidgetConfigStore Widgets { get; } = new();
 
+        public FakeTodoStore Todos { get; } = new();
+
+        public FakeNoteStore Notes { get; } = new();
+
         public BackupService Service { get; }
 
         public Fixture(IWidgetDefinition[]? definitions = null)
@@ -134,7 +166,9 @@ public class BackupServiceTests
                 new TestDefinition("Search", "Search", WidgetZone.Main, true, 10, typeof(object)),
                 new TestDefinition("Links", "Links", WidgetZone.Main, true, 20, typeof(object)),
             });
-            Service = new BackupService(pageService, themeService, layoutService, Links, Theme, Themes, Layouts, Widgets);
+            var todoService = new TodoService(Todos);
+            var notesService = new NotesService(Notes);
+            Service = new BackupService(pageService, themeService, layoutService, todoService, notesService, Links, Theme, Themes, Layouts, Widgets, Todos, Notes);
         }
     }
 
@@ -157,6 +191,14 @@ public class BackupServiceTests
             })),
         }));
         await fixture.Widgets.SetAsync("Clock", "{\"Use24Hour\":true,\"ShowSeconds\":false}");
+        await fixture.Todos.SaveAsync(new TodoList(new[]
+        {
+            new TodoItem(Guid.NewGuid(), "Buy milk", false),
+        }));
+        await fixture.Notes.SaveAsync(new NoteList(new[]
+        {
+            new Note(Guid.NewGuid(), "First note"),
+        }));
     }
 
     [Fact]
@@ -182,6 +224,13 @@ public class BackupServiceTests
         Assert.Equal(2, state.Layouts.Layouts[0].Widgets.Count);
         Assert.Empty(state.Layouts.Layouts[0].GroupChildren);
         Assert.Equal("{\"Use24Hour\":true,\"ShowSeconds\":false}", state.WidgetConfigs["Clock"]);
+        Assert.NotNull(state.Todos);
+        Assert.Single(state.Todos);
+        Assert.Equal("Buy milk", state.Todos[0].Text);
+        Assert.False(state.Todos[0].Done);
+        Assert.NotNull(state.Notes);
+        Assert.Single(state.Notes);
+        Assert.Equal("First note", state.Notes[0].Text);
     }
 
     [Fact]
@@ -206,6 +255,12 @@ public class BackupServiceTests
         Assert.Equal("default", target.Layouts.Stored.ActiveId);
         Assert.Equal(2, target.Layouts.Stored.Layouts[0].Layout.Widgets.Count);
         Assert.Equal("{\"Use24Hour\":true,\"ShowSeconds\":false}", target.Widgets.Stored["Clock"]);
+        Assert.NotNull(target.Todos.Stored);
+        Assert.Single(target.Todos.Stored.Items);
+        Assert.Equal("Buy milk", target.Todos.Stored.Items[0].Text);
+        Assert.NotNull(target.Notes.Stored);
+        Assert.Single(target.Notes.Stored.Items);
+        Assert.Equal("First note", target.Notes.Stored.Items[0].Text);
     }
 
     [Fact]
@@ -225,6 +280,8 @@ public class BackupServiceTests
         Assert.Null(target.Themes.Stored);
         Assert.Null(target.Layouts.Stored);
         Assert.Empty(target.Widgets.Stored);
+        Assert.Null(target.Todos.Stored);
+        Assert.Null(target.Notes.Stored);
     }
 
     [Fact]
@@ -301,6 +358,42 @@ public class BackupServiceTests
         Assert.True(result.IsSuccess);
         Assert.NotNull(target.Layouts.Stored);
         Assert.Empty(target.Layouts.Stored.Layouts[0].Layout.GroupChildren);
+    }
+
+    [Fact]
+    public async Task Import_FileWithoutTodosAndNotes_ReadsAsEmpty()
+    {
+        var source = new Fixture();
+        await SeedAsync(source);
+        JsonObject root = JsonNode.Parse(await source.Service.ExportAsync())!.AsObject();
+        root["State"]!.AsObject().Remove("Todos");
+        root["State"]!.AsObject().Remove("Notes");
+        var target = new Fixture();
+
+        Result<BackupEnvelope> result = await target.Service.ImportAsync(root.ToJsonString());
+
+        Assert.True(result.IsSuccess);
+        Assert.NotNull(target.Todos.Stored);
+        Assert.Empty(target.Todos.Stored.Items);
+        Assert.NotNull(target.Notes.Stored);
+        Assert.Empty(target.Notes.Stored.Items);
+    }
+
+    [Fact]
+    public async Task Import_RejectsBlankTodoText_AndSavesNothing()
+    {
+        var source = new Fixture();
+        await SeedAsync(source);
+        JsonObject root = JsonNode.Parse(await source.Service.ExportAsync())!.AsObject();
+        root["State"]!.AsObject()["Todos"]!.AsArray()[0]!.AsObject()["Text"] = "   ";
+        var target = new Fixture();
+
+        Result<BackupEnvelope> result = await target.Service.ImportAsync(root.ToJsonString());
+
+        Assert.False(result.IsSuccess);
+        Assert.Null(target.Links.Stored);
+        Assert.Null(target.Todos.Stored);
+        Assert.Null(target.Notes.Stored);
     }
 
     [Fact]
