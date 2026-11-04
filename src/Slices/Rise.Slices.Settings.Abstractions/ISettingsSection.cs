@@ -14,8 +14,8 @@ namespace Rise.Slices.Settings.Abstractions;
 /// own Razor component, already loaded as part of the app). That component
 /// is where the section's behavior lives: it injects whatever core
 /// services it needs, exactly like any other slice component, and the
-/// dialog never knows its internals. Contributed sections render between
-/// the dialog's built-in Diagnostics and Maintenance sections;
+/// dialog never knows its internals. Contributed sections render after
+/// the dialog's built-in Theme section;
 /// <see cref="Order"/> orders them among themselves.
 /// </summary>
 public interface ISettingsSection

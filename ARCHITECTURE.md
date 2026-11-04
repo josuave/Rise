@@ -150,17 +150,17 @@ after them — so a new widget lands where its Order puts it instead
 of last, and the stored relative order of existing widgets is never
 disturbed. The default layout is just the definitions in Order —
 it reproduces the old page (Date, Clock, Greeting, Search, Links,
-Theme, Settings visible; Link editor hidden).
+Theme, Settings visible).
 
 The header is three widgets, not one: the Header slice renders
 date, clock, and greeting as separate widgets, each owning its own
 refresh timer, so the shell re-renders only when the layout changes
-instead of on every clock tick. Widgets may also carry settings: a
-definition that implements `IConfigurableWidgetDefinition` names a
-config component, and the layout editor renders it behind a
-Configure button on that widget's row. Config is stored per widget
-id (key `rise.widgets.v1`), not per layout, so switching layouts
-keeps a widget's settings. Configs are self-managing objects:
+instead of on every clock tick. Widgets may also carry settings,
+and those live in the Settings dialog as sections (Clock, Greeting,
+Group, and Notes join Links and Backup there; Theme is built in).
+The layout editor only arranges — it no longer renders settings.
+Config is stored per widget id (key `rise.widgets.v1`), not per
+layout, so switching layouts keeps a widget's settings. Configs are self-managing objects:
 each widget's config derives from the SelfMigratingWidgetConfig
 base in the Settings abstractions (widget id, current version, a
 Migrate step), owns its schema as typed properties over its JSON,
@@ -191,9 +191,8 @@ no change to Domain, the layout service, the editor, or the shell.
 The shell (`Index`) renders widgets from the layout instead of naming
 components directly, and re-renders whenever the layout service's
 `Changed` event fires. The link service has the same event, so tiles
-stay fresh when the editor (a separate widget) saves. Editing is a
-widget too: Links' "Edit links" button shows the Link editor widget,
-whose Done button hides it again. The layout editor itself is a
+stay fresh when the Settings section saves. Links are edited only in
+the Settings dialog: the Links section adds, removes, and resets. The layout editor itself is a
 widget of last resort in the shell: move up/down, hide/show, reset to
 defaults, all buttons (drag-and-drop is a later step, not v1), with
 titles taken from the definitions. Like the Settings contract, this
@@ -249,12 +248,13 @@ over a store port, and a LocalStorage adapter under `rise.todos.v1`
 toggle, delete, clear completed (no due dates, reminders, or
 priorities); notes are a list of plain-text notes (add, edit,
 delete), deliberately no markdown editor — that would be the heavy
-library that reopens the parked lazy-loading decision. Neither
-widget has a config editor; Notes instead carries one self-managing
-config, `NotesViewConfig` (v1, under `rise.widgets.v1` like the header
-configs): a toggle on the widget switches between the list view and
-an optional post-it view — pastel cards (one of five, by note id),
-a handwritten font stack, a slight tilt — and the choice persists.
+library that reopens the parked lazy-loading decision. Notes carries
+one self-managing config, `NotesViewConfig` (v1, under `rise.widgets.v1`
+like the header configs): a toggle on the widget switches between the
+list view and an optional post-it view — pastel cards (one of five, by
+note id), a handwritten font stack, a slight tilt — and the choice
+persists; the same choice is a Notes section in the Settings dialog,
+the theme pattern of dialog setting plus quick toggle.
 Both lists join the backup envelope
 unconditionally, as a compatible v1 extension: a file that predates
 them reads their sections as empty, and blank text is an import
@@ -322,8 +322,8 @@ separate from this one:
    own Razor component for the section. The component is the section's
    behavior and UI: it injects core services and does the work, exactly
    like any slice component. Example: `LinksSettingsSection`
-   (`Order = 100`, component `LinksSettings`, which lists, removes,
-   and resets links) in `Rise.Slices.Links`.
+   (`Order = 100`, component `LinksSettings`, which lists, adds,
+   removes, and resets links) in `Rise.Slices.Links`.
 2. **Register.** The slice exposes a small DI extension (e.g.
    `AddLinksSettings()` registering
    `ISettingsSection -> LinksSettingsSection`) and the shell calls it

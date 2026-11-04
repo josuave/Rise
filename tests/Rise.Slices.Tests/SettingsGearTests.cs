@@ -4,7 +4,10 @@ using Microsoft.Extensions.DependencyInjection;
 using Rise.Application.Ports;
 using Rise.Application.Services;
 using Rise.Domain;
+using Rise.Slices.Header;
+using Rise.Slices.Layout;
 using Rise.Slices.Links;
+using Rise.Slices.Notes;
 using Rise.Slices.Settings;
 using Rise.Slices.Settings.Abstractions;
 using Xunit;
@@ -38,6 +41,30 @@ public class SettingsGearTests : BunitContext
         Assert.Contains("Theme", cut.Markup, StringComparison.Ordinal);
         Assert.Contains("Tiles shown on the home page.", cut.Markup, StringComparison.Ordinal);
         Assert.Contains("Google", cut.Markup, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void GearButton_OpensDialog_WithAllWidgetSections()
+    {
+        Services.AddScoped<IWidgetConfigStore>(_ => new FakeWidgetConfigStore());
+        Services.AddScoped<WidgetConfigService>();
+        Services.AddScoped<ClockConfig>();
+        Services.AddScoped<GreetingConfig>();
+        Services.AddScoped<GroupConfig>();
+        Services.AddScoped<NotesViewConfig>();
+        Services.AddScoped<ISettingsSection, ClockSettingsSection>();
+        Services.AddScoped<ISettingsSection, GreetingSettingsSection>();
+        Services.AddScoped<ISettingsSection, GroupSettingsSection>();
+        Services.AddScoped<ISettingsSection, NotesSettingsSection>();
+
+        IRenderedComponent<SettingsGear> cut = Render<SettingsGear>();
+
+        cut.Find(".calm-settings-gear").Click();
+
+        Assert.Contains("Clock", cut.Markup, StringComparison.Ordinal);
+        Assert.Contains("Greeting", cut.Markup, StringComparison.Ordinal);
+        Assert.Contains("Group", cut.Markup, StringComparison.Ordinal);
+        Assert.Contains("Notes", cut.Markup, StringComparison.Ordinal);
     }
 
     [Fact]

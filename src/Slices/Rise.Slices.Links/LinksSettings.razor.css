@@ -1,3 +1,34 @@
+.calm-settings-add-form {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin: 0 0 0.75rem;
+}
+
+.calm-settings-add-form input {
+    flex: 1;
+    min-width: 0;
+    border: 1px solid var(--calm-border);
+    border-radius: 8px;
+    padding: 0.5rem 0.75rem;
+    background: var(--calm-surface);
+    color: var(--calm-text);
+}
+
+.calm-settings-add-form button {
+    border: 1px solid var(--calm-border);
+    border-radius: 8px;
+    padding: 0.5rem 1rem;
+    background: var(--calm-surface);
+    color: var(--calm-text);
+    cursor: pointer;
+}
+
+.calm-form-error {
+    color: var(--calm-error);
+    font-size: 0.85rem;
+}
+
 .calm-settings-list {
     list-style: none;
     padding: 0;

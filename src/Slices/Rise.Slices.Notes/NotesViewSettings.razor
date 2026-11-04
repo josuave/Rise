@@ -1,0 +1,4 @@
+<div class="calm-notes-view-settings">
+    <button type="button" class="calm-notes-view-option@(!PostItView ? " selected" : "")" aria-pressed="@(!PostItView)" aria-label="Show notes as list" @onclick="() => SetViewAsync(false)">List</button>
+    <button type="button" class="calm-notes-view-option@(PostItView ? " selected" : "")" aria-pressed="@PostItView" aria-label="Show notes as post-its" @onclick="() => SetViewAsync(true)">Post-its</button>
+</div>

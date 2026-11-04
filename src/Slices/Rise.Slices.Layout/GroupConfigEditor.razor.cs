@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Components;
 namespace Rise.Slices.Layout;
 
 /// <summary>
-/// The group widget's settings, rendered by the layout editor: a
+/// The group widget's settings, rendered in the Settings dialog: a
 /// display name, saved on change. Blank restores the default.
 /// </summary>
 public partial class GroupConfigEditor

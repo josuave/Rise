@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Components;
 namespace Rise.Slices.Header;
 
 /// <summary>
-/// The greeting widget's settings, rendered by the layout editor:
+/// The greeting widget's settings, rendered in the Settings dialog:
 /// a custom greeting text, saved on change. Blank restores the
 /// automatic time-based greeting.
 /// </summary>
