@@ -21,6 +21,9 @@ public static class ServiceCollectionExtensions
         services.AddScoped<BackupService>();
         services.AddScoped<TodoService>();
         services.AddScoped<NotesService>();
+        services.AddScoped<WeatherService>();
+        services.AddScoped<IWeatherClient, OpenMeteoWeatherClient>();
+        services.AddScoped<IPlaceGeocoder, OpenMeteoPlaceGeocoder>();
         services.AddScoped<IWidgetConfigStore, LocalStorageWidgetConfigStore>();
         services.AddScoped<IFileDownloader, BrowserFileDownloader>();
         services.AddScoped<ICustomThemeStore, LocalStorageCustomThemeStore>();

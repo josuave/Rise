@@ -1,0 +1,26 @@
+<div class="calm-weather-settings">
+    <div class="calm-weather-place-form">
+        <input type="text" placeholder="Queensbury, NY" aria-label="Weather place" @bind="PlaceText" />
+        <button type="button" @onclick="SavePlaceAsync">Save place</button>
+    </div>
+    @if (!string.IsNullOrEmpty(FormError))
+    {
+        <p class="calm-weather-form-error">@FormError</p>
+    }
+    <p class="calm-weather-settings-current">Showing weather for @Config.Place.</p>
+    <div class="calm-weather-view-settings">
+        <button type="button" class="calm-weather-view-option@(!ShowForecast ? " selected" : "")" aria-pressed="@(!ShowForecast)" aria-label="Show current conditions only" @onclick="() => SetForecastAsync(false)">Current only</button>
+        <button type="button" class="calm-weather-view-option@(ShowForecast ? " selected" : "")" aria-pressed="@ShowForecast" aria-label="Show daily forecast" @onclick="() => SetForecastAsync(true)">Forecast</button>
+    </div>
+    @if (ShowForecast)
+    {
+        <label class="calm-weather-days-label">
+            Forecast days
+            <select aria-label="Forecast days" value="@ForecastDays" @onchange="SetDaysAsync">
+                <option value="3">3 days</option>
+                <option value="5">5 days</option>
+                <option value="7">7 days</option>
+            </select>
+        </label>
+    }
+</div>

@@ -1,0 +1,33 @@
+@using System.Globalization
+@using Rise.Domain
+
+<div class="calm-weather">
+    <div class="calm-weather-header">
+        <h2 class="calm-weather-title">Weather</h2>
+        <span class="calm-weather-place">@Config.Place</span>
+    </div>
+    @if (Forecast is null)
+    {
+        <p class="calm-weather-status">@(Status ?? "Loading weather…")</p>
+    }
+    else
+    {
+        <p class="calm-weather-current">
+            <span class="calm-weather-temp">@Temp(Forecast.Current.TempF)</span>
+            <span class="calm-weather-desc">@WeatherCode.Describe(Forecast.Current.Code)</span>
+        </p>
+        @if (Config.ShowForecast)
+        {
+            <div class="calm-weather-days">
+                @foreach (var day in Forecast.Daily.Skip(1))
+                {
+                    <div class="calm-weather-day">
+                        <span class="calm-weather-dayname">@day.Date.ToString("ddd", CultureInfo.InvariantCulture)</span>
+                        <span class="calm-weather-daydesc">@WeatherCode.Describe(day.Code)</span>
+                        <span class="calm-weather-daytemps">@Temp(day.MaxF) / @Temp(day.MinF)</span>
+                    </div>
+                }
+            </div>
+        }
+    }
+</div>

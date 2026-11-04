@@ -9,6 +9,7 @@ using Rise.Slices.Layout;
 using Rise.Slices.Links;
 using Rise.Slices.Notes;
 using Rise.Slices.Search;
+using Rise.Slices.Weather;
 using Rise.Slices.Settings;
 using Rise.Slices.Todo;
 using Rise.Wasm;
@@ -34,6 +35,7 @@ builder.Services.AddBackupSettings();
 builder.Services.AddHeaderSettings();
 builder.Services.AddLayoutSettings();
 builder.Services.AddNotesSettings();
+builder.Services.AddWeatherSettings();
 
 // Widget definitions, wired here: adding a widget is a new definition
 // plus one line here, never a change to the layout model or the shell.
@@ -44,6 +46,7 @@ builder.Services.AddLinksWidgets();
 builder.Services.AddLayoutWidgets();
 builder.Services.AddTodoWidgets();
 builder.Services.AddNotesWidgets();
+builder.Services.AddWeatherWidgets();
 builder.Services.AddSettingsWidgets();
 
 await builder.Build().RunAsync();

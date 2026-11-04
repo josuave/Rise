@@ -1,0 +1,51 @@
+.calm-weather-header {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+}
+
+.calm-weather-title {
+    margin: 0;
+    font-size: 1rem;
+}
+
+.calm-weather-place {
+    color: var(--calm-muted);
+    font-size: 0.85rem;
+}
+
+.calm-weather-current {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+    margin: 0.25rem 0 0;
+}
+
+.calm-weather-temp {
+    font-size: 1.4rem;
+}
+
+.calm-weather-desc {
+    color: var(--calm-muted);
+}
+
+.calm-weather-status {
+    color: var(--calm-muted);
+    margin: 0.25rem 0 0;
+}
+
+.calm-weather-day {
+    display: flex;
+    gap: 0.5rem;
+    padding: 0.25rem 0;
+    border-top: 1px solid var(--calm-border-soft);
+}
+
+.calm-weather-dayname {
+    width: 3rem;
+}
+
+.calm-weather-daydesc {
+    flex: 1;
+    color: var(--calm-muted);
+}

@@ -9,6 +9,7 @@ using Rise.Slices.Layout;
 using Rise.Slices.Links;
 using Rise.Slices.Notes;
 using Rise.Slices.Settings;
+using Rise.Slices.Weather;
 using Rise.Slices.Settings.Abstractions;
 using Xunit;
 
@@ -56,6 +57,11 @@ public class SettingsGearTests : BunitContext
         Services.AddScoped<ISettingsSection, GreetingSettingsSection>();
         Services.AddScoped<ISettingsSection, GroupSettingsSection>();
         Services.AddScoped<ISettingsSection, NotesSettingsSection>();
+        Services.AddScoped<IWeatherClient>(_ => new FakeWeatherClient());
+        Services.AddScoped<IPlaceGeocoder>(_ => new FakePlaceGeocoder());
+        Services.AddScoped<WeatherService>();
+        Services.AddScoped<WeatherConfig>();
+        Services.AddScoped<ISettingsSection, WeatherSettingsSection>();
 
         IRenderedComponent<SettingsGear> cut = Render<SettingsGear>();
 
@@ -65,6 +71,7 @@ public class SettingsGearTests : BunitContext
         Assert.Contains("Greeting", cut.Markup, StringComparison.Ordinal);
         Assert.Contains("Group", cut.Markup, StringComparison.Ordinal);
         Assert.Contains("Notes", cut.Markup, StringComparison.Ordinal);
+        Assert.Contains("Weather", cut.Markup, StringComparison.Ordinal);
     }
 
     [Fact]

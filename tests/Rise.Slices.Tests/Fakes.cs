@@ -186,3 +186,26 @@ internal sealed class FakeFileDownloader : IFileDownloader
         return Task.CompletedTask;
     }
 }
+
+/// <summary>Weather client that returns a fixed forecast: no network.</summary>
+internal sealed class FakeWeatherClient : IWeatherClient
+{
+    public WeatherForecast Forecast { get; set; } = new(
+        new CurrentConditions(70.6, 0),
+        new[]
+        {
+            new DailyForecast(new DateOnly(2026, 11, 4), 71, 40, 3),
+            new DailyForecast(new DateOnly(2026, 11, 5), 66, 49, 63),
+            new DailyForecast(new DateOnly(2026, 11, 6), 66, 48, 3),
+        });
+
+    public Task<Result<WeatherForecast>> GetForecastAsync(double latitude, double longitude, int forecastDays, CancellationToken cancellationToken = default) =>
+        Task.FromResult(Result<WeatherForecast>.Success(Forecast));
+}
+
+/// <summary>Place geocoder that resolves any name to Queensbury: no network.</summary>
+internal sealed class FakePlaceGeocoder : IPlaceGeocoder
+{
+    public Task<Result<GeocodedPlace>> GeocodeAsync(string place, CancellationToken cancellationToken = default) =>
+        Task.FromResult(Result<GeocodedPlace>.Success(new GeocodedPlace("Queensbury, New York, United States", 43.37729, -73.61317)));
+}
