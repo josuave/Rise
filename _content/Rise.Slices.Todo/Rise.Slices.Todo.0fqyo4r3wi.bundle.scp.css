@@ -1,0 +1,86 @@
+/* _content/Rise.Slices.Todo/TodoWidget.razor.rz.scp.css */
+/* Todo widget: a titled container for the list. */
+.calm-todo[b-b7e172kc7g] {
+    border: 1px solid var(--calm-border);
+    border-radius: 12px;
+    padding: 1rem;
+    background: var(--calm-surface);
+}
+
+.calm-todo-title[b-b7e172kc7g] {
+    margin: 0 0 0.75rem;
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.calm-todo-list[b-b7e172kc7g] {
+    margin-top: 0.75rem;
+}
+
+.calm-todo-row[b-b7e172kc7g] {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.25rem 0;
+}
+
+.calm-todo-text[b-b7e172kc7g] {
+    flex: 1;
+    text-align: left;
+}
+
+.calm-todo-text-done[b-b7e172kc7g] {
+    color: var(--calm-muted);
+    text-decoration: line-through;
+}
+
+.calm-todo-remove[b-b7e172kc7g] {
+    width: 22px;
+    height: 22px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    border: 1px solid var(--calm-border);
+    background: var(--calm-surface);
+    color: var(--calm-faint);
+    cursor: pointer;
+    line-height: 1;
+}
+
+.calm-todo-clear[b-b7e172kc7g] {
+    background: none;
+    border: none;
+    color: var(--calm-faint);
+    cursor: pointer;
+    font-size: 0.9rem;
+    margin-top: 0.75rem;
+}
+
+.calm-add-form[b-b7e172kc7g] {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    justify-content: center;
+    margin-top: 1rem;
+}
+
+.calm-add-form input[b-b7e172kc7g] {
+    border: 1px solid var(--calm-border);
+    border-radius: 8px;
+    padding: 0.5rem 0.75rem;
+    background: var(--calm-surface);
+    color: var(--calm-text);
+}
+
+.calm-add-form button[b-b7e172kc7g] {
+    border: 1px solid var(--calm-border);
+    border-radius: 8px;
+    padding: 0.5rem 1rem;
+    background: var(--calm-surface);
+    color: var(--calm-text);
+    cursor: pointer;
+}
+
+.calm-form-error[b-b7e172kc7g] {
+    color: var(--calm-error);
+    font-size: 0.85rem;
+}

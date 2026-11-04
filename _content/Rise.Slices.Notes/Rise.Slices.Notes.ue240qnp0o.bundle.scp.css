@@ -1,0 +1,73 @@
+/* _content/Rise.Slices.Notes/NotesWidget.razor.rz.scp.css */
+/* Notes widget: a titled container for the list. */
+.calm-notes[b-olnuqwbtar] {
+    border: 1px solid var(--calm-border);
+    border-radius: 12px;
+    padding: 1rem;
+    background: var(--calm-surface);
+}
+
+.calm-notes-title[b-olnuqwbtar] {
+    margin: 0 0 0.75rem;
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.calm-notes-list[b-olnuqwbtar] {
+    margin-top: 0.75rem;
+}
+
+.calm-note-row[b-olnuqwbtar] {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.25rem 0;
+}
+
+.calm-note-text[b-olnuqwbtar] {
+    flex: 1;
+    text-align: left;
+    white-space: pre-wrap;
+}
+
+.calm-note-remove[b-olnuqwbtar] {
+    width: 22px;
+    height: 22px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    border: 1px solid var(--calm-border);
+    background: var(--calm-surface);
+    color: var(--calm-faint);
+    cursor: pointer;
+    line-height: 1;
+}
+
+.calm-add-form[b-olnuqwbtar] {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    justify-content: center;
+    margin-top: 1rem;
+}
+
+.calm-add-form textarea[b-olnuqwbtar] {
+    border: 1px solid var(--calm-border);
+    border-radius: 8px;
+    padding: 0.5rem 0.75rem;
+    background: var(--calm-surface);
+    color: var(--calm-text);
+}
+
+.calm-add-form button[b-olnuqwbtar] {
+    border: 1px solid var(--calm-border);
+    border-radius: 8px;
+    padding: 0.5rem 1rem;
+    background: var(--calm-surface);
+    color: var(--calm-text);
+    cursor: pointer;
+}
+
+.calm-form-error[b-olnuqwbtar] {
+    color: var(--calm-error);
+    font-size: 0.85rem;
+}
