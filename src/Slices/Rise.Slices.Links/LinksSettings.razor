@@ -1,4 +1,12 @@
-<p class="calm-dialog-note">Manage the tiles on the home page from here, without going back to the page itself.</p>
+<div class="calm-settings-add-form">
+    <input type="text" placeholder="Name" aria-label="Link name" @bind="NewName" />
+    <input type="url" placeholder="https://example.com" aria-label="Link URL" @bind="NewUrl" />
+    <button type="button" @onclick="AddAsync">Add link</button>
+</div>
+@if (!string.IsNullOrEmpty(FormError))
+{
+    <p class="calm-form-error">@FormError</p>
+}
 <ul class="calm-settings-list">
     @foreach (var link in Page.Links)
     {

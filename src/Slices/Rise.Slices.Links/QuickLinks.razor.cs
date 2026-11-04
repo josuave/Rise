@@ -5,17 +5,14 @@ using Rise.Domain;
 namespace Rise.Slices.Links;
 
 /// <summary>
-/// The Links widget: tiles only. Editing lives in its own widget
-/// (LinksEditor); this button just shows that widget. Tiles stay fresh
-/// because the component reloads whenever the link service saves.
+/// The Links widget: tiles only. Editing lives in the Settings
+/// dialog. Tiles stay fresh because the component reloads whenever
+/// the link service saves.
 /// </summary>
 public partial class QuickLinks : IDisposable
 {
     [Inject]
     private StartPageService? StartPageService { get; set; }
-
-    [Inject]
-    private LayoutService? LayoutService { get; set; }
 
     private StartPage Page { get; set; } = StartPage.Default();
 
@@ -37,14 +34,6 @@ public partial class QuickLinks : IDisposable
 
         Page = await StartPageService.LoadAsync();
         await InvokeAsync(StateHasChanged);
-    }
-
-    private async Task ShowEditorAsync()
-    {
-        if (LayoutService is not null)
-        {
-            await LayoutService.ShowWidgetAsync(LinkEditorWidgetDefinition.WidgetId);
-        }
     }
 
     public void Dispose()

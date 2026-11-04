@@ -10,7 +10,7 @@ namespace Rise.Slices.Layout;
 /// (see PageLayout.GroupChildren), and its display name lives in its
 /// own config, not in the definition.
 /// </summary>
-public sealed class GroupWidgetDefinition : IConfigurableWidgetDefinition
+public sealed class GroupWidgetDefinition : IWidgetDefinition
 {
     public const string WidgetId = "Group";
 
@@ -27,8 +27,6 @@ public sealed class GroupWidgetDefinition : IConfigurableWidgetDefinition
     public Type ComponentType => typeof(GroupWidget);
 
     public bool IsGroup => true;
-
-    public Type ConfigComponentType => typeof(GroupConfigEditor);
 }
 
 /// <summary>Registers the group widget and its name config.</summary>

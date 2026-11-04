@@ -31,6 +31,9 @@ builder.Services.AddScoped<IJSInProcessRuntime>(sp =>
 // Slice contributions to Settings, wired here so slices never depend on each other.
 builder.Services.AddLinksSettings();
 builder.Services.AddBackupSettings();
+builder.Services.AddHeaderSettings();
+builder.Services.AddLayoutSettings();
+builder.Services.AddNotesSettings();
 
 // Widget definitions, wired here: adding a widget is a new definition
 // plus one line here, never a change to the layout model or the shell.

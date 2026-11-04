@@ -1,0 +1,18 @@
+.calm-notes-view-settings {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.calm-notes-view-option {
+    border: 1px solid var(--calm-border);
+    border-radius: 8px;
+    padding: 0.5rem 1rem;
+    background: var(--calm-surface);
+    color: var(--calm-text);
+    cursor: pointer;
+}
+
+.calm-notes-view-option.selected {
+    background: var(--calm-tile-bg);
+    border-color: var(--calm-muted);
+}

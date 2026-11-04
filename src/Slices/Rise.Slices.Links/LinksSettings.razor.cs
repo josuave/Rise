@@ -7,7 +7,8 @@ namespace Rise.Slices.Links;
 /// <summary>
 /// The Links slice's injected Settings section (see <see cref="LinksSettingsSection"/>).
 /// Behavior lives here, in the slice, not in the Settings dialog: it loads the
-/// page through the core service, removes links, and resets to defaults.
+/// page through the core service, adds and removes links, and resets to defaults.
+/// This is the links' only editor.
 /// </summary>
 public partial class LinksSettings
 {
@@ -17,11 +18,36 @@ public partial class LinksSettings
     private StartPage Page { get; set; } = StartPage.Default();
     private string? Message { get; set; }
 
+    private string NewName { get; set; } = string.Empty;
+    private string NewUrl { get; set; } = string.Empty;
+    private string? FormError { get; set; }
+
     protected override async Task OnInitializedAsync()
     {
         if (StartPageService is not null)
         {
             Page = await StartPageService.LoadAsync();
+        }
+    }
+
+    private async Task AddAsync()
+    {
+        if (StartPageService is null)
+        {
+            return;
+        }
+
+        Result<StartPage> result = await StartPageService.AddLinkAsync(Page, NewName, NewUrl);
+        if (result.IsSuccess && result.Value is not null)
+        {
+            Page = result.Value;
+            NewName = string.Empty;
+            NewUrl = string.Empty;
+            FormError = null;
+        }
+        else
+        {
+            FormError = result.Error;
         }
     }
 

@@ -120,16 +120,6 @@ a, .btn-link {
     word-break: break-word;
 }
 
-.calm-edit-toggle {
-    margin-top: 2rem;
-    background: none;
-    border: none;
-    color: var(--calm-faint);
-    cursor: pointer;
-    font-size: 0.85rem;
-    text-decoration: underline;
-}
-
 .calm-dialog-note {
     color: var(--calm-muted);
     font-size: 0.85rem;

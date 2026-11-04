@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Components;
 namespace Rise.Slices.Header;
 
 /// <summary>
-/// The clock widget's settings, rendered by the layout editor:
+/// The clock widget's settings, rendered in the Settings dialog:
 /// 24-hour format and seconds, saved immediately on change.
 /// </summary>
 public partial class ClockConfigEditor

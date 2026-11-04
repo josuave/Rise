@@ -46,12 +46,6 @@
             <button type="button" aria-label="@(placement.Visible ? "Hide" : "Show") @TitleOf(placement)" @onclick="() => ToggleVisibleAsync(placement)">
                 @(placement.Visible ? "Hide" : "Show")
             </button>
-            @if (ConfigComponentFor(placement) is not null)
-            {
-                <button type="button" aria-label="Configure @TitleOf(placement)" @onclick="() => ToggleConfig(placement)">
-                    @(ExpandedConfigId == placement.Id ? "Done" : "Configure")
-                </button>
-            }
             @if (IsGroup(placement))
             {
                 @if (ConfirmingGroupDelete)
@@ -70,12 +64,6 @@
                 <button type="button" aria-label="Add @TitleOf(placement) to group" @onclick="() => AddToGroupAsync(placement)">Into group</button>
             }
         </div>
-        @if (ExpandedConfigId == placement.Id && ConfigComponentFor(placement) is Type configType)
-        {
-            <div class="calm-layout-config-panel">
-                <DynamicComponent Type="@configType" />
-            </div>
-        }
         @if (IsGroup(placement))
         {
             @foreach (var child in Layout.GroupedWidgets())
