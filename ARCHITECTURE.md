@@ -267,7 +267,11 @@ rotated phone, a wide browser window); in portrait the calm stack
 stays. Its rules live inside `@media (orientation: landscape)`
 and duplicate the always-board block, since plain CSS cannot share
 declarations across a media query. If both flags are on, the
-always-board wins. Preview choices ride the backup envelope as
+always-board wins. Under phone widths (560px and below) the board
+collapses to one column — two columns force the grid wider than a
+portrait phone, so the page spills sideways and the clock clips —
+and slots carry `min-width: 0` so a track can shrink below its
+content minimum. Preview choices ride the backup envelope as
 a compatible v1 extension (see `MIGRATIONS.md`). Deliberately not
 Microsoft.FeatureManagement: that library's flags are
 configuration-driven and deploy-time, while Rise's are toggled by

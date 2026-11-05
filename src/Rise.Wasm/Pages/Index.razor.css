@@ -76,6 +76,7 @@
     border: 1px solid var(--calm-border-soft);
     border-radius: 0.75rem;
     padding: 1rem;
+    min-width: 0;
 }
 
 .calm-board .calm-widget-slot[data-widget="Clock"] {
@@ -107,9 +108,26 @@
         border: 1px solid var(--calm-border-soft);
         border-radius: 0.75rem;
         padding: 1rem;
+        min-width: 0;
     }
 
     .calm-board-landscape .calm-widget-slot[data-widget="Clock"] {
         grid-column: 1 / -1;
+    }
+}
+
+/* Phone widths: the board collapses to one column. Two columns
+   below ~560px force the grid wider than the viewport — each
+   track's content minimum (the 3.5rem clock, the search row) adds
+   up past the screen, so the page spills sideways and the clock
+   clips. One column plus min-width: 0 on the slots keeps the board
+   inside the viewport; the Clock span is a no-op in one column.
+   The landscape selector is harmless in portrait: its grid rule
+   lives inside the orientation query, so on a display:contents
+   board this only sets a column count that never applies. */
+@media (max-width: 560px) {
+    .calm-board .calm-widget-board,
+    .calm-board-landscape .calm-widget-board {
+        grid-template-columns: 1fr;
     }
 }
