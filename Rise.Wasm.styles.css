@@ -131,6 +131,44 @@
     font-size: 0.9rem;
     margin-top: 1.5rem;
 }
+
+/* Widget slots and the Calm Board preview. The board container and
+   each slot are display:contents by default, so the wrappers change
+   nothing until the calm-board flag opts in. With the flag on, the
+   board becomes a two-column grid, slots become warm-paper cards,
+   and the Clock slot spans the full width as the hero. v0: board
+   treatment only — widget contents keep their own styles, and which
+   widgets show stays with the layout, not the flag. */
+.calm-widget-board[b-cw8acn2iox] {
+    display: contents;
+}
+
+.calm-widget-slot[b-cw8acn2iox] {
+    display: contents;
+}
+
+.calm-board[b-cw8acn2iox] {
+    max-width: 860px;
+}
+
+.calm-board .calm-widget-board[b-cw8acn2iox] {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.calm-board .calm-widget-slot[b-cw8acn2iox] {
+    display: block;
+    background: var(--calm-surface);
+    border: 1px solid var(--calm-border-soft);
+    border-radius: 0.75rem;
+    padding: 1rem;
+}
+
+.calm-board .calm-widget-slot[data-widget="Clock"][b-cw8acn2iox] {
+    grid-column: 1 / -1;
+}
 /* /Pages/KeyboardSettings.razor.rz.scp.css */
 .calm-hotkey-row[b-dnjajif5x8] {
     display: flex;
@@ -181,6 +219,53 @@
 
 .calm-module-state[b-phl5r1rg4x] {
     color: var(--calm-muted);
+}
+/* /Pages/PreviewSettings.razor.rz.scp.css */
+/* Preview feature rows: quiet hairline-separated rows, one checkbox
+   per feature. The component owns its own classes — colocated CSS
+   is scoped, so nothing here can leak into other slices. */
+.calm-preview-row[b-ii3a524efn] {
+    display: flex;
+    gap: 0.75rem;
+    align-items: flex-start;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid var(--calm-border-soft);
+    cursor: pointer;
+}
+
+.calm-preview-list .calm-preview-row:last-child[b-ii3a524efn] {
+    border-bottom: none;
+}
+
+.calm-preview-row input[type="checkbox"][b-ii3a524efn] {
+    accent-color: var(--calm-muted);
+    width: 1.1rem;
+    height: 1.1rem;
+    margin-top: 0.15rem;
+    flex-shrink: 0;
+}
+
+.calm-preview-text[b-ii3a524efn] {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+}
+
+.calm-preview-title[b-ii3a524efn] {
+    font-weight: 600;
+}
+
+.calm-preview-description[b-ii3a524efn] {
+    color: var(--calm-muted);
+    font-size: 0.9rem;
+}
+
+.calm-preview-status[b-ii3a524efn],
+.calm-preview-loading[b-ii3a524efn],
+.calm-preview-empty[b-ii3a524efn] {
+    color: var(--calm-muted);
+    font-size: 0.9rem;
+    margin-top: 0.75rem;
 }
 /* /Shared/MainLayout.razor.rz.scp.css */
 .calm-shell[b-q9uxc4emvx] {
