@@ -25,6 +25,14 @@ public partial class LayoutEditor : IDisposable
     [Inject]
     private IEnumerable<IWidgetDefinition> Definitions { get; set; } = Array.Empty<IWidgetDefinition>();
 
+    /// <summary>Null in older tests: no filtering then, every widget shows.</summary>
+    [Inject]
+    private ModuleService? ModuleService { get; set; }
+
+    /// <summary>Null in older tests: no filtering then, every widget shows.</summary>
+    [Inject]
+    private IModuleCatalog? ModuleCatalog { get; set; }
+
     private LayoutCollection Collection { get; set; } = new LayoutCollection(
         LayoutCollection.DefaultId,
         Array.Empty<NamedLayout>());
@@ -37,6 +45,9 @@ public partial class LayoutEditor : IDisposable
 
     private bool ConfirmingGroupDelete { get; set; }
 
+    /// <summary>Ids of modules currently switched off. Their placements stay in the layout, but their rows move to the disabled list.</summary>
+    private HashSet<string> DisabledModules { get; set; } = new();
+
     protected override async Task OnInitializedAsync()
     {
         if (LayoutService is not null)
@@ -44,6 +55,9 @@ public partial class LayoutEditor : IDisposable
             await RefreshAsync();
             LayoutService.Changed += OnLayoutChanged;
         }
+
+        await RefreshDisabledAsync();
+        ModuleService?.Changed += OnModulesChanged;
     }
 
     private async void OnLayoutChanged(object? sender, EventArgs args)
@@ -68,6 +82,41 @@ public partial class LayoutEditor : IDisposable
         RenameName = Collection.Active?.Name ?? string.Empty;
     }
 
+    private async Task RefreshDisabledAsync() =>
+        DisabledModules = ModuleCatalog is null || ModuleService is null
+            ? new HashSet<string>()
+            : await ModuleService.DisabledIdsAsync(ModuleCatalog.Modules);
+
+    private async void OnModulesChanged(object? sender, EventArgs args)
+    {
+        await RefreshAsync();
+        await RefreshDisabledAsync();
+        await InvokeAsync(StateHasChanged);
+    }
+
+    /// <summary>Whether a widget's module is switched off. Unclaimed widgets are never filtered.</summary>
+    private bool IsWidgetDisabled(string widgetId) =>
+        ModuleCatalog?.ForWidget(widgetId) is ModuleInfo module && DisabledModules.Contains(module.Id);
+
+    private IEnumerable<WidgetPlacement> EnabledTopLevelWidgets() =>
+        Layout.TopLevelWidgets().Where(w => !IsWidgetDisabled(w.Id));
+
+    private IEnumerable<WidgetPlacement> EnabledGroupedWidgets() =>
+        Layout.GroupedWidgets().Where(w => !IsWidgetDisabled(w.Id));
+
+    private IReadOnlyList<ModuleInfo> DisabledModuleList() =>
+        ModuleCatalog is null
+            ? Array.Empty<ModuleInfo>()
+            : ModuleCatalog.Modules.Where(m => DisabledModules.Contains(m.Id)).ToList();
+
+    private async Task EnableModuleAsync(ModuleInfo module)
+    {
+        if (ModuleService is not null)
+        {
+            await ModuleService.SetEnabledAsync(module.Id, true);
+        }
+    }
+
     private string TitleOf(WidgetPlacement placement) =>
         Definitions.FirstOrDefault(d => d.Id == placement.Id)?.Title ?? placement.Id;
 
@@ -76,7 +125,7 @@ public partial class LayoutEditor : IDisposable
 
     private bool IsFirstInZone(WidgetPlacement placement)
     {
-        var zone = Layout.TopLevelWidgets()
+        var zone = EnabledTopLevelWidgets()
             .Where(w => w.Zone == placement.Zone)
             .ToList();
         return zone.Count == 0 || zone[0].Id == placement.Id;
@@ -84,7 +133,7 @@ public partial class LayoutEditor : IDisposable
 
     private bool IsLastInZone(WidgetPlacement placement)
     {
-        var zone = Layout.TopLevelWidgets()
+        var zone = EnabledTopLevelWidgets()
             .Where(w => w.Zone == placement.Zone)
             .ToList();
         return zone.Count == 0 || zone[^1].Id == placement.Id;
@@ -212,6 +261,7 @@ public partial class LayoutEditor : IDisposable
         if (disposing)
         {
             LayoutService?.Changed -= OnLayoutChanged;
+            ModuleService?.Changed -= OnModulesChanged;
         }
     }
 }

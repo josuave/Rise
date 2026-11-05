@@ -1,3 +1,4 @@
+using System.IO;
 using Microsoft.AspNetCore.Components;
 using Rise.Application.Ports;
 using Rise.Application.Services;
@@ -13,8 +14,11 @@ namespace Rise.Slices.Settings;
 /// theme toggle lives in its own widget (ThemeToggle). It contains no
 /// storage or JS code itself. Custom themes appear in the theme
 /// picker alongside the built-ins; the theme editor edits one.
+/// Sections belonging to a switched-off module are hidden: a module's
+/// sections live in the module's assembly, so the dialog filters by
+/// assembly name.
 /// </summary>
-public partial class SettingsGear
+public partial class SettingsGear : IDisposable
 {
     [Inject]
     private IThemeStore? ThemeStore { get; set; }
@@ -29,6 +33,17 @@ public partial class SettingsGear
     [Inject]
     private IEnumerable<ISettingsSection> Sections { get; set; } = Array.Empty<ISettingsSection>();
 
+    /// <summary>Null in older tests: no filtering then, every section shows.</summary>
+    [Inject]
+    private ModuleService? ModuleService { get; set; }
+
+    /// <summary>Null in older tests: no filtering then, every section shows.</summary>
+    [Inject]
+    private IModuleCatalog? ModuleCatalog { get; set; }
+
+    /// <summary>Ids of modules currently switched off.</summary>
+    private HashSet<string> DisabledModules { get; set; } = new();
+
     private bool IsOpen { get; set; }
 
     /// <summary>Stored preference: "light", "dark", "system" (the default), or "custom:&lt;id&gt;".</summary>
@@ -40,6 +55,9 @@ public partial class SettingsGear
 
     protected override async Task OnInitializedAsync()
     {
+        await RefreshDisabledAsync();
+        ModuleService?.Changed += OnModulesChanged;
+
         if (CustomThemeService is not null)
         {
             CustomThemes = await CustomThemeService.LoadAsync();
@@ -156,4 +174,60 @@ public partial class SettingsGear
     private void Open() => IsOpen = true;
 
     private void Close() => IsOpen = false;
+
+    private async Task RefreshDisabledAsync() =>
+        DisabledModules = ModuleCatalog is null || ModuleService is null
+            ? new HashSet<string>()
+            : await ModuleService.DisabledIdsAsync(ModuleCatalog.Modules);
+
+    private async void OnModulesChanged(object? sender, EventArgs args)
+    {
+        await RefreshDisabledAsync();
+        await InvokeAsync(StateHasChanged);
+    }
+
+    /// <summary>
+    /// Contributed sections ordered by <see cref="ISettingsSection.Order"/>,
+    /// skipping sections whose component lives in a switched-off
+    /// module's assembly. Sections from unclaimed assemblies always show.
+    /// A lazy section's component lives in the container's assembly, so
+    /// it filters by its own assembly file name instead.
+    /// </summary>
+    private IEnumerable<ISettingsSection> VisibleSections()
+    {
+        IOrderedEnumerable<ISettingsSection> ordered = Sections.OrderBy(s => s.Order);
+        if (ModuleCatalog is null || ModuleService is null || DisabledModules.Count == 0)
+        {
+            return ordered;
+        }
+
+        var disabledAssemblies = ModuleCatalog.Modules
+            .Where(m => DisabledModules.Contains(m.Id))
+            .Select(m => m.AssemblyName)
+            .ToHashSet();
+        return ordered.Where(s => SectionAssemblyName(s) is not string assemblyName
+            || !disabledAssemblies.Contains(assemblyName));
+    }
+
+    private static string? SectionAssemblyName(ISettingsSection section) =>
+        section is ILazySettingsSection lazy
+            ? Path.GetFileNameWithoutExtension(lazy.AssemblyFile)
+            : section.ComponentType.Assembly.GetName().Name;
+
+    private static Dictionary<string, object?> LazySectionParameters(ILazySettingsSection lazy) =>
+        new() { ["Section"] = lazy };
+
+    public void Dispose()
+    {
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
+    protected virtual void Dispose(bool disposing)
+    {
+        if (disposing && ModuleService is not null)
+        {
+            ModuleService.Changed -= OnModulesChanged;
+        }
+    }
 }

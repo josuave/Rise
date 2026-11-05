@@ -15,7 +15,6 @@ public class NotesViewSettingsTests : BunitContext
     {
         Services.AddScoped<IWidgetConfigStore>(_ => _configStore);
         Services.AddScoped<WidgetConfigService>();
-        Services.AddScoped<NotesViewConfig>();
     }
 
     [Fact]

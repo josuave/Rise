@@ -17,6 +17,8 @@ namespace Rise.Slices.Tests;
 
 public class SettingsGearTests : BunitContext
 {
+    private static readonly string[] WeatherWidgets = { "Weather" };
+
     private readonly FakeThemeStore _theme = new();
     private readonly FakeLinkStore _store = new();
     private readonly FakeCustomThemeStore _customThemes = new();
@@ -47,16 +49,17 @@ public class SettingsGearTests : BunitContext
     [Fact]
     public void GearButton_OpensDialog_WithAllWidgetSections()
     {
+        // Notes is a lazy module: its section renders through the lazy
+        // section container in the browser, not from DI, so it is not
+        // registered here. The browser harness covers the lazy path.
         Services.AddScoped<IWidgetConfigStore>(_ => new FakeWidgetConfigStore());
         Services.AddScoped<WidgetConfigService>();
         Services.AddScoped<ClockConfig>();
         Services.AddScoped<GreetingConfig>();
         Services.AddScoped<GroupConfig>();
-        Services.AddScoped<NotesViewConfig>();
         Services.AddScoped<ISettingsSection, ClockSettingsSection>();
         Services.AddScoped<ISettingsSection, GreetingSettingsSection>();
         Services.AddScoped<ISettingsSection, GroupSettingsSection>();
-        Services.AddScoped<ISettingsSection, NotesSettingsSection>();
         Services.AddScoped<IWeatherClient>(_ => new FakeWeatherClient());
         Services.AddScoped<IPlaceGeocoder>(_ => new FakePlaceGeocoder());
         Services.AddScoped<WeatherService>();
@@ -70,7 +73,6 @@ public class SettingsGearTests : BunitContext
         Assert.Contains("Clock", cut.Markup, StringComparison.Ordinal);
         Assert.Contains("Greeting", cut.Markup, StringComparison.Ordinal);
         Assert.Contains("Group", cut.Markup, StringComparison.Ordinal);
-        Assert.Contains("Notes", cut.Markup, StringComparison.Ordinal);
         Assert.Contains("Weather", cut.Markup, StringComparison.Ordinal);
     }
 
@@ -148,6 +150,31 @@ public class SettingsGearTests : BunitContext
         Assert.Empty(_customThemes.StoredThemes!);
         Assert.Equal("system", _theme.Stored);
         Assert.Equal("system", _theme.Applied);
+    }
+
+    [Fact]
+    public void DisabledModule_HidesItsSection()
+    {
+        var catalog = new FakeModuleCatalog
+        {
+            Modules = new[]
+            {
+                new ModuleInfo("Weather", "Weather", WeatherWidgets, "Rise.Slices.Weather", IsLazy: false, CanDisable: true),
+            },
+        };
+        var moduleStore = new FakeModuleStore();
+        moduleStore.Stored["Weather"] = false;
+        Services.AddSingleton<IModuleCatalog>(catalog);
+        Services.AddScoped<IModuleStore>(_ => moduleStore);
+        Services.AddScoped<ModuleService>();
+        Services.AddScoped<ISettingsSection, WeatherSettingsSection>();
+
+        IRenderedComponent<SettingsGear> cut = Render<SettingsGear>();
+        cut.Find(".calm-settings-gear").Click();
+
+        // The section is filtered before activation, so its service
+        // dependencies are deliberately not registered here.
+        cut.WaitForAssertion(() => Assert.DoesNotContain("Weather", cut.Markup, StringComparison.Ordinal));
     }
 
     [Fact]

@@ -1,0 +1,12 @@
+@if (ResolvedType is not null)
+{
+    <DynamicComponent Type="@ResolvedType" />
+}
+else if (Error is not null)
+{
+    <p>@Error</p>
+}
+else
+{
+    <p>Loading…</p>
+}

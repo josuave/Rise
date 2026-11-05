@@ -91,6 +91,14 @@ no sections, which read as empty on import; blank text is an import
 error, never silently dropped, mirroring links. Same rule as groups:
 adding optional sections does not bump the version.
 
+v1 extension — module choices (compatible, no version bump): the
+state gains `Modules`, a map of module id to enabled flag holding
+only explicit choices. A file that predates it has no section, and
+import leaves the current choices untouched (replace semantics
+only when the section is present). Unknown module ids are kept,
+harmless and forward-compatible; a blank module id is an import
+error.
+
 ## Adding a version (v2 and beyond)
 
 1. Bump `BackupFormat.CurrentVersion` and document the new shape

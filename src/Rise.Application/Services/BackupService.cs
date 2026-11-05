@@ -29,7 +29,8 @@ public sealed class BackupService(
     ILayoutCollectionStore layoutStore,
     IWidgetConfigStore widgetConfigStore,
     ITodoStore todoStore,
-    INoteStore noteStore)
+    INoteStore noteStore,
+    IModuleStore moduleStore)
 {
     public async Task<string> ExportAsync(CancellationToken cancellationToken = default)
     {
@@ -40,6 +41,7 @@ public sealed class BackupService(
         NoteList notes = await notesService.LoadAsync(cancellationToken);
         string theme = await themeStore.GetStoredThemeAsync(cancellationToken) ?? "system";
         Dictionary<string, string> widgetConfigs = await widgetConfigStore.GetAllAsync(cancellationToken);
+        Dictionary<string, bool> modules = await moduleStore.GetAllAsync(cancellationToken);
 
         var state = new BackupStateDto(
             page.Links.Select(link => new BackupLinkDto(link.Id, link.Name, link.Url.Value)).ToList(),
@@ -54,7 +56,8 @@ public sealed class BackupService(
                     layout.Layout.GroupChildren.ToList())).ToList()),
             widgetConfigs,
             todos.Items.Select(item => new BackupTodoDto(item.Id, item.Text, item.Done)).ToList(),
-            notes.Items.Select(note => new BackupNoteDto(note.Id, note.Text)).ToList());
+            notes.Items.Select(note => new BackupNoteDto(note.Id, note.Text)).ToList(),
+            modules);
         JsonObject stateJson = JsonSerializer.SerializeToNode(state)!.AsObject();
         return BackupFormat.Serialize(new BackupEnvelope(
             BackupFormat.CurrentVersion,
@@ -95,6 +98,10 @@ public sealed class BackupService(
         await layoutStore.SaveAsync(state.Layouts, cancellationToken);
         await todoStore.SaveAsync(state.Todos, cancellationToken);
         await noteStore.SaveAsync(state.Notes, cancellationToken);
+        if (state.Modules is not null)
+        {
+            await moduleStore.SaveAllAsync(state.Modules, cancellationToken);
+        }
         foreach (KeyValuePair<string, string> pair in state.WidgetConfigs)
         {
             await widgetConfigStore.SetAsync(pair.Key, pair.Value, cancellationToken);
@@ -239,6 +246,16 @@ public sealed class BackupService(
             notes.Add(new Note(dto.Id, dto.Text.Trim()));
         }
 
+        // Module choices are a compatible v1 extension: a file that
+        // predates them has no section, which leaves current choices
+        // untouched; a blank module id is an import error, mirroring
+        // widget configs. Unknown ids are kept: they are harmless and
+        // forward-compatible with modules added later.
+        if (state.Modules is not null && state.Modules.Any(pair => string.IsNullOrWhiteSpace(pair.Key)))
+        {
+            return Result<ImportedState>.Failure("That backup has a module choice without a name.");
+        }
+
         return Result<ImportedState>.Success(new ImportedState(
             new StartPage(links),
             theme,
@@ -246,7 +263,8 @@ public sealed class BackupService(
             new LayoutCollection(state.Layouts.ActiveId, layouts),
             state.WidgetConfigs,
             new TodoList(todos),
-            new NoteList(notes)));
+            new NoteList(notes),
+            state.Modules));
     }
 
     private static BackupThemeDto ToTheme(CustomTheme theme) => new(
@@ -294,5 +312,6 @@ public sealed class BackupService(
         LayoutCollection Layouts,
         Dictionary<string, string> WidgetConfigs,
         TodoList Todos,
-        NoteList Notes);
+        NoteList Notes,
+        Dictionary<string, bool>? Modules);
 }

@@ -37,7 +37,7 @@
                 }
             </section>
 
-            @foreach (var section in Sections.OrderBy(s => s.Order))
+            @foreach (var section in VisibleSections())
             {
                 <section>
                     <h3>@section.Title</h3>
@@ -45,7 +45,14 @@
                     {
                         <p class="calm-dialog-note">@section.Description</p>
                     }
-                    <DynamicComponent Type="@section.ComponentType" />
+                    @if (section is ILazySettingsSection lazy)
+                    {
+                        <DynamicComponent Type="@section.ComponentType" Parameters="@LazySectionParameters(lazy)" />
+                    }
+                    else
+                    {
+                        <DynamicComponent Type="@section.ComponentType" />
+                    }
                 </section>
             }
         </div>

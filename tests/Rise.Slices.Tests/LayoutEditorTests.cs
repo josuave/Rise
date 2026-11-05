@@ -22,6 +22,7 @@ public class LayoutEditorTests : BunitContext
     private static readonly string[] MovedOrder = new[] { "Date", "Clock", "Greeting", "Links", "Search", "Backup", "Todo", "Notes", "Theme", "Group", "Settings" };
     private static readonly bool[] DefaultVisibility = new[] { true, true, true, true, true, false, false, false, true, false, true };
     private static readonly string[] GroupedLinksSearch = new[] { "Links", "Search" };
+    private static readonly string[] NotesWidgets = { "Notes" };
 
     private readonly FakeLayoutCollectionStore _layoutStore = new();
 
@@ -223,6 +224,28 @@ public class LayoutEditorTests : BunitContext
         Assert.Empty(active.GroupChildren);
         Assert.Contains("Search", active.Widgets.Select(w => w.Id));
         Assert.False(active.Widgets.Single(w => w.Id == "Group").Visible);
+    }
+
+    [Fact]
+    public void DisabledModule_MovesToDisabledList_WithEnableButton()
+    {
+        var catalog = new FakeModuleCatalog
+        {
+            Modules = new[]
+            {
+                new ModuleInfo("Notes", "Notes", NotesWidgets, "Rise.Slices.Notes", IsLazy: false, CanDisable: true),
+            },
+        };
+        var moduleStore = new FakeModuleStore();
+        moduleStore.Stored["Notes"] = false;
+        Services.AddSingleton<IModuleCatalog>(catalog);
+        Services.AddScoped<IModuleStore>(_ => moduleStore);
+        Services.AddScoped<ModuleService>();
+
+        IRenderedComponent<LayoutEditor> cut = Render<LayoutEditor>();
+
+        cut.WaitForAssertion(() => Assert.Contains("Disabled modules", cut.Markup, StringComparison.Ordinal));
+        Assert.Contains("Enable Notes", cut.Markup, StringComparison.Ordinal);
     }
 
     [Fact]

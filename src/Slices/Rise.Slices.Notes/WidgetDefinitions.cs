@@ -26,13 +26,16 @@ public sealed class NotesWidgetDefinition : IWidgetDefinition
     public Type ComponentType => typeof(NotesWidget);
 }
 
-/// <summary>Shell wiring for the Notes slice's widget.</summary>
+/// <summary>
+/// Shell wiring for the Notes slice's widget, kept for tests: in the
+/// app itself Notes is a lazy module, so the shell registers its lazy
+/// definition instead and this extension is not called.
+/// </summary>
 public static class NotesWidgetExtensions
 {
     public static IServiceCollection AddNotesWidgets(this IServiceCollection services)
     {
         services.AddSingleton<IWidgetDefinition, NotesWidgetDefinition>();
-        services.AddScoped<NotesViewConfig>();
         return services;
     }
 }

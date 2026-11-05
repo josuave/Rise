@@ -1,0 +1,15 @@
+.calm-module-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid var(--calm-border-soft);
+}
+
+.calm-module-row:last-child {
+    border-bottom: none;
+}
+
+.calm-module-state {
+    color: var(--calm-muted);
+}

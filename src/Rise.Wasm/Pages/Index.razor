@@ -4,12 +4,14 @@
 @using Microsoft.JSInterop
 @inject Rise.Application.Services.LayoutService LayoutService
 @inject IEnumerable<Rise.Application.Ports.IWidgetDefinition> WidgetDefinitions
+@inject Rise.Application.Services.ModuleService ModuleService
+@inject Rise.Application.Ports.IModuleCatalog ModuleCatalog
 @inject IJSInProcessRuntime JSInProcess
 
 <PageTitle>Rise</PageTitle>
 
 <div class="calm-settings-cluster">
-    @foreach (var widget in Layout.ClusterWidgets().Where(w => w.Visible))
+    @foreach (var widget in Layout.ClusterWidgets().Where(w => w.Visible && !IsWidgetDisabled(w.Id)))
     {
         @if (ComponentFor(widget.Id) is Type clusterComponent)
         {
@@ -25,15 +27,23 @@
         {
             <Rise.Slices.Layout.GroupWidget>
                 <ChildContent>
-                    @foreach (var child in Layout.GroupedWidgets().Where(w => w.Visible))
+                    @foreach (var child in Layout.GroupedWidgets().Where(w => w.Visible && !IsWidgetDisabled(w.Id)))
                     {
-                        @if (ComponentFor(child.Id) is Type childComponent)
+                        @if (IsLazy(child.Id))
+                        {
+                            <LazyWidgetContainer WidgetId="@child.Id" />
+                        }
+                        else if (ComponentFor(child.Id) is Type childComponent)
                         {
                             <DynamicComponent Type="@childComponent" />
                         }
                     }
                 </ChildContent>
             </Rise.Slices.Layout.GroupWidget>
+        }
+        else if (IsLazy(id))
+        {
+            <LazyWidgetContainer WidgetId="@id" />
         }
         else if (ComponentFor(id) is Type mainComponent)
         {
@@ -63,6 +73,9 @@
     private Rise.Domain.PageLayout Layout { get; set; } =
         new Rise.Domain.PageLayout(Array.Empty<Rise.Domain.WidgetPlacement>());
 
+    /// <summary>Ids of modules currently switched off. Disabled widgets render nothing, but their placements survive in the layout.</summary>
+    private HashSet<string> DisabledModules { get; set; } = new();
+
     private bool EditingLayout { get; set; }
 
     /// <summary>Whether the first-run hint is showing: true until the user dismisses it once.</summary>
@@ -84,7 +97,15 @@
 
     /// <summary>Ids of visible Main widgets that aren't inside the group: the page's top-level Main rows.</summary>
     private IEnumerable<string> MainTopLevelIds() =>
-        Layout.TopLevelWidgets().Where(w => w.Zone == Rise.Domain.WidgetZone.Main && w.Visible).Select(w => w.Id);
+        Layout.TopLevelWidgets().Where(w => w.Zone == Rise.Domain.WidgetZone.Main && w.Visible && !IsWidgetDisabled(w.Id)).Select(w => w.Id);
+
+    /// <summary>Whether a widget's module is switched off. Unclaimed widgets are never filtered.</summary>
+    private bool IsWidgetDisabled(string id) =>
+        ModuleCatalog.ForWidget(id) is Rise.Domain.ModuleInfo module && DisabledModules.Contains(module.Id);
+
+    /// <summary>Whether the widget's definition is lazy metadata: its assembly loads on first show, through the container.</summary>
+    private bool IsLazy(string id) =>
+        WidgetDefinitions.OfType<LazyWidgetDefinition>().Any(d => d.Id == id);
 
     private bool IsGroup(string id) =>
         WidgetDefinitions.FirstOrDefault(d => d.Id == id)?.IsGroup ?? false;
@@ -93,8 +114,13 @@
     {
         Layout = await LayoutService.LoadAsync();
         LayoutService.Changed += OnLayoutChanged;
+        await RefreshDisabledAsync();
+        ModuleService.Changed += OnModulesChanged;
         ShowHint = !IsHintDismissed();
     }
+
+    private async Task RefreshDisabledAsync() =>
+        DisabledModules = await ModuleService.DisabledIdsAsync(ModuleCatalog.Modules);
 
     /// <summary>Reads the dismiss flag through the shell's riseStorage helper.</summary>
     private bool IsHintDismissed()
@@ -130,6 +156,12 @@
         await InvokeAsync(StateHasChanged);
     }
 
+    private async void OnModulesChanged(object? sender, EventArgs args)
+    {
+        await RefreshDisabledAsync();
+        await InvokeAsync(StateHasChanged);
+    }
+
     public void Dispose()
     {
         Dispose(true);
@@ -141,6 +173,7 @@
         if (disposing)
         {
             LayoutService.Changed -= OnLayoutChanged;
+            ModuleService.Changed -= OnModulesChanged;
         }
     }
 }

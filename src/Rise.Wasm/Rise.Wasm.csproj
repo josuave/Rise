@@ -23,6 +23,11 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- Lazy modules: published but not downloaded until first shown. -->
+    <BlazorWebAssemblyLazyLoad Include="Rise.Slices.Notes.wasm" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ServiceWorker Include="wwwroot\service-worker.js" PublishedContent="wwwroot\service-worker.published.js" />
   </ItemGroup>
 
