@@ -30,6 +30,9 @@ public class LayoutEditorTests : BunitContext
     {
         Services.AddScoped<ILayoutCollectionStore>(_ => _layoutStore);
         Services.AddScoped<LayoutService>();
+        Services.AddScoped<IModuleStore>(_ => new FakeModuleStore());
+        Services.AddScoped<ModuleService>();
+        Services.AddSingleton<IModuleCatalog>(new FakeModuleCatalog());
         Services.AddSingleton<IWidgetDefinition, DateWidgetDefinition>();
         Services.AddSingleton<IWidgetDefinition, ClockWidgetDefinition>();
         Services.AddSingleton<IWidgetDefinition, GreetingWidgetDefinition>();

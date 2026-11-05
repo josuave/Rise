@@ -31,6 +31,9 @@ public class SettingsGearTests : BunitContext
         Services.AddScoped<CustomThemeService>();
         Services.AddScoped<StartPageService>();
         Services.AddScoped<ISettingsSection, LinksSettingsSection>();
+        Services.AddScoped<IModuleStore>(_ => new FakeModuleStore());
+        Services.AddScoped<ModuleService>();
+        Services.AddSingleton<IModuleCatalog>(new FakeModuleCatalog());
     }
 
     [Fact]
