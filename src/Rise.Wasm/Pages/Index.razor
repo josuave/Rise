@@ -23,7 +23,7 @@
     }
 </div>
 
-<div class="calm-page@(CalmBoardPreview ? " calm-board" : "")">
+<div class="calm-page@(BoardClass)">
     <div class="calm-widget-board">
     @foreach (string id in MainTopLevelIds())
     {
@@ -103,6 +103,33 @@
     /// <summary>Whether the Calm Board preview treatment is on: the page renders as a board instead of the calm stack.</summary>
     private bool CalmBoardPreview { get; set; }
 
+    /// <summary>Whether the landscape-only Calm Board preview is on: the board shows only when the viewport is landscape.</summary>
+    private bool CalmBoardLandscapePreview { get; set; }
+
+    /// <summary>
+    /// The board classes for the page root: the always-board class, the
+    /// landscape-only class, or both — both on means the always-board
+    /// wins, since its rules are not orientation-gated.
+    /// </summary>
+    private string BoardClass
+    {
+        get
+        {
+            List<string> classes = new();
+            if (CalmBoardPreview)
+            {
+                classes.Add("calm-board");
+            }
+
+            if (CalmBoardLandscapePreview)
+            {
+                classes.Add("calm-board-landscape");
+            }
+
+            return classes.Count == 0 ? string.Empty : " " + string.Join(" ", classes);
+        }
+    }
+
     /// <summary>Handle the shell hands to JS so the document keydown listener can call back into this page.</summary>
     private DotNetObjectReference<Index>? HotkeyRef { get; set; }
 
@@ -146,7 +173,7 @@
         ModuleService.Changed += OnModulesChanged;
         ShowHint = !IsHintDismissed();
         await PreviewFeatureService.LoadAsync();
-        CalmBoardPreview = await PreviewFeatureService.IsEnabledAsync(Rise.Domain.PreviewFeatures.CalmBoard);
+        await RefreshBoardFlagsAsync();
         PreviewFeatureService.Changed += OnPreviewFeaturesChanged;
         await HotkeyService.LoadAsync();
         HotkeyRef = DotNetObjectReference.Create(this);
@@ -258,8 +285,14 @@
 
     private async void OnPreviewFeaturesChanged(object? sender, EventArgs args)
     {
-        CalmBoardPreview = await PreviewFeatureService.IsEnabledAsync(Rise.Domain.PreviewFeatures.CalmBoard);
+        await RefreshBoardFlagsAsync();
         await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task RefreshBoardFlagsAsync()
+    {
+        CalmBoardPreview = await PreviewFeatureService.IsEnabledAsync(Rise.Domain.PreviewFeatures.CalmBoard);
+        CalmBoardLandscapePreview = await PreviewFeatureService.IsEnabledAsync(Rise.Domain.PreviewFeatures.CalmBoardLandscape);
     }
 
     public void Dispose()

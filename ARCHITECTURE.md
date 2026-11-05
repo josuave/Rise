@@ -261,7 +261,13 @@ that are `display: contents` until the flag opts in, then become a
 two-column grid of warm-paper cards with the Clock slot spanning
 full width as the hero. v0 is the treatment only: widget contents
 keep their own styles, and which widgets show stays with the
-layout, not the flag. Preview choices ride the backup envelope as
+layout, not the flag. A second flag, `calm-board-landscape`,
+applies the same treatment only when the viewport is landscape (a
+rotated phone, a wide browser window); in portrait the calm stack
+stays. Its rules live inside `@media (orientation: landscape)`
+and duplicate the always-board block, since plain CSS cannot share
+declarations across a media query. If both flags are on, the
+always-board wins. Preview choices ride the backup envelope as
 a compatible v1 extension (see `MIGRATIONS.md`). Deliberately not
 Microsoft.FeatureManagement: that library's flags are
 configuration-driven and deploy-time, while Rise's are toggled by

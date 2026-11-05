@@ -74,6 +74,16 @@ public class PreviewFeatureServiceTests
     }
 
     [Fact]
+    public async Task GetAll_ListsLandscapeVariant_OffByDefault()
+    {
+        var service = new PreviewFeatureService(new FakePreviewFeatureStore());
+
+        IReadOnlyList<(PreviewFeature Feature, bool Enabled)> all = await service.GetAllAsync();
+
+        Assert.Contains(all, pair => pair.Feature.Id == PreviewFeatures.CalmBoardLandscape && !pair.Enabled);
+    }
+
+    [Fact]
     public async Task GetAll_IgnoresUnknownStoredIds()
     {
         var store = new FakePreviewFeatureStore();
