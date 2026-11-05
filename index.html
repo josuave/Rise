@@ -131,6 +131,33 @@
                 return window.matchMedia('(prefers-color-scheme: dark)').matches;
             }
         };
+        // Global hotkey listener for the shell. Forwards keystrokes to
+        // .NET, except keystrokes typed into editable fields (inputs,
+        // textareas, selects, content-editable) — those belong to the
+        // field — and except modifier shortcuts and Escape, which
+        // always forward so the palette opens even while typing and
+        // closes from anywhere. Repeats are ignored so holding a key
+        // never fires its action twice.
+        window.riseHotkeys = {
+            ref: null,
+            handler: function (e) {
+                if (e.repeat) { return; }
+                var target = e.target;
+                var editable = target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.tagName === 'SELECT' || target.isContentEditable);
+                var mod = e.ctrlKey || e.metaKey;
+                if (editable && !mod && e.key !== 'Escape') { return; }
+                if (!window.riseHotkeys.ref) { return; }
+                window.riseHotkeys.ref.invokeMethodAsync('OnHotkeyKeyDown', e.key, mod, e.altKey, e.shiftKey);
+            },
+            register: function (dotNetRef) {
+                window.riseHotkeys.ref = dotNetRef;
+                document.addEventListener('keydown', window.riseHotkeys.handler);
+            },
+            unregister: function () {
+                document.removeEventListener('keydown', window.riseHotkeys.handler);
+                window.riseHotkeys.ref = null;
+            }
+        };
         // Download helper for the Backup slice. Kept in the shell
         // (not in a component) so slices stay free of JS interop.
         window.riseDownload = {
