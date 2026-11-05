@@ -151,6 +151,31 @@ public class BackupServiceTests
         }
     }
 
+    private sealed class FakePreviewFeatureStore : IPreviewFeatureStore
+    {
+        public Dictionary<string, bool> Stored { get; } = new();
+
+        public Task<Dictionary<string, bool>> GetAllAsync(CancellationToken cancellationToken = default) =>
+            Task.FromResult(new Dictionary<string, bool>(Stored));
+
+        public Task SetAsync(string featureId, bool enabled, CancellationToken cancellationToken = default)
+        {
+            Stored[featureId] = enabled;
+            return Task.CompletedTask;
+        }
+
+        public Task SaveAllAsync(Dictionary<string, bool> choices, CancellationToken cancellationToken = default)
+        {
+            Stored.Clear();
+            foreach (KeyValuePair<string, bool> pair in choices)
+            {
+                Stored[pair.Key] = pair.Value;
+            }
+
+            return Task.CompletedTask;
+        }
+    }
+
     private sealed class FakeHotkeyStore : IHotkeyStore
     {
         public Dictionary<string, HotkeyBinding> Stored { get; } = new();
@@ -209,6 +234,8 @@ public class BackupServiceTests
 
         public FakeHotkeyStore Hotkeys { get; } = new();
 
+        public FakePreviewFeatureStore PreviewFeatures { get; } = new();
+
         public BackupService Service { get; }
 
         public Fixture(IWidgetDefinition[]? definitions = null)
@@ -222,7 +249,7 @@ public class BackupServiceTests
             });
             var todoService = new TodoService(Todos);
             var notesService = new NotesService(Notes);
-            Service = new BackupService(pageService, themeService, layoutService, todoService, notesService, Links, Theme, Themes, Layouts, Widgets, Todos, Notes, Modules, Hotkeys);
+            Service = new BackupService(pageService, themeService, layoutService, todoService, notesService, Links, Theme, Themes, Layouts, Widgets, Todos, Notes, Modules, Hotkeys, PreviewFeatures);
         }
     }
 
@@ -330,6 +357,21 @@ public class BackupServiceTests
         Assert.True(result.IsSuccess);
         Assert.True(target.Hotkeys.Stored.TryGetValue("toggle-theme", out HotkeyBinding? restored));
         Assert.Equal("y", restored.Key);
+    }
+
+    [Fact]
+    public async Task PreviewFeatures_RoundTrip_RestoresChoices()
+    {
+        var source = new Fixture();
+        source.PreviewFeatures.Stored["calm-board"] = true;
+        string json = await source.Service.ExportAsync();
+        var target = new Fixture();
+
+        Result<BackupEnvelope> result = await target.Service.ImportAsync(json);
+
+        Assert.True(result.IsSuccess);
+        Assert.True(target.PreviewFeatures.Stored.TryGetValue("calm-board", out bool restored));
+        Assert.True(restored);
     }
 
     [Fact]

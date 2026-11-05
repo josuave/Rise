@@ -1,0 +1,27 @@
+@if (!Loaded)
+{
+    <p class="calm-preview-loading">Loading preview features…</p>
+}
+else if (Features.Count == 0)
+{
+    <p class="calm-preview-empty">No preview features right now.</p>
+}
+else
+{
+    <div class="calm-preview-list">
+        @foreach (var (feature, enabled) in Features)
+        {
+            <label class="calm-preview-row">
+                <input type="checkbox" checked="@enabled" @onchange="e => ToggleAsync(feature, e.Value is true)" />
+                <span class="calm-preview-text">
+                    <span class="calm-preview-title">@feature.Title</span>
+                    <span class="calm-preview-description">@feature.Description</span>
+                </span>
+            </label>
+        }
+    </div>
+}
+@if (Status is not null)
+{
+    <p class="calm-preview-status" role="status">@Status</p>
+}

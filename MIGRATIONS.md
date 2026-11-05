@@ -107,6 +107,14 @@ untouched (replace semantics only when the section is present).
 Unknown action ids are kept, harmless and forward-compatible; a
 blank action id or key is an import error.
 
+v1 extension — preview-feature choices (compatible, no version
+bump): the state gains `PreviewFeatures`, a map of feature id to
+enabled flag holding only explicit opt-ins. A file that predates
+it has no section, and import leaves the current choices untouched
+(replace semantics only when the section is present). Unknown
+feature ids are kept, harmless and forward-compatible; a blank
+feature id is an import error.
+
 ## Adding a version (v2 and beyond)
 
 1. Bump `BackupFormat.CurrentVersion` and document the new shape

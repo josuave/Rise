@@ -47,9 +47,10 @@ public sealed record BackupNoteDto(Guid Id, string Text);
 /// <summary>
 /// The saved state in a backup: links, theme choice, custom themes,
 /// layouts, per-widget config JSON, the to-do and note lists, the
-/// explicit module choices, and the explicit hotkey bindings (absent
-/// in files that predate them, which read as empty on import — and,
-/// for modules and hotkeys, leave current choices untouched).
+/// explicit module choices, the explicit hotkey bindings, and the
+/// explicit preview-feature choices (absent in files that predate
+/// them, which read as empty on import — and, for modules, hotkeys,
+/// and preview features, leave current choices untouched).
 /// </summary>
 public sealed record BackupStateDto(
     IReadOnlyList<BackupLinkDto> Links,
@@ -60,7 +61,8 @@ public sealed record BackupStateDto(
     IReadOnlyList<BackupTodoDto>? Todos,
     IReadOnlyList<BackupNoteDto>? Notes,
     Dictionary<string, bool>? Modules,
-    Dictionary<string, HotkeyBinding>? Hotkeys);
+    Dictionary<string, HotkeyBinding>? Hotkeys,
+    Dictionary<string, bool>? PreviewFeatures);
 
 /// <summary>A parsed backup file: its version, its export date (ISO 8601), and its state JSON.</summary>
 public sealed record BackupEnvelope(int FormatVersion, string ExportedAt, System.Text.Json.Nodes.JsonObject State);

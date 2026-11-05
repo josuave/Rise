@@ -51,6 +51,10 @@ builder.Services.AddScoped<ISettingsSection, ModuleSettingsSection>();
 // so the manager lives here, not in a slice.
 builder.Services.AddScoped<ISettingsSection, KeyboardSettingsSection>();
 
+// Shell-owned section: the preview-feature manager. The flags are
+// app-wide, so the manager lives here, not in a slice.
+builder.Services.AddScoped<ISettingsSection, PreviewSettingsSection>();
+
 // Widget definitions, wired here: adding a widget is a new definition
 // plus one line here, never a change to the layout model or the shell.
 builder.Services.AddHeaderWidgets();

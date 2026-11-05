@@ -208,6 +208,31 @@ internal sealed class FakeModuleCatalog : IModuleCatalog
 }
 
 /// <summary>In-memory hotkey store for slice tests.</summary>
+internal sealed class FakePreviewFeatureStore : IPreviewFeatureStore
+{
+    public Dictionary<string, bool> Stored { get; } = new();
+
+    public Task<Dictionary<string, bool>> GetAllAsync(CancellationToken cancellationToken = default) =>
+        Task.FromResult(new Dictionary<string, bool>(Stored));
+
+    public Task SetAsync(string featureId, bool enabled, CancellationToken cancellationToken = default)
+    {
+        Stored[featureId] = enabled;
+        return Task.CompletedTask;
+    }
+
+    public Task SaveAllAsync(Dictionary<string, bool> choices, CancellationToken cancellationToken = default)
+    {
+        Stored.Clear();
+        foreach (KeyValuePair<string, bool> pair in choices)
+        {
+            Stored[pair.Key] = pair.Value;
+        }
+
+        return Task.CompletedTask;
+    }
+}
+
 internal sealed class FakeHotkeyStore : IHotkeyStore
 {
     public Dictionary<string, HotkeyBinding> Stored { get; } = new();

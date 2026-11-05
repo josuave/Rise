@@ -31,7 +31,8 @@ public sealed class BackupService(
     ITodoStore todoStore,
     INoteStore noteStore,
     IModuleStore moduleStore,
-    IHotkeyStore hotkeyStore)
+    IHotkeyStore hotkeyStore,
+    IPreviewFeatureStore previewFeatureStore)
 {
     public async Task<string> ExportAsync(CancellationToken cancellationToken = default)
     {
@@ -44,6 +45,7 @@ public sealed class BackupService(
         Dictionary<string, string> widgetConfigs = await widgetConfigStore.GetAllAsync(cancellationToken);
         Dictionary<string, bool> modules = await moduleStore.GetAllAsync(cancellationToken);
         Dictionary<string, HotkeyBinding> hotkeys = await hotkeyStore.GetAllAsync(cancellationToken);
+        Dictionary<string, bool> previewFeatures = await previewFeatureStore.GetAllAsync(cancellationToken);
 
         var state = new BackupStateDto(
             page.Links.Select(link => new BackupLinkDto(link.Id, link.Name, link.Url.Value)).ToList(),
@@ -60,7 +62,8 @@ public sealed class BackupService(
             todos.Items.Select(item => new BackupTodoDto(item.Id, item.Text, item.Done)).ToList(),
             notes.Items.Select(note => new BackupNoteDto(note.Id, note.Text)).ToList(),
             modules,
-            hotkeys);
+            hotkeys,
+            previewFeatures);
         JsonObject stateJson = JsonSerializer.SerializeToNode(state)!.AsObject();
         return BackupFormat.Serialize(new BackupEnvelope(
             BackupFormat.CurrentVersion,
@@ -109,6 +112,11 @@ public sealed class BackupService(
         if (state.Hotkeys is not null)
         {
             await hotkeyStore.SaveAllAsync(state.Hotkeys, cancellationToken);
+        }
+
+        if (state.PreviewFeatures is not null)
+        {
+            await previewFeatureStore.SaveAllAsync(state.PreviewFeatures, cancellationToken);
         }
         foreach (KeyValuePair<string, string> pair in state.WidgetConfigs)
         {
@@ -274,6 +282,15 @@ public sealed class BackupService(
             return Result<ImportedState>.Failure("That backup has a hotkey binding without a name or key.");
         }
 
+        // Preview-feature choices are a compatible v1 extension like
+        // modules: absent leaves current choices untouched; a blank
+        // feature id is an import error. Unknown ids are kept:
+        // harmless and forward-compatible with features added later.
+        if (state.PreviewFeatures is not null && state.PreviewFeatures.Any(pair => string.IsNullOrWhiteSpace(pair.Key)))
+        {
+            return Result<ImportedState>.Failure("That backup has a preview feature choice without a name.");
+        }
+
         return Result<ImportedState>.Success(new ImportedState(
             new StartPage(links),
             theme,
@@ -283,7 +300,8 @@ public sealed class BackupService(
             new TodoList(todos),
             new NoteList(notes),
             state.Modules,
-            state.Hotkeys));
+            state.Hotkeys,
+            state.PreviewFeatures));
     }
 
     private static BackupThemeDto ToTheme(CustomTheme theme) => new(
@@ -333,5 +351,6 @@ public sealed class BackupService(
         TodoList Todos,
         NoteList Notes,
         Dictionary<string, bool>? Modules,
-        Dictionary<string, HotkeyBinding>? Hotkeys);
+        Dictionary<string, HotkeyBinding>? Hotkeys,
+        Dictionary<string, bool>? PreviewFeatures);
 }

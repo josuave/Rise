@@ -43,3 +43,41 @@
     font-size: 0.9rem;
     margin-top: 1.5rem;
 }
+
+/* Widget slots and the Calm Board preview. The board container and
+   each slot are display:contents by default, so the wrappers change
+   nothing until the calm-board flag opts in. With the flag on, the
+   board becomes a two-column grid, slots become warm-paper cards,
+   and the Clock slot spans the full width as the hero. v0: board
+   treatment only — widget contents keep their own styles, and which
+   widgets show stays with the layout, not the flag. */
+.calm-widget-board {
+    display: contents;
+}
+
+.calm-widget-slot {
+    display: contents;
+}
+
+.calm-board {
+    max-width: 860px;
+}
+
+.calm-board .calm-widget-board {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.calm-board .calm-widget-slot {
+    display: block;
+    background: var(--calm-surface);
+    border: 1px solid var(--calm-border-soft);
+    border-radius: 0.75rem;
+    padding: 1rem;
+}
+
+.calm-board .calm-widget-slot[data-widget="Clock"] {
+    grid-column: 1 / -1;
+}

@@ -248,6 +248,27 @@ action that already owns the binding. Hotkey bindings ride the
 backup envelope as a compatible v1 extension (see
 `MIGRATIONS.md`).
 
+Preview features: the shell owns a small preview-feature manager
+for opting into upcoming features before they become the default.
+Features are registered in one place (`PreviewFeatures` in Domain)
+and stored as explicit opt-ins under `rise.preview.v1` — no entry
+means off. The Preview features section in Settings (Order 215,
+shell-owned like the module switchboard) lists each feature with a
+checkbox; toggling is live through the service's Changed event.
+The first feature is the Calm Board layout: with it on, the page
+renders the board treatment — Main widgets sit in slot wrappers
+that are `display: contents` until the flag opts in, then become a
+two-column grid of warm-paper cards with the Clock slot spanning
+full width as the hero. v0 is the treatment only: widget contents
+keep their own styles, and which widgets show stays with the
+layout, not the flag. Preview choices ride the backup envelope as
+a compatible v1 extension (see `MIGRATIONS.md`). Deliberately not
+Microsoft.FeatureManagement: that library's flags are
+configuration-driven and deploy-time, while Rise's are toggled by
+the user at runtime and persisted per browser; the hand-rolled
+store is one port, one adapter, and one service in the shape of
+the module and hotkey stores.
+
 Adding a widget is a new definition plus one line in Program.cs:
 no change to Domain, the layout service, the editor, or the shell.
 
