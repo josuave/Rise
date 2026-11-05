@@ -22,6 +22,7 @@ public class BackupControlsTests : BunitContext
         Services.AddScoped<ITodoStore>(_ => new FakeTodoStore());
         Services.AddScoped<INoteStore>(_ => new FakeNoteStore());
         Services.AddScoped<IModuleStore>(_ => new FakeModuleStore());
+        Services.AddScoped<IHotkeyStore>(_ => new FakeHotkeyStore());
         Services.AddScoped<StartPageService>();
         Services.AddScoped<CustomThemeService>();
         Services.AddScoped<LayoutService>();

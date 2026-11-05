@@ -5,7 +5,9 @@
 @inject Rise.Application.Services.LayoutService LayoutService
 @inject IEnumerable<Rise.Application.Ports.IWidgetDefinition> WidgetDefinitions
 @inject Rise.Application.Services.ModuleService ModuleService
+@inject Rise.Application.Services.HotkeyService HotkeyService
 @inject Rise.Application.Ports.IModuleCatalog ModuleCatalog
+@inject Rise.Application.Ports.IThemeStore ThemeStore
 @inject IJSInProcessRuntime JSInProcess
 
 <PageTitle>Rise</PageTitle>
@@ -59,6 +61,10 @@
         </div>
     }
 
+    <button type="button" class="calm-layout-toggle" title="Open the command palette (Ctrl+K)" @onclick="() => PaletteOpen = true">
+        Commands
+    </button>
+
     <button type="button" class="calm-layout-toggle" @onclick="() => EditingLayout = !EditingLayout">
         @(EditingLayout ? "Done" : "Edit layout")
     </button>
@@ -69,6 +75,11 @@
     }
 </div>
 
+@if (PaletteOpen)
+{
+    <CommandPalette OnClose="ClosePalette" OnToggleEditLayout="ToggleEditLayoutFromPalette" />
+}
+
 @code {
     private Rise.Domain.PageLayout Layout { get; set; } =
         new Rise.Domain.PageLayout(Array.Empty<Rise.Domain.WidgetPlacement>());
@@ -77,6 +88,11 @@
     private HashSet<string> DisabledModules { get; set; } = new();
 
     private bool EditingLayout { get; set; }
+
+    private bool PaletteOpen { get; set; }
+
+    /// <summary>Handle the shell hands to JS so the document keydown listener can call back into this page.</summary>
+    private DotNetObjectReference<Index>? HotkeyRef { get; set; }
 
     /// <summary>Whether the first-run hint is showing: true until the user dismisses it once.</summary>
     private bool ShowHint { get; set; }
@@ -117,6 +133,69 @@
         await RefreshDisabledAsync();
         ModuleService.Changed += OnModulesChanged;
         ShowHint = !IsHintDismissed();
+        await HotkeyService.LoadAsync();
+        HotkeyRef = DotNetObjectReference.Create(this);
+        try
+        {
+            JSInProcess.InvokeVoid("riseHotkeys.register", HotkeyRef);
+        }
+        catch (JSException)
+        {
+            // No global listener: hotkeys stay inert, but the palette still opens from its button.
+        }
+    }
+
+    /// <summary>
+    /// Called by the document keydown listener for every keystroke the
+    /// listener forwards (it already skips keystrokes typed into
+    /// editable fields, except modifier shortcuts and Escape). Unknown
+    /// keystrokes are ignored; a matched action runs, and the palette
+    /// trigger toggles the palette.
+    /// </summary>
+    [JSInvokable]
+    public async Task OnHotkeyKeyDown(string key, bool mod, bool alt, bool shift)
+    {
+        string? action = HotkeyService.TryMatch(key, mod, alt, shift);
+        switch (action)
+        {
+            case "open-palette":
+                PaletteOpen = !PaletteOpen;
+                break;
+            case "toggle-edit-layout":
+                EditingLayout = !EditingLayout;
+                break;
+            case "toggle-theme":
+                await FlipThemeAsync();
+                break;
+            default:
+                return;
+        }
+
+        await InvokeAsync(StateHasChanged);
+    }
+
+    /// <summary>Light becomes dark, dark becomes light, and anything else (system, custom) lands on light.</summary>
+    private async Task FlipThemeAsync()
+    {
+        string next = await ThemeStore.GetStoredThemeAsync() switch
+        {
+            "light" => "dark",
+            "dark" => "light",
+            _ => "light",
+        };
+        await ThemeStore.SetStoredThemeAsync(next);
+        await ThemeStore.ApplyThemeAsync(next);
+    }
+
+    private void ClosePalette()
+    {
+        PaletteOpen = false;
+    }
+
+    private void ToggleEditLayoutFromPalette()
+    {
+        EditingLayout = !EditingLayout;
+        PaletteOpen = false;
     }
 
     private async Task RefreshDisabledAsync() =>
@@ -174,6 +253,16 @@
         {
             LayoutService.Changed -= OnLayoutChanged;
             ModuleService.Changed -= OnModulesChanged;
+            try
+            {
+                JSInProcess.InvokeVoid("riseHotkeys.unregister");
+            }
+            catch (JSException)
+            {
+                // The page is going away; a stale listener is harmless.
+            }
+
+            HotkeyRef?.Dispose();
         }
     }
 }

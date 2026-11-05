@@ -30,7 +30,8 @@ public sealed class BackupService(
     IWidgetConfigStore widgetConfigStore,
     ITodoStore todoStore,
     INoteStore noteStore,
-    IModuleStore moduleStore)
+    IModuleStore moduleStore,
+    IHotkeyStore hotkeyStore)
 {
     public async Task<string> ExportAsync(CancellationToken cancellationToken = default)
     {
@@ -42,6 +43,7 @@ public sealed class BackupService(
         string theme = await themeStore.GetStoredThemeAsync(cancellationToken) ?? "system";
         Dictionary<string, string> widgetConfigs = await widgetConfigStore.GetAllAsync(cancellationToken);
         Dictionary<string, bool> modules = await moduleStore.GetAllAsync(cancellationToken);
+        Dictionary<string, HotkeyBinding> hotkeys = await hotkeyStore.GetAllAsync(cancellationToken);
 
         var state = new BackupStateDto(
             page.Links.Select(link => new BackupLinkDto(link.Id, link.Name, link.Url.Value)).ToList(),
@@ -57,7 +59,8 @@ public sealed class BackupService(
             widgetConfigs,
             todos.Items.Select(item => new BackupTodoDto(item.Id, item.Text, item.Done)).ToList(),
             notes.Items.Select(note => new BackupNoteDto(note.Id, note.Text)).ToList(),
-            modules);
+            modules,
+            hotkeys);
         JsonObject stateJson = JsonSerializer.SerializeToNode(state)!.AsObject();
         return BackupFormat.Serialize(new BackupEnvelope(
             BackupFormat.CurrentVersion,
@@ -101,6 +104,11 @@ public sealed class BackupService(
         if (state.Modules is not null)
         {
             await moduleStore.SaveAllAsync(state.Modules, cancellationToken);
+        }
+
+        if (state.Hotkeys is not null)
+        {
+            await hotkeyStore.SaveAllAsync(state.Hotkeys, cancellationToken);
         }
         foreach (KeyValuePair<string, string> pair in state.WidgetConfigs)
         {
@@ -256,6 +264,16 @@ public sealed class BackupService(
             return Result<ImportedState>.Failure("That backup has a module choice without a name.");
         }
 
+        // Hotkey bindings are a compatible v1 extension like modules:
+        // absent leaves current bindings untouched; a blank action id
+        // or key is an import error. Unknown ids are kept: harmless
+        // and forward-compatible with actions added later.
+        if (state.Hotkeys is not null && state.Hotkeys.Any(pair =>
+            string.IsNullOrWhiteSpace(pair.Key) || string.IsNullOrWhiteSpace(pair.Value.Key)))
+        {
+            return Result<ImportedState>.Failure("That backup has a hotkey binding without a name or key.");
+        }
+
         return Result<ImportedState>.Success(new ImportedState(
             new StartPage(links),
             theme,
@@ -264,7 +282,8 @@ public sealed class BackupService(
             state.WidgetConfigs,
             new TodoList(todos),
             new NoteList(notes),
-            state.Modules));
+            state.Modules,
+            state.Hotkeys));
     }
 
     private static BackupThemeDto ToTheme(CustomTheme theme) => new(
@@ -313,5 +332,6 @@ public sealed class BackupService(
         Dictionary<string, string> WidgetConfigs,
         TodoList Todos,
         NoteList Notes,
-        Dictionary<string, bool>? Modules);
+        Dictionary<string, bool>? Modules,
+        Dictionary<string, HotkeyBinding>? Hotkeys);
 }

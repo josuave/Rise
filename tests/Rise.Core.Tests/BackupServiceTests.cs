@@ -151,6 +151,31 @@ public class BackupServiceTests
         }
     }
 
+    private sealed class FakeHotkeyStore : IHotkeyStore
+    {
+        public Dictionary<string, HotkeyBinding> Stored { get; } = new();
+
+        public Task<Dictionary<string, HotkeyBinding>> GetAllAsync(CancellationToken cancellationToken = default) =>
+            Task.FromResult(new Dictionary<string, HotkeyBinding>(Stored));
+
+        public Task SetAsync(string actionId, HotkeyBinding binding, CancellationToken cancellationToken = default)
+        {
+            Stored[actionId] = binding;
+            return Task.CompletedTask;
+        }
+
+        public Task SaveAllAsync(Dictionary<string, HotkeyBinding> bindings, CancellationToken cancellationToken = default)
+        {
+            Stored.Clear();
+            foreach (KeyValuePair<string, HotkeyBinding> pair in bindings)
+            {
+                Stored[pair.Key] = pair.Value;
+            }
+
+            return Task.CompletedTask;
+        }
+    }
+
     private sealed record TestGroupDefinition(
         string Id,
         string Title,
@@ -182,6 +207,8 @@ public class BackupServiceTests
 
         public FakeModuleStore Modules { get; } = new();
 
+        public FakeHotkeyStore Hotkeys { get; } = new();
+
         public BackupService Service { get; }
 
         public Fixture(IWidgetDefinition[]? definitions = null)
@@ -195,7 +222,7 @@ public class BackupServiceTests
             });
             var todoService = new TodoService(Todos);
             var notesService = new NotesService(Notes);
-            Service = new BackupService(pageService, themeService, layoutService, todoService, notesService, Links, Theme, Themes, Layouts, Widgets, Todos, Notes, Modules);
+            Service = new BackupService(pageService, themeService, layoutService, todoService, notesService, Links, Theme, Themes, Layouts, Widgets, Todos, Notes, Modules, Hotkeys);
         }
     }
 
@@ -288,6 +315,21 @@ public class BackupServiceTests
         Assert.NotNull(target.Notes.Stored);
         Assert.Single(target.Notes.Stored.Items);
         Assert.Equal("First note", target.Notes.Stored.Items[0].Text);
+    }
+
+    [Fact]
+    public async Task Hotkeys_RoundTrip_RestoresOverrides()
+    {
+        var source = new Fixture();
+        source.Hotkeys.Stored["toggle-theme"] = new HotkeyBinding("y", Mod: false, Alt: false, Shift: false);
+        string json = await source.Service.ExportAsync();
+        var target = new Fixture();
+
+        Result<BackupEnvelope> result = await target.Service.ImportAsync(json);
+
+        Assert.True(result.IsSuccess);
+        Assert.True(target.Hotkeys.Stored.TryGetValue("toggle-theme", out HotkeyBinding? restored));
+        Assert.Equal("y", restored.Key);
     }
 
     [Fact]

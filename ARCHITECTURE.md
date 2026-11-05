@@ -226,6 +226,28 @@ lazy). Grouped lazy widgets render through the same container
 branch, but grouping a lazy widget has not been browser-verified
 yet.
 
+Keyboard-first: the shell owns a command palette and a hotkey
+system, both shell-rendered, not widgets. The palette
+(`CommandPalette`, opened with Ctrl/Cmd+K) filters one list over
+links, widget visibility, layouts, built-in themes, and the
+edit-layout toggle, plus a web-search fallback for the typed
+query; it runs through the same services the widgets use, so the
+page updates through the usual Changed events. Hotkeys are named
+actions (`HotkeyActions`: open palette, toggle edit layout,
+toggle light/dark theme) with bindings stored as overrides under
+`rise.hotkeys.v1` — no entry means the default. A document
+keydown listener in `index.html` forwards keystrokes to the shell
+(`riseHotkeys`, via a DotNetObjectReference); it skips keystrokes
+typed into editable fields, except modifier shortcuts and Escape,
+and ignores repeats, so holding a key never fires twice. The
+Keyboard section in Settings (Order 160, shell-owned like the
+module switchboard) lists each action with Rebind — captured in a
+readonly input, since a button would re-fire its click on Space —
+and Reset to defaults; a conflicting rebind fails naming the
+action that already owns the binding. Hotkey bindings ride the
+backup envelope as a compatible v1 extension (see
+`MIGRATIONS.md`).
+
 Adding a widget is a new definition plus one line in Program.cs:
 no change to Domain, the layout service, the editor, or the shell.
 The shell (`Index`) renders widgets from the layout instead of naming

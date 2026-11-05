@@ -99,6 +99,14 @@ only when the section is present). Unknown module ids are kept,
 harmless and forward-compatible; a blank module id is an import
 error.
 
+v1 extension — hotkey bindings (compatible, no version bump): the
+state gains `Hotkeys`, a map of action id to `{ "Key", "Mod",
+"Alt", "Shift" }` holding only explicit overrides. A file that
+predates it has no section, and import leaves the current bindings
+untouched (replace semantics only when the section is present).
+Unknown action ids are kept, harmless and forward-compatible; a
+blank action id or key is an import error.
+
 ## Adding a version (v2 and beyond)
 
 1. Bump `BackupFormat.CurrentVersion` and document the new shape

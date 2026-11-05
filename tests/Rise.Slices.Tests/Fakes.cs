@@ -207,6 +207,32 @@ internal sealed class FakeModuleCatalog : IModuleCatalog
     public IReadOnlyList<ModuleInfo> Modules { get; set; } = Array.Empty<ModuleInfo>();
 }
 
+/// <summary>In-memory hotkey store for slice tests.</summary>
+internal sealed class FakeHotkeyStore : IHotkeyStore
+{
+    public Dictionary<string, HotkeyBinding> Stored { get; } = new();
+
+    public Task<Dictionary<string, HotkeyBinding>> GetAllAsync(CancellationToken cancellationToken = default) =>
+        Task.FromResult(new Dictionary<string, HotkeyBinding>(Stored));
+
+    public Task SetAsync(string actionId, HotkeyBinding binding, CancellationToken cancellationToken = default)
+    {
+        Stored[actionId] = binding;
+        return Task.CompletedTask;
+    }
+
+    public Task SaveAllAsync(Dictionary<string, HotkeyBinding> bindings, CancellationToken cancellationToken = default)
+    {
+        Stored.Clear();
+        foreach (KeyValuePair<string, HotkeyBinding> pair in bindings)
+        {
+            Stored[pair.Key] = pair.Value;
+        }
+
+        return Task.CompletedTask;
+    }
+}
+
 /// <summary>In-memory file downloader for slice tests: records downloads instead of saving files.</summary>
 internal sealed class FakeFileDownloader : IFileDownloader
 {

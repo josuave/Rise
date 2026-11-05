@@ -1,0 +1,24 @@
+<div class="calm-hotkey-list">
+    @foreach (var row in Rows)
+    {
+        <div class="calm-hotkey-row">
+            <span class="calm-hotkey-title">@row.Action.Title</span>
+            <span class="calm-hotkey-binding">@row.Binding.Display</span>
+            @if (CapturingActionId == row.Action.Id)
+            {
+                <input class="calm-hotkey-capture" type="text" readonly autofocus aria-label="Press keys for @row.Action.Title"
+                       value="Press keys… (Esc to cancel)" @onkeydown="OnCaptureKeyDown" @onblur="CancelCapture" />
+            }
+            else
+            {
+                <button type="button" class="calm-hotkey-rebind" aria-label="Rebind @row.Action.Title"
+                        @onclick="() => CapturingActionId = row.Action.Id">Rebind</button>
+            }
+        </div>
+    }
+</div>
+<button type="button" class="calm-hotkey-reset" @onclick="ResetAsync">Reset to defaults</button>
+@if (Status is not null)
+{
+    <p class="calm-hotkey-status" role="status">@Status</p>
+}

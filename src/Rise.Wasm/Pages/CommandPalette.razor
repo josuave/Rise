@@ -1,0 +1,24 @@
+<div class="calm-palette-backdrop" @onclick="Close">
+    <div class="calm-palette" role="dialog" aria-label="Command palette" tabindex="-1" @onclick:stopPropagation="true" @onkeydown="OnPanelKeyDown">
+        <input class="calm-palette-input" type="text" placeholder="Type a command or search…" aria-label="Command palette"
+               autofocus @bind="Query" @bind:event="oninput" />
+        <div class="calm-palette-list" role="listbox">
+            @foreach (var (command, index) in Filtered.Select((command, index) => (command, index)))
+            {
+                <button type="button" class="calm-palette-row @(index == SelectedIndex ? "calm-palette-row-selected" : "")"
+                        role="option" aria-selected="@(index == SelectedIndex)" @onclick="() => RunAsync(command)">
+                    <span class="calm-palette-title">@command.Title</span>
+                    @if (command.Detail is not null)
+                    {
+                        <span class="calm-palette-detail">@command.Detail</span>
+                    }
+                </button>
+            }
+            @if (Filtered.Count == 0)
+            {
+                <div class="calm-palette-empty">No matching commands.</div>
+            }
+        </div>
+        <div class="calm-palette-hint">↑↓ to move · Enter to run · Esc to close</div>
+    </div>
+</div>
