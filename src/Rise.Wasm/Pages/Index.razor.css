@@ -81,3 +81,35 @@
 .calm-board .calm-widget-slot[data-widget="Clock"] {
     grid-column: 1 / -1;
 }
+
+/* Calm Board, landscape only: the same board treatment, but it
+   applies only when the viewport is landscape — a rotated phone,
+   a tablet on its side, a wide browser window. In portrait the
+   calm stack stays. The rules duplicate the always-board block
+   above because plain CSS has no way to share a declaration block
+   across a media query; the alternative was JS matchMedia
+   plumbing, which is heavier than the duplication. */
+@media (orientation: landscape) {
+    .calm-board-landscape {
+        max-width: 860px;
+    }
+
+    .calm-board-landscape .calm-widget-board {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+
+    .calm-board-landscape .calm-widget-slot {
+        display: block;
+        background: var(--calm-surface);
+        border: 1px solid var(--calm-border-soft);
+        border-radius: 0.75rem;
+        padding: 1rem;
+    }
+
+    .calm-board-landscape .calm-widget-slot[data-widget="Clock"] {
+        grid-column: 1 / -1;
+    }
+}
