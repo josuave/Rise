@@ -175,6 +175,38 @@ internal sealed class FakeWidgetConfigStore : IWidgetConfigStore
         Task.FromResult(Stored.ToDictionary(pair => pair.Key, pair => pair.Value));
 }
 
+/// <summary>In-memory module store for slice tests: explicit choices only, like the real store.</summary>
+internal sealed class FakeModuleStore : IModuleStore
+{
+    public Dictionary<string, bool> Stored { get; } = new();
+
+    public Task<Dictionary<string, bool>> GetAllAsync(CancellationToken cancellationToken = default) =>
+        Task.FromResult(new Dictionary<string, bool>(Stored));
+
+    public Task SetAsync(string moduleId, bool enabled, CancellationToken cancellationToken = default)
+    {
+        Stored[moduleId] = enabled;
+        return Task.CompletedTask;
+    }
+
+    public Task SaveAllAsync(Dictionary<string, bool> choices, CancellationToken cancellationToken = default)
+    {
+        Stored.Clear();
+        foreach (KeyValuePair<string, bool> pair in choices)
+        {
+            Stored[pair.Key] = pair.Value;
+        }
+
+        return Task.CompletedTask;
+    }
+}
+
+/// <summary>Module catalog for slice tests: empty by default, so nothing is filtered unless a test fills it.</summary>
+internal sealed class FakeModuleCatalog : IModuleCatalog
+{
+    public IReadOnlyList<ModuleInfo> Modules { get; set; } = Array.Empty<ModuleInfo>();
+}
+
 /// <summary>In-memory file downloader for slice tests: records downloads instead of saving files.</summary>
 internal sealed class FakeFileDownloader : IFileDownloader
 {

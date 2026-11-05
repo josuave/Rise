@@ -1,3 +1,4 @@
+using System.Text.Json.Nodes;
 using Microsoft.AspNetCore.Components;
 using Rise.Application.Services;
 using Rise.Domain;
@@ -14,12 +15,19 @@ public partial class NotesWidget : IDisposable
     [Inject]
     private NotesService NotesService { get; set; } = null!;
 
+    // Notes is a lazy module: no typed config is registered at
+    // startup, so the widget reads its view setting through the
+    // generic widget config service instead of a NotesViewConfig class.
     [Inject]
-    private NotesViewConfig ViewConfig { get; set; } = null!;
+    private WidgetConfigService ConfigService { get; set; } = null!;
 
     private NoteList List { get; set; } = NoteList.Empty();
 
-    private bool PostItView => ViewConfig.PostItView;
+    private JsonObject ViewData { get; set; } = new();
+
+    private const string PostItViewKey = "PostItView";
+
+    private bool PostItView => WidgetConfigJson.GetBool(ViewData, PostItViewKey);
 
     private string NewText { get; set; } = string.Empty;
 
@@ -32,7 +40,7 @@ public partial class NotesWidget : IDisposable
     protected override async Task OnInitializedAsync()
     {
         List = await NotesService.LoadAsync();
-        await ViewConfig.LoadAsync();
+        ViewData = await ConfigService.LoadMigratedAsync("Notes", 1, static (data, _) => data);
         NotesService.Changed += OnListChanged;
     }
 
@@ -91,8 +99,8 @@ public partial class NotesWidget : IDisposable
 
     private async Task ToggleViewAsync()
     {
-        ViewConfig.PostItView = !ViewConfig.PostItView;
-        await ViewConfig.SaveAsync();
+        ViewData[PostItViewKey] = !PostItView;
+        await ConfigService.SetJsonAsync("Notes", ViewData.ToJsonString());
     }
 
     /// <summary>

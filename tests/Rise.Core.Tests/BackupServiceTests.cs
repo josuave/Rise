@@ -126,6 +126,31 @@ public class BackupServiceTests
         }
     }
 
+    private sealed class FakeModuleStore : IModuleStore
+    {
+        public Dictionary<string, bool> Stored { get; } = new();
+
+        public Task<Dictionary<string, bool>> GetAllAsync(CancellationToken cancellationToken = default) =>
+            Task.FromResult(new Dictionary<string, bool>(Stored));
+
+        public Task SetAsync(string moduleId, bool enabled, CancellationToken cancellationToken = default)
+        {
+            Stored[moduleId] = enabled;
+            return Task.CompletedTask;
+        }
+
+        public Task SaveAllAsync(Dictionary<string, bool> choices, CancellationToken cancellationToken = default)
+        {
+            Stored.Clear();
+            foreach (KeyValuePair<string, bool> pair in choices)
+            {
+                Stored[pair.Key] = pair.Value;
+            }
+
+            return Task.CompletedTask;
+        }
+    }
+
     private sealed record TestGroupDefinition(
         string Id,
         string Title,
@@ -155,6 +180,8 @@ public class BackupServiceTests
 
         public FakeNoteStore Notes { get; } = new();
 
+        public FakeModuleStore Modules { get; } = new();
+
         public BackupService Service { get; }
 
         public Fixture(IWidgetDefinition[]? definitions = null)
@@ -168,7 +195,7 @@ public class BackupServiceTests
             });
             var todoService = new TodoService(Todos);
             var notesService = new NotesService(Notes);
-            Service = new BackupService(pageService, themeService, layoutService, todoService, notesService, Links, Theme, Themes, Layouts, Widgets, Todos, Notes);
+            Service = new BackupService(pageService, themeService, layoutService, todoService, notesService, Links, Theme, Themes, Layouts, Widgets, Todos, Notes, Modules);
         }
     }
 

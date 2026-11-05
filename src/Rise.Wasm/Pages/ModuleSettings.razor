@@ -1,0 +1,31 @@
+<div class="calm-module-settings">
+    @if (!Loaded)
+    {
+        <p>Loading…</p>
+    }
+    else
+    {
+        @foreach (var module in Catalog.Modules)
+        {
+            <div class="calm-module-row">
+                <span class="calm-module-name">@module.Title</span>
+                @if (module.IsLazy)
+                {
+                    <span class="calm-module-state">Loads on demand</span>
+                }
+                @if (!module.CanDisable)
+                {
+                    <span class="calm-module-state">Always on</span>
+                }
+                else if (IsEnabled(module))
+                {
+                    <button type="button" aria-label="Disable @module.Title" @onclick="() => DisableAsync(module)">Disable</button>
+                }
+                else
+                {
+                    <button type="button" aria-label="Enable @module.Title" @onclick="() => EnableAsync(module)">Enable</button>
+                }
+            </div>
+        }
+    }
+</div>

@@ -36,7 +36,7 @@
     <h3>Widgets in this layout</h3>
     <p class="calm-dialog-note">Move widgets within their area, hide the ones you don't want, or reset to defaults. Changes save automatically.</p>
 
-    @foreach (var placement in Layout.TopLevelWidgets())
+    @foreach (var placement in EnabledTopLevelWidgets())
     {
         <div class="calm-layout-row">
             <span class="calm-layout-name">@TitleOf(placement)</span>
@@ -66,7 +66,7 @@
         </div>
         @if (IsGroup(placement))
         {
-            @foreach (var child in Layout.GroupedWidgets())
+            @foreach (var child in EnabledGroupedWidgets())
             {
                 <div class="calm-layout-row calm-layout-child">
                     <span class="calm-layout-name">@TitleOf(child)</span>
@@ -79,6 +79,20 @@
                     <button type="button" aria-label="Remove @TitleOf(child) from group" @onclick="() => RemoveFromGroupAsync(child)">Out of group</button>
                 </div>
             }
+        }
+    }
+
+    @if (DisabledModuleList().Count > 0)
+    {
+        <h3>Disabled modules</h3>
+        <p class="calm-dialog-note">These modules are switched off. Enable one to bring its widgets back.</p>
+        @foreach (var module in DisabledModuleList())
+        {
+            <div class="calm-layout-row">
+                <span class="calm-layout-name">@module.Title</span>
+                <span class="calm-layout-zone">Disabled</span>
+                <button type="button" aria-label="Enable @module.Title" @onclick="() => EnableModuleAsync(module)">Enable</button>
+            </div>
         }
     }
 

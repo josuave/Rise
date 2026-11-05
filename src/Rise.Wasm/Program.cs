@@ -2,17 +2,19 @@ using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.JSInterop;
+using Rise.Application.Ports;
 using Rise.Infrastructure;
 using Rise.Slices.Backup;
 using Rise.Slices.Header;
 using Rise.Slices.Layout;
 using Rise.Slices.Links;
-using Rise.Slices.Notes;
 using Rise.Slices.Search;
 using Rise.Slices.Weather;
 using Rise.Slices.Settings;
+using Rise.Slices.Settings.Abstractions;
 using Rise.Slices.Todo;
 using Rise.Wasm;
+using Rise.Wasm.Pages;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");
@@ -34,8 +36,16 @@ builder.Services.AddLinksSettings();
 builder.Services.AddBackupSettings();
 builder.Services.AddHeaderSettings();
 builder.Services.AddLayoutSettings();
-builder.Services.AddNotesSettings();
 builder.Services.AddWeatherSettings();
+
+// Notes is a lazy module: its section is metadata here, not the
+// slice's registration, so the slice assembly stays unloaded until
+// the section itself renders.
+builder.Services.AddScoped<ISettingsSection, LazyNotesSettingsSection>();
+
+// Shell-owned section: the module switchboard. It lives here, not in
+// a slice, because it lists every module including Settings itself.
+builder.Services.AddScoped<ISettingsSection, ModuleSettingsSection>();
 
 // Widget definitions, wired here: adding a widget is a new definition
 // plus one line here, never a change to the layout model or the shell.
@@ -45,8 +55,16 @@ builder.Services.AddSearchWidget();
 builder.Services.AddLinksWidgets();
 builder.Services.AddLayoutWidgets();
 builder.Services.AddTodoWidgets();
-builder.Services.AddNotesWidgets();
 builder.Services.AddWeatherWidgets();
+
+// Notes is a lazy module: its definition is metadata here, not the
+// slice's registration, so the slice assembly stays unloaded until
+// the widget itself shows.
+builder.Services.AddSingleton<IWidgetDefinition, LazyWidgetDefinition>();
 builder.Services.AddSettingsWidgets();
+
+// The module catalog, owned by the composition root: the shell,
+// the layout editor, and the settings dialog filter by it.
+builder.Services.AddSingleton<IModuleCatalog, StaticModuleCatalog>();
 
 await builder.Build().RunAsync();

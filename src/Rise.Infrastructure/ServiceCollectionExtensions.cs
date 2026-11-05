@@ -21,10 +21,12 @@ public static class ServiceCollectionExtensions
         services.AddScoped<BackupService>();
         services.AddScoped<TodoService>();
         services.AddScoped<NotesService>();
+        services.AddScoped<ModuleService>();
         services.AddScoped<WeatherService>();
         services.AddScoped<IWeatherClient, OpenMeteoWeatherClient>();
         services.AddScoped<IPlaceGeocoder, OpenMeteoPlaceGeocoder>();
         services.AddScoped<IWidgetConfigStore, LocalStorageWidgetConfigStore>();
+        services.AddScoped<IModuleStore, LocalStorageModuleStore>();
         services.AddScoped<IFileDownloader, BrowserFileDownloader>();
         services.AddScoped<ICustomThemeStore, LocalStorageCustomThemeStore>();
         services.AddScoped<ILayoutCollectionStore, LocalStorageLayoutCollectionStore>();

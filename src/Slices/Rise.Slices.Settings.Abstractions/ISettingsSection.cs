@@ -33,6 +33,9 @@ public interface ISettingsSection
     /// The section's Razor component type. It must be a component type from an
     /// assembly already loaded by the app (a slice the shell references);
     /// <c>DynamicComponent</c> cannot load arbitrary plugin assemblies.
+    /// The exception is a lazy section: see <see cref="ILazySettingsSection"/>,
+    /// whose component type is the always-loaded lazy section container
+    /// and whose real component loads on first render.
     /// </summary>
     Type ComponentType { get; }
 }

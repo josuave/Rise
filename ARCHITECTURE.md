@@ -186,6 +186,46 @@ The "Edit layout" button and the editor stay shell-rendered, not
 widgets: an editor you could hide would strand the user with no
 way back.
 
+Modules: a slice is a module, and the shell holds the catalog
+(`IModuleCatalog`, one entry per slice: module id, title, widget
+ids, assembly name, lazy flag, can-disable flag). Module choices
+live under `rise.modules.v1` and hold only explicit choices — no
+entry means enabled, so existing users see zero change. Hide and
+disable stay distinct: hide is layout-level and live; disable is
+module-level, removes the module's widgets from the page and the
+editor and its section from the dialog, and restarts the page (an
+assembly cannot be unloaded mid-session, so the reload is what
+makes it truly gone). Enable is live, no reload. Settings is
+locked on: it owns the gear and the dialog the Modules section
+itself lives in. Module choices ride the backup envelope as a
+compatible v1 extension (see `MIGRATIONS.md`).
+
+Lazy modules: Notes is the first. A lazy module's assembly is
+excluded from the boot download with `BlazorWebAssemblyLazyLoad`
+and fetched on first show through `LazyAssemblyLoader`, via a
+shell container component. The container needs metadata that
+exists without the assembly, so the shell registers it directly:
+a lazy widget definition (id, title, zone, order, visibility,
+assembly file, component type name) and, for its dialog section,
+a lazy section (`ILazySettingsSection`) rendered through a lazy
+section container that loads the assembly and then renders the
+real section component. Two consequences of loading after
+startup: a lazy slice cannot use a typed config class (DI
+registrations run at startup, so lazy slices read their settings
+through the generic widget config service), and a second load of
+an already-loaded assembly does not return it again (both
+containers fall back to the already-loaded assemblies). A third
+gotcha is the service worker: the published worker precaches
+every `.wasm` in the assets manifest, which would download at
+install time exactly what lazy loading keeps out of boot — so
+each lazy module gets an exclusion pattern in
+`service-worker.published.js`. Known leaks, not bugs: a lazy
+slice's scoped CSS still loads at boot, and a disabled eager
+module still downloads at boot (skipping that needs every module
+lazy). Grouped lazy widgets render through the same container
+branch, but grouping a lazy widget has not been browser-verified
+yet.
+
 Adding a widget is a new definition plus one line in Program.cs:
 no change to Domain, the layout service, the editor, or the shell.
 The shell (`Index`) renders widgets from the layout instead of naming
@@ -360,11 +400,11 @@ its own beyond the clock/greeting shell.
 
 ## Future options this structure keeps open
 
-- **Lazy loading:** slices already publish as separate assemblies
-  (`Rise.Slices.*.wasm` under `_framework`). Marking one with
-  `BlazorWebAssemblyLazyLoad` and loading it on its route via
-  `LazyAssemblyLoader` is a small change, worth it only for a heavy
-  slice — not for Links/Search today.
+- **More lazy modules:** Notes proved the pattern (see the Modules
+  section above). Extending it to another slice is the same shape:
+  shell metadata definition plus container, generic config, lazy
+  section, service-worker exclusion. Worth it only for a heavy
+  slice or many optional ones — not for Links/Search today.
 - **Tests:** pure core tests need no browser; service tests need only
   a fake port; component tests need only a fake service. That last
   one is now real: `tests/Rise.Slices.Tests` (bUnit + xUnit) renders
