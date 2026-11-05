@@ -250,6 +250,21 @@ backup envelope as a compatible v1 extension (see
 
 Adding a widget is a new definition plus one line in Program.cs:
 no change to Domain, the layout service, the editor, or the shell.
+
+Architecture tests (`tests/Rise.Architecture.Tests`) enforce the
+slice rule instead of assuming it: a slice may reference only the
+core (Application, and Domain where it uses domain types
+directly) and the shared settings contract — never
+Infrastructure, never another slice, never the shell. Domain
+references no other Rise assembly, Application sits on Domain
+only, Infrastructure adapts the core only, and the settings
+contract is dependency-free. The tests read each assembly's
+manifest references, so they catch a new reference the moment it
+is added; a completeness test fails if a slice-shaped DLL appears
+in the output that the tests do not know. The shell (Rise.Wasm)
+is deliberately untested: the composition root is the one place
+allowed to reference everything. The suite runs as its own step
+in `pr.yml`, alongside core and slice tests.
 The shell (`Index`) renders widgets from the layout instead of naming
 components directly, and re-renders whenever the layout service's
 `Changed` event fires. The link service has the same event, so tiles
