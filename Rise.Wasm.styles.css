@@ -54,6 +54,22 @@
     font-size: 0.9rem;
     margin-top: 1.5rem;
 }
+/* /Pages/ModuleSettings.razor.rz.scp.css */
+.calm-module-row[b-phl5r1rg4x] {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid var(--calm-border-soft);
+}
+
+.calm-module-row:last-child[b-phl5r1rg4x] {
+    border-bottom: none;
+}
+
+.calm-module-state[b-phl5r1rg4x] {
+    color: var(--calm-muted);
+}
 /* /Shared/MainLayout.razor.rz.scp.css */
 .calm-shell[b-q9uxc4emvx] {
     background: var(--calm-bg);

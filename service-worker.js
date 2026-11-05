@@ -1,4 +1,4 @@
-/* Manifest version: OJW9fIFA */
+/* Manifest version: iHFbzUdq */
 // Caution! Be sure you understand the caveats before publishing an application with
 // offline support. See https://aka.ms/blazor-offline-considerations
 
@@ -10,7 +10,13 @@ self.addEventListener('fetch', event => event.respondWith(onFetch(event)));
 const cacheNamePrefix = 'offline-cache-';
 const cacheName = `${cacheNamePrefix}${self.assetsManifest.version}`;
 const offlineAssetsInclude = [ /\.dll$/, /\.pdb$/, /\.wasm/, /\.html/, /\.js$/, /\.json$/, /\.css$/, /\.woff$/, /\.png$/, /\.jpe?g$/, /\.gif$/, /\.ico$/, /\.blat$/, /\.dat$/ ];
-const offlineAssetsExclude = [ /^service-worker\.js$/ ];
+// Lazily loaded assemblies are excluded from the precache, or the
+// service worker would download at install time exactly what lazy
+// loading keeps out of the boot download. One pattern per lazy module
+// (the fingerprinted file name keeps the module prefix); a lazy module
+// then loads on demand over the network, and shows its load error when
+// offline instead of its widget.
+const offlineAssetsExclude = [ /^service-worker\.js$/, /^_framework\/Rise\.Slices\.Notes\.[^/]+\.wasm$/ ];
 
 async function onInstall(event) {
     console.info('Service worker: Install');
