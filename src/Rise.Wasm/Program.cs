@@ -47,6 +47,10 @@ builder.Services.AddScoped<ISettingsSection, LazyNotesSettingsSection>();
 // a slice, because it lists every module including Settings itself.
 builder.Services.AddScoped<ISettingsSection, ModuleSettingsSection>();
 
+// Shell-owned section: the hotkey manager. The actions are app-wide,
+// so the manager lives here, not in a slice.
+builder.Services.AddScoped<ISettingsSection, KeyboardSettingsSection>();
+
 // Widget definitions, wired here: adding a widget is a new definition
 // plus one line here, never a change to the layout model or the shell.
 builder.Services.AddHeaderWidgets();

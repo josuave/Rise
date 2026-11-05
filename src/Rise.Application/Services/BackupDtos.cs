@@ -1,4 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
+using Rise.Domain;
 
 namespace Rise.Application.Services;
 
@@ -45,10 +46,10 @@ public sealed record BackupNoteDto(Guid Id, string Text);
 
 /// <summary>
 /// The saved state in a backup: links, theme choice, custom themes,
-/// layouts, per-widget config JSON, the to-do and note lists, and the
-/// explicit module choices (absent in files that predate them, which
-/// read as empty on import — and, for modules, leave current choices
-/// untouched).
+/// layouts, per-widget config JSON, the to-do and note lists, the
+/// explicit module choices, and the explicit hotkey bindings (absent
+/// in files that predate them, which read as empty on import — and,
+/// for modules and hotkeys, leave current choices untouched).
 /// </summary>
 public sealed record BackupStateDto(
     IReadOnlyList<BackupLinkDto> Links,
@@ -58,7 +59,8 @@ public sealed record BackupStateDto(
     Dictionary<string, string> WidgetConfigs,
     IReadOnlyList<BackupTodoDto>? Todos,
     IReadOnlyList<BackupNoteDto>? Notes,
-    Dictionary<string, bool>? Modules);
+    Dictionary<string, bool>? Modules,
+    Dictionary<string, HotkeyBinding>? Hotkeys);
 
 /// <summary>A parsed backup file: its version, its export date (ISO 8601), and its state JSON.</summary>
 public sealed record BackupEnvelope(int FormatVersion, string ExportedAt, System.Text.Json.Nodes.JsonObject State);
