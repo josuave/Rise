@@ -465,7 +465,7 @@ its own beyond the clock/greeting shell.
   header widget added a component test (fixed clock) and a reconcile
   test proving new widgets slot in by Order. Both test projects carry `coverlet.collector`;
   CI collects Cobertura coverage via `coverage.runsettings`
-  (test assemblies excluded) and uploads it to Codecov.
+  (test assemblies excluded); nothing uploads it anywhere.
 - **New slice:** copy a slice project, depend on Application, add its
   component to the shell page, wire any new port in Infrastructure.
   No core or existing slice changes required.

@@ -1,8 +1,6 @@
 # Rise
 Unambitious start page project.
 
-[![codecov](https://codecov.io/gh/josuave/Rise/branch/main/graph/badge.svg)](https://codecov.io/gh/josuave/Rise)
-
 [Here you go!](https://josuave.github.io/Rise/)
 
 ## Resources
