@@ -6,6 +6,7 @@
 @inject IEnumerable<Rise.Application.Ports.IWidgetDefinition> WidgetDefinitions
 @inject Rise.Application.Services.ModuleService ModuleService
 @inject Rise.Application.Services.HotkeyService HotkeyService
+@inject Rise.Application.Services.PreviewFeatureService PreviewFeatureService
 @inject Rise.Application.Ports.IModuleCatalog ModuleCatalog
 @inject Rise.Application.Ports.IThemeStore ThemeStore
 @inject IJSInProcessRuntime JSInProcess
@@ -22,11 +23,13 @@
     }
 </div>
 
-<div class="calm-page">
+<div class="calm-page@(CalmBoardPreview ? " calm-board" : "")">
+    <div class="calm-widget-board">
     @foreach (string id in MainTopLevelIds())
     {
         @if (IsGroup(id))
         {
+            <div class="calm-widget-slot" data-widget="@id">
             <Rise.Slices.Layout.GroupWidget>
                 <ChildContent>
                     @foreach (var child in Layout.GroupedWidgets().Where(w => w.Visible && !IsWidgetDisabled(w.Id)))
@@ -42,16 +45,22 @@
                     }
                 </ChildContent>
             </Rise.Slices.Layout.GroupWidget>
+            </div>
         }
         else if (IsLazy(id))
         {
+            <div class="calm-widget-slot" data-widget="@id">
             <LazyWidgetContainer WidgetId="@id" />
+            </div>
         }
         else if (ComponentFor(id) is Type mainComponent)
         {
+            <div class="calm-widget-slot" data-widget="@id">
             <DynamicComponent Type="@mainComponent" />
+            </div>
         }
     }
+    </div>
 
     @if (ShowHint)
     {
@@ -90,6 +99,9 @@
     private bool EditingLayout { get; set; }
 
     private bool PaletteOpen { get; set; }
+
+    /// <summary>Whether the Calm Board preview treatment is on: the page renders as a board instead of the calm stack.</summary>
+    private bool CalmBoardPreview { get; set; }
 
     /// <summary>Handle the shell hands to JS so the document keydown listener can call back into this page.</summary>
     private DotNetObjectReference<Index>? HotkeyRef { get; set; }
@@ -133,6 +145,9 @@
         await RefreshDisabledAsync();
         ModuleService.Changed += OnModulesChanged;
         ShowHint = !IsHintDismissed();
+        await PreviewFeatureService.LoadAsync();
+        CalmBoardPreview = await PreviewFeatureService.IsEnabledAsync(Rise.Domain.PreviewFeatures.CalmBoard);
+        PreviewFeatureService.Changed += OnPreviewFeaturesChanged;
         await HotkeyService.LoadAsync();
         HotkeyRef = DotNetObjectReference.Create(this);
         try
@@ -241,6 +256,12 @@
         await InvokeAsync(StateHasChanged);
     }
 
+    private async void OnPreviewFeaturesChanged(object? sender, EventArgs args)
+    {
+        CalmBoardPreview = await PreviewFeatureService.IsEnabledAsync(Rise.Domain.PreviewFeatures.CalmBoard);
+        await InvokeAsync(StateHasChanged);
+    }
+
     public void Dispose()
     {
         Dispose(true);
@@ -253,6 +274,7 @@
         {
             LayoutService.Changed -= OnLayoutChanged;
             ModuleService.Changed -= OnModulesChanged;
+            PreviewFeatureService.Changed -= OnPreviewFeaturesChanged;
             try
             {
                 JSInProcess.InvokeVoid("riseHotkeys.unregister");

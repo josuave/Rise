@@ -1,0 +1,46 @@
+/* Preview feature rows: quiet hairline-separated rows, one checkbox
+   per feature. The component owns its own classes — colocated CSS
+   is scoped, so nothing here can leak into other slices. */
+.calm-preview-row {
+    display: flex;
+    gap: 0.75rem;
+    align-items: flex-start;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid var(--calm-border-soft);
+    cursor: pointer;
+}
+
+.calm-preview-list .calm-preview-row:last-child {
+    border-bottom: none;
+}
+
+.calm-preview-row input[type="checkbox"] {
+    accent-color: var(--calm-muted);
+    width: 1.1rem;
+    height: 1.1rem;
+    margin-top: 0.15rem;
+    flex-shrink: 0;
+}
+
+.calm-preview-text {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+}
+
+.calm-preview-title {
+    font-weight: 600;
+}
+
+.calm-preview-description {
+    color: var(--calm-muted);
+    font-size: 0.9rem;
+}
+
+.calm-preview-status,
+.calm-preview-loading,
+.calm-preview-empty {
+    color: var(--calm-muted);
+    font-size: 0.9rem;
+    margin-top: 0.75rem;
+}
