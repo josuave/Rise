@@ -262,9 +262,13 @@ contract is dependency-free. The tests read each assembly's
 manifest references, so they catch a new reference the moment it
 is added; a completeness test fails if a slice-shaped DLL appears
 in the output that the tests do not know. The shell (Rise.Wasm)
-is deliberately untested: the composition root is the one place
-allowed to reference everything. The suite runs as its own step
-in `pr.yml`, alongside core and slice tests.
+is tested in the reverse direction only: as the composition root
+it may reference everything, but nothing may reference it. Two
+further guards follow Milan Jovanovic's architecture-test
+pattern: the core references no ASP.NET Core assembly, and every
+type in a slice assembly lives in that slice's own namespace.
+The suite runs as its own step in `pr.yml`, alongside core and
+slice tests.
 The shell (`Index`) renders widgets from the layout instead of naming
 components directly, and re-renders whenever the layout service's
 `Changed` event fires. The link service has the same event, so tiles
