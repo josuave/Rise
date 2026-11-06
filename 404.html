@@ -22,7 +22,11 @@
         // users don't flash light. "system" (or nothing stored) leaves
         // data-theme unset, and the CSS system media query decides. A
         // "custom:<id>" choice applies that theme's light or dark half
-        // as inline variables, by device preference. Keep the variable
+        // as inline variables, by device preference. A
+        // "pack:omarchy:<slug>" choice applies that pack theme's single
+        // palette as inline variables; the palettes are cached in
+        // localStorage by the app (rise.omarchy-themes.v1), because
+        // this script runs before Blazor starts. Keep the variable
         // names in sync with app.css and the riseTheme block below.
         (function () {
             try {
@@ -48,6 +52,25 @@
                         };
                         for (var key in vars) {
                             if (vars[key]) { document.documentElement.style.setProperty(key, vars[key]); }
+                        }
+                    }
+                } else if (t && t.indexOf('pack:omarchy:') === 0) {
+                    var packs = JSON.parse(window.localStorage.getItem('rise.omarchy-themes.v1') || '[]');
+                    var slug = t.substring('pack:omarchy:'.length);
+                    var foundPack = null;
+                    for (var j = 0; j < packs.length; j++) {
+                        if (packs[j].Id === slug) { foundPack = packs[j]; break; }
+                    }
+                    if (foundPack && foundPack.Palette) {
+                        var packVars = {
+                            '--calm-bg': foundPack.Palette.Background, '--calm-text': foundPack.Palette.Text,
+                            '--calm-muted': foundPack.Palette.Muted, '--calm-faint': foundPack.Palette.Faint,
+                            '--calm-surface': foundPack.Palette.Surface, '--calm-border': foundPack.Palette.Border,
+                            '--calm-border-soft': foundPack.Palette.BorderSoft, '--calm-tile-bg': foundPack.Palette.TileBackground,
+                            '--calm-error': foundPack.Palette.Error
+                        };
+                        for (var packKey in packVars) {
+                            if (packVars[packKey]) { document.documentElement.style.setProperty(packKey, packVars[packKey]); }
                         }
                     }
                 }
