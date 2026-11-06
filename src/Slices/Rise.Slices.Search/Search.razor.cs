@@ -52,7 +52,10 @@ public partial class Search : IDisposable
 
     public async Task SearchOnEnter(KeyboardEventArgs args)
     {
-        if (args.Code == "Enter" || args.Code == "NumpadEnter")
+        // Android's soft keyboard sends the search key with key "Enter"
+        // but an empty code (no physical key), so the key matters, not
+        // just the code.
+        if (args.Key == "Enter" || args.Code == "Enter" || args.Code == "NumpadEnter")
         {
             await RunSearch();
         }
