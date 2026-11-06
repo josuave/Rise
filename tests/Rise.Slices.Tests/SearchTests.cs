@@ -1,7 +1,6 @@
 using AngleSharp.Dom;
 using Bunit;
 using Microsoft.AspNetCore.Components;
-using Microsoft.AspNetCore.Components.Web;
 using Microsoft.Extensions.DependencyInjection;
 using Rise.Application.Ports;
 using Rise.Application.Services;
@@ -27,13 +26,13 @@ public class SearchTests : BunitContext
     }
 
     [Fact]
-    public void EnterKey_LaunchesEncodedGoogleUrl()
+    public void Submit_LaunchesEncodedGoogleUrl()
     {
         IRenderedComponent<SearchComponent> cut = Render<SearchComponent>();
 
         IElement input = cut.Find(".calm-search-input");
         input.Input("hello world");
-        input.KeyDown(new KeyboardEventArgs { Code = "Enter" });
+        cut.Find("form").Submit();
 
         Assert.Single(_launcher.LaunchedUrls);
         Assert.Equal(
@@ -42,31 +41,19 @@ public class SearchTests : BunitContext
     }
 
     [Fact]
-    public void EnterKey_LaunchesSearch()
+    public void Submit_LaunchesSearch()
     {
+        // The box is a form, so submitting it is the search — and the
+        // form is what makes the Android keyboard's search key work,
+        // where soft keyboards often send no usable keydown at all.
         IRenderedComponent<SearchComponent> cut = Render<SearchComponent>();
 
         IElement input = cut.Find(".calm-search-input");
         input.Input("from enter");
-        input.KeyDown(new KeyboardEventArgs { Code = "Enter" });
+        cut.Find("form").Submit();
 
         Assert.Single(_launcher.LaunchedUrls);
         Assert.Contains("from%20enter", _launcher.LaunchedUrls[0].AbsoluteUri, StringComparison.Ordinal);
-    }
-
-    [Fact]
-    public void AndroidSearchKey_LaunchesSearch()
-    {
-        // Android's soft keyboard sends the search key with key "Enter"
-        // but an empty code (no physical key).
-        IRenderedComponent<SearchComponent> cut = Render<SearchComponent>();
-
-        IElement input = cut.Find(".calm-search-input");
-        input.Input("from android");
-        input.KeyDown(new KeyboardEventArgs { Key = "Enter", Code = string.Empty });
-
-        Assert.Single(_launcher.LaunchedUrls);
-        Assert.Contains("from%20android", _launcher.LaunchedUrls[0].AbsoluteUri, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -74,13 +61,13 @@ public class SearchTests : BunitContext
     {
         IRenderedComponent<SearchComponent> cut = Render<SearchComponent>();
 
-        cut.Find(".calm-search-input").KeyDown(new KeyboardEventArgs { Code = "Enter" });
+        cut.Find("form").Submit();
 
         Assert.Empty(_launcher.LaunchedUrls);
     }
 
     [Fact]
-    public async Task SearchEnter_UsesConfiguredEngine()
+    public async Task Submit_UsesConfiguredEngine()
     {
         _configs.Stored["Search"] = "{\"EngineId\":\"brave\"}";
 
@@ -90,7 +77,7 @@ public class SearchTests : BunitContext
             "Search Brave…",
             cut.Find(".calm-search-input").GetAttribute("placeholder")));
         await cut.Find(".calm-search-input").InputAsync(new ChangeEventArgs { Value = "hello world" });
-        await cut.Find(".calm-search-input").KeyDownAsync(new KeyboardEventArgs { Code = "Enter" });
+        await cut.Find("form").SubmitAsync();
 
         Assert.Single(_launcher.LaunchedUrls);
         Assert.Equal(
@@ -116,7 +103,7 @@ public class SearchTests : BunitContext
     }
 
     [Fact]
-    public async Task SearchEnter_UsesCustomEngine()
+    public async Task Submit_UsesCustomEngine()
     {
         _configs.Stored["Search"] = "{\"EngineId\":\"custom:mojeek\",\"CustomEngines\":[{\"Id\":\"custom:mojeek\",\"Name\":\"Mojeek\",\"UrlTemplate\":\"https://www.mojeek.com/search?q=%s\"}]}";
 
@@ -126,7 +113,7 @@ public class SearchTests : BunitContext
             "Search Mojeek…",
             cut.Find(".calm-search-input").GetAttribute("placeholder")));
         await cut.Find(".calm-search-input").InputAsync(new ChangeEventArgs { Value = "hello world" });
-        await cut.Find(".calm-search-input").KeyDownAsync(new KeyboardEventArgs { Code = "Enter" });
+        await cut.Find("form").SubmitAsync();
 
         Assert.Single(_launcher.LaunchedUrls);
         Assert.Equal(
@@ -145,7 +132,7 @@ public class SearchTests : BunitContext
             "Search Google…",
             cut.Find(".calm-search-input").GetAttribute("placeholder")));
         await cut.Find(".calm-search-input").InputAsync(new ChangeEventArgs { Value = "hello world" });
-        await cut.Find(".calm-search-input").KeyDownAsync(new KeyboardEventArgs { Code = "Enter" });
+        await cut.Find("form").SubmitAsync();
 
         Assert.Single(_launcher.LaunchedUrls);
         Assert.Equal(

@@ -1,11 +1,10 @@
 @using Rise.Domain
 
-<div class="calm-search" @onkeydown="OnKeyDown">
+<form class="calm-search" @onsubmit="RunSearch" @onsubmit:preventDefault="true" @onkeydown="OnKeyDown">
     <input type="search"
            class="calm-search-input"
            placeholder="@SearchPlaceholder"
            aria-label="@SearchPlaceholder"
-           @onkeydown="@SearchOnEnter"
            @bind="SearchString"
            @bind:event="oninput" />
     <button type="button" class="calm-search-engine-button" aria-label="Change search engine (currently @(CurrentEngine.Name))" aria-haspopup="true" aria-expanded="@(MenuOpen ? "true" : "false")" @onclick="ToggleMenu">
@@ -38,4 +37,4 @@
             }
         </div>
     }
-</div>
+</form>

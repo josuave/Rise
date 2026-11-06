@@ -122,7 +122,10 @@ a Settings section that shows each engine's own favicon with a
 letter tile when it cannot load, so the box and the command palette
 share one resolution through the `ISearchEngineProvider` port; the
 box itself shows the configured engine's favicon where the Search
-button used to be — Enter runs the search — and clicking the
+button used to be — the box is a form, so Enter and the keyboard's
+search key submit it (a form is what makes the search key work on
+Android, where soft keyboards often send no usable keydown at all)
+— and clicking the
 favicon opens a quick engine picker that sets the same configured
 engine), Settings (gear button
 and a Settings dialog: a built-in Theme section — Light / Dark /

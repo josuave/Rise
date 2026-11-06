@@ -9,11 +9,15 @@ namespace Rise.Slices.Search;
 /// <summary>
 /// Imperative shell for the Search slice: it collects input and calls the application
 /// service. Query building is pure core; opening the tab is an infrastructure adapter.
-/// The box shows the configured engine's favicon in place of a search button —
-/// Enter runs the search — and clicking the favicon opens a quick engine picker
-/// that sets the configured engine, the same choice the Settings section makes.
-/// The placeholder names the engine and follows engine changes live; the engine
-/// resolves through the provider, so the box and the command palette never disagree.
+/// The box shows the configured engine's favicon in place of a search button, and
+/// the box is a form, so Enter and the keyboard's search key submit it — a form is
+/// what makes the search key work on Android, where soft keyboards often send no
+/// usable keydown at all (key "Unidentified" with keyCode 229, or only a
+/// beforeinput with inputType "insertLineBreak"). Clicking the favicon opens a
+/// quick engine picker that sets the configured engine, the same choice the
+/// Settings section makes. The placeholder names the engine and follows engine
+/// changes live; the engine resolves through the provider, so the box and the
+/// command palette never disagree.
 /// </summary>
 public partial class Search : IDisposable
 {
@@ -48,17 +52,6 @@ public partial class Search : IDisposable
         await Config.LoadAsync();
         await RefreshEngineAsync();
         ConfigService.ConfigChanged += OnConfigChanged;
-    }
-
-    public async Task SearchOnEnter(KeyboardEventArgs args)
-    {
-        // Android's soft keyboard sends the search key with key "Enter"
-        // but an empty code (no physical key), so the key matters, not
-        // just the code.
-        if (args.Key == "Enter" || args.Code == "Enter" || args.Code == "NumpadEnter")
-        {
-            await RunSearch();
-        }
     }
 
     public async Task RunSearch()
