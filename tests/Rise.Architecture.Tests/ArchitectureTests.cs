@@ -156,11 +156,21 @@ public class ArchitectureTests
     public void Slice_TypesResideInTheirOwnNamespace(string assemblyName)
     {
         Type[] stray = Assembly.Load(assemblyName).GetTypes()
-            .Where(type => type.Namespace != assemblyName)
+            .Where(type => type.Namespace != assemblyName && !IsCoverletTracker(type))
             .ToArray();
         Assert.True(stray.Length == 0,
             $"{assemblyName} has types outside its own namespace: {string.Join(", ", stray.Select(type => type.FullName))}.");
     }
+
+    /// <summary>
+    /// Coverlet's coverage collection injects one tracker type per
+    /// instrumented assembly (Coverlet.Core.Instrumentation.Tracker.
+    /// &lt;AssemblyName&gt;_&lt;guid&gt;). It is not a type the project
+    /// wrote, so the colocation rule ignores it — otherwise this test
+    /// fails only when coverage runs, which is exactly when CI runs it.
+    /// </summary>
+    private static bool IsCoverletTracker(Type type) =>
+        type.Namespace?.StartsWith("Coverlet.Core.Instrumentation", StringComparison.Ordinal) == true;
 
     /// <summary>
     /// A new slice must join the theory list above: every slice-shaped

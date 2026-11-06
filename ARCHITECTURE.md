@@ -332,6 +332,9 @@ it may reference everything, but nothing may reference it. Two
 further guards follow Milan Jovanovic's architecture-test
 pattern: the core references no ASP.NET Core assembly, and every
 type in a slice assembly lives in that slice's own namespace.
+The namespace guard ignores Coverlet's injected tracker types:
+coverage collection adds one per instrumented assembly, and
+without the exclusion the guard fails only when coverage runs.
 The suite runs as its own step in `pr.yml`, alongside core and
 slice tests.
 The shell (`Index`) renders widgets from the layout instead of naming
