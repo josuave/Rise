@@ -115,6 +115,8 @@ internal sealed class FakeThemeStore : IThemeStore
     public ThemePalette? AppliedPalette { get; private set; }
     public bool SystemPrefersDark { get; set; }
 
+    public event EventHandler? Changed;
+
     public FakeThemeStore(string? stored = null, bool systemPrefersDark = false)
     {
         Stored = stored;
@@ -127,6 +129,7 @@ internal sealed class FakeThemeStore : IThemeStore
     public Task SetStoredThemeAsync(string theme, CancellationToken cancellationToken = default)
     {
         Stored = theme;
+        Changed?.Invoke(this, EventArgs.Empty);
         return Task.CompletedTask;
     }
 
@@ -205,6 +208,24 @@ internal sealed class FakeModuleStore : IModuleStore
 internal sealed class FakeModuleCatalog : IModuleCatalog
 {
     public IReadOnlyList<ModuleInfo> Modules { get; set; } = Array.Empty<ModuleInfo>();
+}
+
+/// <summary>Omarchy theme pack for slice tests: empty by default; a test fills Themes to list pack themes.</summary>
+internal sealed class FakeOmarchyThemeProvider : IOmarchyThemeProvider
+{
+    public IReadOnlyList<OmarchyTheme> Themes { get; set; } = Array.Empty<OmarchyTheme>();
+}
+
+/// <summary>Omarchy theme cache for slice tests: records the last written pack list.</summary>
+internal sealed class FakeOmarchyThemeCache : IOmarchyThemeCache
+{
+    public IReadOnlyList<OmarchyTheme>? Written { get; private set; }
+
+    public Task WriteCacheAsync(IReadOnlyList<OmarchyTheme> themes, CancellationToken cancellationToken = default)
+    {
+        Written = themes;
+        return Task.CompletedTask;
+    }
 }
 
 /// <summary>In-memory hotkey store for slice tests.</summary>

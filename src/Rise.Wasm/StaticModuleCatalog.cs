@@ -22,6 +22,7 @@ internal sealed class StaticModuleCatalog : IModuleCatalog
     private static readonly string[] NotesWidgets = { "Notes" };
     private static readonly string[] LayoutWidgets = { "Group" };
     private static readonly string[] SettingsWidgets = { "Theme", "Settings" };
+    private static readonly string[] OmarchyThemeWidgets = Array.Empty<string>();
 
     public IReadOnlyList<ModuleInfo> Modules { get; } = new[]
     {
@@ -34,5 +35,9 @@ internal sealed class StaticModuleCatalog : IModuleCatalog
         new ModuleInfo("Notes", "Notes", NotesWidgets, "Rise.Slices.Notes", IsLazy: true, CanDisable: true),
         new ModuleInfo("Layout", "Groups", LayoutWidgets, "Rise.Slices.Layout", IsLazy: false, CanDisable: true),
         new ModuleInfo("Settings", "Settings", SettingsWidgets, "Rise.Slices.Settings", IsLazy: false, CanDisable: false),
+        // A module with no widgets: the slice only supplies the
+        // Omarchy themes, listed by the theme picker instead of the
+        // layout editor. Disabling hides them there.
+        new ModuleInfo(OmarchyTheme.ModuleId, "Omarchy themes", OmarchyThemeWidgets, "Rise.Slices.OmarchyThemes", IsLazy: false, CanDisable: true),
     };
 }

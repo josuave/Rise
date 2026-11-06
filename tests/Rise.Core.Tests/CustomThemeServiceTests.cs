@@ -32,6 +32,8 @@ public class CustomThemeServiceTests
         public ThemePalette? AppliedPalette { get; private set; }
         public bool SystemPrefersDark { get; set; }
 
+        public event EventHandler? Changed;
+
         public FakeThemeStore(string? stored = null) => Stored = stored;
 
         public Task<string?> GetStoredThemeAsync(CancellationToken cancellationToken = default) =>
@@ -40,6 +42,7 @@ public class CustomThemeServiceTests
         public Task SetStoredThemeAsync(string theme, CancellationToken cancellationToken = default)
         {
             Stored = theme;
+            Changed?.Invoke(this, EventArgs.Empty);
             return Task.CompletedTask;
         }
 

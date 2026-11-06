@@ -4,8 +4,9 @@ namespace Rise.Application.Ports;
 
 /// <summary>
 /// Outbound port: the user's theme preference. Stored values are
-/// "light", "dark", "system" (follow the device), or "custom:&lt;id&gt;"
-/// for a user-made theme. "system" is the default when nothing is
+/// "light", "dark", "system" (follow the device), "custom:&lt;id&gt;"
+/// for a user-made theme, or "pack:omarchy:&lt;slug&gt;" for an
+/// Omarchy pack theme. "system" is the default when nothing is
 /// stored. Applying a built-in theme sets the page's data-theme
 /// attribute ("light"/"dark") or removes it ("system", so the CSS
 /// system media query decides); applying a custom palette sets the
@@ -15,6 +16,9 @@ namespace Rise.Application.Ports;
 /// </summary>
 public interface IThemeStore
 {
+    /// <summary>Raised after the stored theme preference changes, so the quick toggle can follow picks made in Settings.</summary>
+    event EventHandler? Changed;
+
     /// <summary>Stored theme preference, or null when nothing is stored yet.</summary>
     Task<string?> GetStoredThemeAsync(CancellationToken cancellationToken = default);
 

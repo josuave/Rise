@@ -3,6 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Rise.Application.Ports;
 using Rise.Application.Services;
 using Rise.Domain;
+using Rise.Slices.OmarchyThemes;
 using Rise.Slices.Settings;
 using Xunit;
 
@@ -19,6 +20,10 @@ public class ThemeToggleTests : BunitContext
         Services.AddScoped<IThemeStore>(_ => _theme);
         Services.AddScoped<ICustomThemeStore>(_ => _customThemes);
         Services.AddScoped<CustomThemeService>();
+        Services.AddScoped<IOmarchyThemeProvider>(_ => new FakeOmarchyThemeProvider());
+        Services.AddScoped<IModuleStore>(_ => new FakeModuleStore());
+        Services.AddScoped<ModuleService>();
+        Services.AddSingleton<IModuleCatalog>(new FakeModuleCatalog());
     }
 
     [Fact]
@@ -59,5 +64,64 @@ public class ThemeToggleTests : BunitContext
         IRenderedComponent<ThemeToggle> cut = Render<ThemeToggle>();
 
         cut.WaitForAssertion(() => Assert.Equal(ThemePalette.DefaultDark, theme.AppliedPalette));
+    }
+
+    [Fact]
+    public void Toggle_WithActivePackTheme_AppliesPaletteAndShowsSun()
+    {
+        OmarchyTheme tokyo = OmarchyThemePack.All.Single(t => t.Id == "tokyo-night");
+        var theme = new FakeThemeStore("pack:omarchy:tokyo-night");
+        Services.AddScoped<IThemeStore>(_ => theme);
+        Services.AddScoped<IOmarchyThemeProvider>(_ => new FakeOmarchyThemeProvider
+        {
+            Themes = new[] { tokyo },
+        });
+
+        IRenderedComponent<ThemeToggle> cut = Render<ThemeToggle>();
+
+        cut.WaitForAssertion(() => Assert.Equal(tokyo.Palette, theme.AppliedPalette));
+        // A dark pack is showing, so the toggle shows the sun (to light).
+        Assert.Equal("☀", cut.Find(".calm-theme-toggle").TextContent);
+    }
+
+    [Fact]
+    public void Toggle_WithActiveLightPackTheme_AppliesPaletteAndShowsMoon()
+    {
+        OmarchyTheme latte = OmarchyThemePack.All.Single(t => t.Id == "catppuccin-latte");
+        var theme = new FakeThemeStore("pack:omarchy:catppuccin-latte");
+        Services.AddScoped<IThemeStore>(_ => theme);
+        Services.AddScoped<IOmarchyThemeProvider>(_ => new FakeOmarchyThemeProvider
+        {
+            Themes = new[] { latte },
+        });
+
+        IRenderedComponent<ThemeToggle> cut = Render<ThemeToggle>();
+
+        cut.WaitForAssertion(() => Assert.Equal(latte.Palette, theme.AppliedPalette));
+        // A light pack is showing, so the toggle shows the moon (to dark).
+        Assert.Equal("☾", cut.Find(".calm-theme-toggle").TextContent);
+    }
+
+    [Fact]
+    public async Task Toggle_FollowsPackThemePickedElsewhere()
+    {
+        OmarchyTheme tokyo = OmarchyThemePack.All.Single(t => t.Id == "tokyo-night");
+        Services.AddScoped<IOmarchyThemeProvider>(_ => new FakeOmarchyThemeProvider
+        {
+            Themes = new[] { tokyo },
+        });
+        IRenderedComponent<ThemeToggle> cut = Render<ThemeToggle>();
+
+        // Light device, system theme: the toggle shows the moon.
+        Assert.Equal("☾", cut.Find(".calm-theme-toggle").TextContent);
+
+        // A pick made elsewhere (the Settings dialog) flows through the store's Changed event.
+        await _theme.SetStoredThemeAsync("pack:omarchy:tokyo-night");
+
+        cut.WaitForAssertion(() =>
+        {
+            Assert.Equal(tokyo.Palette, _theme.AppliedPalette);
+            Assert.Equal("☀", cut.Find(".calm-theme-toggle").TextContent);
+        });
     }
 }
