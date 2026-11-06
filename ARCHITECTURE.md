@@ -279,6 +279,40 @@ the user at runtime and persisted per browser; the hand-rolled
 store is one port, one adapter, and one service in the shape of
 the module and hotkey stores.
 
+Backgrounds: one chosen background for the page — a built-in calm
+gradient preset (None, Dawn, Mist, Dusk, Forest, registered in
+Domain) or a custom image address pasted in Settings. The choice
+lives under `rise.background.v1` through the same port/adapter/
+service shape as the preview features, and the Background section
+in Settings (Order 170, shell-owned like the preview manager)
+applies it live through the service's Changed event, no restart.
+The shell renders the background as a fixed layer behind the page
+content (above the body's calm background, below everything else),
+with a scrim of the theme's calm background over it so text stays
+readable in both themes — one choice covers light and dark in v1.
+A custom address must be an absolute http(s) URL; the page
+references it like any image, so it needs the network to load and
+is not cached offline. An uploaded image file is hashed (SHA-256)
+and its bytes stored in IndexedDB keyed by that hash, through the
+`riseBackgroundImage` JS helper; the choice carries only the
+descriptor (hash, original file name, size, type). At boot the
+service turns the stored bytes back into a blob URL — one live
+URL at a time, revoked when the choice moves on. When the bytes
+are gone — a backup restored on a fresh device, or the browser
+evicted the store — the service flags the upload missing and the
+Background section prompts for a re-upload naming that file;
+re-uploading the same file restores it (hash-checked), a
+different file is flagged and only replaces it on an explicit
+"use this image instead". Replacing an upload deletes the old
+bytes; uploads cap at 10 MB, the same cap as backup imports.
+Background choices ride the backup envelope as a compatible v1
+extension (see `MIGRATIONS.md`); an unknown preset in an
+imported file repairs to none, a custom choice without a valid
+address is an import error, and an upload descriptor without
+valid details is an import error — the bytes never ride the
+backup, so a restored upload always arrives as the re-upload
+prompt.
+
 Adding a widget is a new definition plus one line in Program.cs:
 no change to Domain, the layout service, the editor, or the shell.
 
@@ -298,6 +332,9 @@ it may reference everything, but nothing may reference it. Two
 further guards follow Milan Jovanovic's architecture-test
 pattern: the core references no ASP.NET Core assembly, and every
 type in a slice assembly lives in that slice's own namespace.
+The namespace guard ignores Coverlet's injected tracker types:
+coverage collection adds one per instrumented assembly, and
+without the exclusion the guard fails only when coverage runs.
 The suite runs as its own step in `pr.yml`, alongside core and
 slice tests.
 The shell (`Index`) renders widgets from the layout instead of naming
