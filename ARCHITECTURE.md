@@ -120,8 +120,11 @@ registry, `SearchEngines` — Google, DuckDuckGo, Bing, Brave — plus
 user-added customs stored in the Search widget's config, picked in
 a Settings section that shows each engine's own favicon with a
 letter tile when it cannot load, so the box and the command palette
-share one resolution through the `ISearchEngineProvider` port),
-Settings (gear button
+share one resolution through the `ISearchEngineProvider` port; the
+box itself shows the configured engine's favicon where the Search
+button used to be — Enter runs the search — and clicking the
+favicon opens a quick engine picker that sets the same configured
+engine), Settings (gear button
 and a Settings dialog: a built-in Theme section — Light / Dark /
 System, persisted via the `IThemeStore` port — plus sections
 contributed by other slices), and Layout (the layout editor).
