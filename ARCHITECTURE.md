@@ -115,7 +115,11 @@ Rules for a slice:
    shared variables.
 
 Current slices: Links (tiles, persisted via `ILinkStore`), Search
-(query box, launched via `ISearchLauncher`), Settings (gear button
+(query box, launched via `ISearchLauncher`; the engine is a Domain
+registry, `SearchEngines` — Google, DuckDuckGo, Bing, Brave — picked
+in a Settings section and stored as the Search widget's config, so
+the box and the command palette share one resolution through the
+`ISearchEngineProvider` port), Settings (gear button
 and a Settings dialog: a built-in Theme section — Light / Dark /
 System, persisted via the `IThemeStore` port — plus sections
 contributed by other slices), and Layout (the layout editor).

@@ -38,6 +38,7 @@ builder.Services.AddBackupSettings();
 builder.Services.AddHeaderSettings();
 builder.Services.AddLayoutSettings();
 builder.Services.AddWeatherSettings();
+builder.Services.AddSearchSettings();
 
 // Notes is a lazy module: its section is metadata here, not the
 // slice's registration, so the slice assembly stays unloaded until

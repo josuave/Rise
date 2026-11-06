@@ -1,0 +1,16 @@
+.calm-search-engine-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.calm-search-engine-option {
+    display: flex;
+    align-items: center;
+    text-align: left;
+}
+
+.calm-search-engine-option.selected {
+    background: var(--calm-tile-bg);
+    font-weight: 700;
+}

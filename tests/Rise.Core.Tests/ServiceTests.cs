@@ -33,6 +33,12 @@ public class ServiceTests
         }
     }
 
+    private sealed class FakeEngineProvider(string engineId) : ISearchEngineProvider
+    {
+        public Task<string> GetEngineIdAsync(CancellationToken cancellationToken = default) =>
+            Task.FromResult(engineId);
+    }
+
     [Fact]
     public async Task StartPageService_Load_ReturnsDefaultsWhenStoreIsEmpty()
     {
@@ -95,5 +101,29 @@ public class ServiceTests
 
         Assert.False(await service.LaunchSearchAsync("   "));
         Assert.Single(launcher.Launched);
+    }
+
+    [Fact]
+    public async Task SearchService_UsesConfiguredEngine()
+    {
+        var launcher = new FakeLauncher();
+        var service = new SearchService(launcher, new FakeEngineProvider("brave"));
+
+        Assert.True(await service.LaunchSearchAsync("hello world"));
+
+        Assert.Single(launcher.Launched);
+        Assert.Equal("https://search.brave.com/search?q=hello%20world", launcher.Launched[0].AbsoluteUri);
+    }
+
+    [Fact]
+    public async Task SearchService_UnknownConfiguredEngine_FallsBackToGoogle()
+    {
+        var launcher = new FakeLauncher();
+        var service = new SearchService(launcher, new FakeEngineProvider("ghost"));
+
+        Assert.True(await service.LaunchSearchAsync("hello world"));
+
+        Assert.Single(launcher.Launched);
+        Assert.Equal("https://www.google.com/search?q=hello%20world", launcher.Launched[0].AbsoluteUri);
     }
 }

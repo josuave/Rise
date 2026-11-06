@@ -11,7 +11,9 @@ namespace Rise.Slices.Search;
 /// </summary>
 public sealed class SearchWidgetDefinition : IWidgetDefinition
 {
-    public string Id => "Search";
+    public const string WidgetId = "Search";
+
+    public string Id => WidgetId;
     public string Title => "Search";
     public WidgetZone Zone => WidgetZone.Main;
     public bool DefaultVisible => true;
@@ -25,6 +27,8 @@ public static class SearchWidgetExtensions
     public static IServiceCollection AddSearchWidget(this IServiceCollection services)
     {
         services.AddSingleton<IWidgetDefinition, SearchWidgetDefinition>();
+        services.AddScoped<SearchConfig>();
+        services.AddScoped<ISearchEngineProvider, SearchEngineProvider>();
         return services;
     }
 }

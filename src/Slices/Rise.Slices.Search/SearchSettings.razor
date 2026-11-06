@@ -1,0 +1,14 @@
+@using Rise.Domain
+
+<div class="calm-search-engine-list">
+    @foreach (SearchEngine engine in SearchEngines.All)
+    {
+        <button type="button"
+                class="calm-search-engine-option@(IsActive(engine) ? " selected" : "")"
+                aria-pressed="@(IsActive(engine) ? "true" : "false")"
+                aria-label="Use @(engine.Name) search"
+                @onclick="() => SetEngineAsync(engine)">
+            @engine.Name
+        </button>
+    }
+</div>

@@ -90,6 +90,23 @@ public class DomainTests
     }
 
     [Theory]
+    [InlineData("duckduckgo", "https://duckduckgo.com/?q=hello%20world")]
+    [InlineData("bing", "https://www.bing.com/search?q=hello%20world")]
+    [InlineData("brave", "https://search.brave.com/search?q=hello%20world")]
+    [InlineData("ghost", "https://www.google.com/search?q=hello%20world")]
+    [InlineData(null, "https://www.google.com/search?q=hello%20world")]
+    public void SearchQuery_BuildsEngineUrl(string? engineId, string expected)
+    {
+        Uri? url = SearchQuery.Build("hello world", engineId);
+
+        Assert.Equal(expected, url!.AbsoluteUri);
+    }
+
+    [Fact]
+    public void SearchQuery_BlankInputWithEngine_ReturnsNull() =>
+        Assert.Null(SearchQuery.Build("   ", "brave"));
+
+    [Theory]
     [InlineData(0, "Good morning.")]
     [InlineData(11, "Good morning.")]
     [InlineData(12, "Good afternoon.")]
