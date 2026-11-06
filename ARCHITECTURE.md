@@ -290,6 +290,14 @@ The shell renders the background as a fixed layer behind the page
 content (above the body's calm background, below everything else),
 with a scrim of the theme's calm background over it so text stays
 readable in both themes — one choice covers light and dark in v1.
+The page background lives on `<body>` only, never on the shell
+(`.calm-shell`) or `<html>`: a body's background becomes the canvas
+background, so the fixed layer paints above it. An opaque background
+on the shell covered the layer entirely in v1 — the layer was in the
+DOM with the right computed style, but no pixel ever showed it
+(fixed in the follow-up that moved the background to the body;
+verify visual features by sampling screenshot pixels, not just
+computed styles).
 A custom address must be an absolute http(s) URL; the page
 references it like any image, so it needs the network to load and
 is not cached offline. An uploaded image file is hashed (SHA-256)

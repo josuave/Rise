@@ -1,5 +1,9 @@
 .calm-shell {
-    background: var(--calm-bg);
+    /* No background here: the page background lives on <body> so the
+       fixed background layer (z-index -1) paints above it. An opaque
+       background on this shell would cover the layer entirely — the
+       background would be in the DOM and in the computed style, but
+       no pixel would ever show it. */
     color: var(--calm-text);
     min-height: 100vh;
     display: flex;

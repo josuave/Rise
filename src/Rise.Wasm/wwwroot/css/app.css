@@ -4,6 +4,16 @@ html, body {
     font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
 }
 
+/* The page background lives on <body> only — never on <html> and
+   never on the .calm-shell in the layout. A body's background becomes
+   the canvas background, so the fixed background layer (z-index -1)
+   paints above it and the gradient actually shows. If <html> carried
+   it, the body's own background box would paint over the layer; if
+   the shell carried it, its opaque box would do the same. */
+body {
+    background: var(--calm-bg);
+}
+
 h1:focus {
     outline: none;
 }
