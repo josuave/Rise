@@ -8,6 +8,117 @@
 @import '_content/Rise.Slices.Todo/Rise.Slices.Todo.8lgqz1uc4m.bundle.scp.css';
 @import '_content/Rise.Slices.Weather/Rise.Slices.Weather.i964rxdoj4.bundle.scp.css';
 
+/* /Pages/BackgroundSettings.razor.rz.scp.css */
+/* Background picker: preset swatches in a row, then the custom
+   image address field. The component owns its own classes —
+   colocated CSS is scoped, so nothing here can leak into other
+   slices. */
+.calm-background-presets[b-jsnesr5ld6] {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+
+.calm-background-swatch[b-jsnesr5ld6] {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    align-items: center;
+    color: var(--calm-text);
+}
+
+.calm-background-swatch-color[b-jsnesr5ld6] {
+    display: block;
+    width: 4.5rem;
+    height: 3rem;
+    border: 1px solid var(--calm-border);
+    border-radius: 0.5rem;
+    background-color: var(--calm-bg);
+    background-size: cover;
+    background-position: center;
+}
+
+.calm-background-swatch[aria-pressed="true"] .calm-background-swatch-color[b-jsnesr5ld6] {
+    outline: 2px solid var(--calm-muted);
+    outline-offset: 2px;
+}
+
+.calm-background-swatch-title[b-jsnesr5ld6] {
+    font-size: 0.85rem;
+    color: var(--calm-muted);
+}
+
+.calm-background-custom[b-jsnesr5ld6] {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    align-items: center;
+    margin-top: 1rem;
+}
+
+.calm-background-custom label[b-jsnesr5ld6] {
+    color: var(--calm-muted);
+    font-size: 0.9rem;
+}
+
+.calm-background-custom input[b-jsnesr5ld6] {
+    flex: 1;
+    min-width: 12rem;
+    font: inherit;
+    color: var(--calm-text);
+    background: var(--calm-surface);
+    border: 1px solid var(--calm-border);
+    border-radius: 0.5rem;
+    padding: 0.5rem 0.75rem;
+}
+
+.calm-background-apply[b-jsnesr5ld6] {
+    font: inherit;
+    color: var(--calm-text);
+    background: var(--calm-surface);
+    border: 1px solid var(--calm-border);
+    border-radius: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    cursor: pointer;
+}
+
+.calm-background-status[b-jsnesr5ld6],
+.calm-background-loading[b-jsnesr5ld6] {
+    color: var(--calm-muted);
+    font-size: 0.9rem;
+    margin-top: 0.75rem;
+}
+
+.calm-background-upload[b-jsnesr5ld6] {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    align-items: flex-start;
+    margin-top: 1rem;
+}
+
+.calm-background-missing[b-jsnesr5ld6] {
+    color: var(--calm-muted);
+    font-size: 0.9rem;
+    margin: 0;
+}
+
+.calm-background-upload-label[b-jsnesr5ld6] {
+    color: var(--calm-muted);
+    font-size: 0.9rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.calm-background-upload-label input[type="file"][b-jsnesr5ld6] {
+    font: inherit;
+    color: var(--calm-text);
+}
 /* /Pages/CommandPalette.razor.rz.scp.css */
 .calm-palette-backdrop[b-2doiel3n63] {
     position: fixed;
@@ -90,6 +201,26 @@
     width: 100%;
     max-width: 620px;
     text-align: center;
+}
+
+/* Background layer: fixed behind the page content (above the
+   body's calm background, below everything else). Rendered only
+   when a background is chosen. The scrim tints it with the theme's
+   calm background so text stays readable in both themes. */
+.calm-background[b-cw8acn2iox] {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+.calm-background-scrim[b-cw8acn2iox] {
+    position: absolute;
+    inset: 0;
+    background: var(--calm-bg);
+    opacity: 0.55;
 }
 
 /* Settings cluster (kept subtle so the Calm page stays calm): theme

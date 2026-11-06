@@ -171,6 +171,62 @@
                 URL.revokeObjectURL(url);
             }
         };
+        // Uploaded background images live in IndexedDB, keyed by the
+        // SHA-256 hash of the file — localStorage is too small and
+        // string-only for image bytes. load() turns the stored blob
+        // back into a blob URL the page references like any image;
+        // it returns null when the bytes are gone (fresh device after
+        // a backup restore, or the browser evicted the store), and
+        // the app prompts for a re-upload from the stored descriptor.
+        // Only one background URL is live at a time: loading a new
+        // one revokes the old, and clearUrl() drops it when the
+        // choice moves away from an upload.
+        window.riseBackgroundImage = (function () {
+            var currentUrl = null;
+            function openDb() {
+                return new Promise(function (resolve, reject) {
+                    var req = indexedDB.open('rise', 1);
+                    req.onupgradeneeded = function () { req.result.createObjectStore('background-images'); };
+                    req.onsuccess = function () { resolve(req.result); };
+                    req.onerror = function () { reject(req.error); };
+                });
+            }
+            function run(db, mode, op) {
+                return new Promise(function (resolve, reject) {
+                    var req = op(db.transaction('background-images', mode).objectStore('background-images'));
+                    req.onsuccess = function () { resolve(req.result); };
+                    req.onerror = function () { reject(req.error); };
+                });
+            }
+            return {
+                save: async function (hash, bytes, mimeType) {
+                    var db = await openDb();
+                    try {
+                        await run(db, 'readwrite', function (store) { return store.put(new Blob([bytes], { type: mimeType }), hash); });
+                    } finally { db.close(); }
+                },
+                load: async function (hash) {
+                    var db = await openDb();
+                    var blob;
+                    try {
+                        blob = await run(db, 'readonly', function (store) { return store.get(hash); });
+                    } finally { db.close(); }
+                    if (!blob) { return null; }
+                    if (currentUrl) { URL.revokeObjectURL(currentUrl); }
+                    currentUrl = URL.createObjectURL(blob);
+                    return currentUrl;
+                },
+                remove: async function (hash) {
+                    var db = await openDb();
+                    try {
+                        await run(db, 'readwrite', function (store) { return store.delete(hash); });
+                    } finally { db.close(); }
+                },
+                clearUrl: function () {
+                    if (currentUrl) { URL.revokeObjectURL(currentUrl); currentUrl = null; }
+                }
+            };
+        })();
         // When the device flips light/dark, a custom theme follows it
         // by re-applying the matching half.
         window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function () {
