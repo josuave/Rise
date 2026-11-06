@@ -459,6 +459,30 @@ switching to a built-in clears the inline variables. Deleting the
 active custom theme repairs the choice to "system"; an orphaned
 custom choice repairs the same way on startup. Generating a theme
 from a seed color or image is a later step, not this one. The
+Omarchy themes are a third kind of theme, supplied by an optional
+module rather than made by the user: all 23 built-in themes from
+omacom/omarchy, each one palette with its declared mode — dark
+themes stay dark and light themes stay light whatever the device
+prefers, so a pack theme has no second half; the quick toggle
+shows the pack's own declared mode and stays in sync with picks
+made in Settings through the theme store's Changed event
+(flipping away from a pack theme still lands on an explicit
+built-in, like a custom theme). The palettes
+are copied mechanically from each theme's colors.toml into the
+OmarchyThemes slice (Background is background, Text is
+bright_foreground, Muted is muted, Faint is dark_foreground,
+Surface is lighter_background, Border is muted, BorderSoft is
+lighter_background, TileBackground is selection, Error is red,
+Accent is accent for the picker's swatch). The module is a
+catalog entry with no widgets; the theme picker lists the pack
+only while the module is switched on, and switching it off
+repairs an active pack choice to "system" on startup. The choice
+is stored as "pack:omarchy:&lt;slug&gt;" in `rise.theme.v1`, so it
+rides backup as the theme string with no format change; the
+palettes themselves never ride the backup — the module re-supplies
+them. The before-first-paint script applies a pack choice from a
+palette cache the app writes to `rise.omarchy-themes.v1` on boot,
+because the script runs before Blazor starts. The
 shell's index.html provides the `window.riseTheme` script block the
 theme adapter calls (localStorage, the page's data-theme attribute,
 custom inline variables, matchMedia), the same way it provides

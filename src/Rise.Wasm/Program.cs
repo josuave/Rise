@@ -8,6 +8,7 @@ using Rise.Slices.Backup;
 using Rise.Slices.Header;
 using Rise.Slices.Layout;
 using Rise.Slices.Links;
+using Rise.Slices.OmarchyThemes;
 using Rise.Slices.Search;
 using Rise.Slices.Weather;
 using Rise.Slices.Settings;
@@ -68,6 +69,10 @@ builder.Services.AddLinksWidgets();
 builder.Services.AddLayoutWidgets();
 builder.Services.AddTodoWidgets();
 builder.Services.AddWeatherWidgets();
+
+// Theme pack: no widgets — the slice only supplies the Omarchy
+// themes, listed by the theme picker instead of the layout editor.
+builder.Services.AddOmarchyThemes();
 
 // Notes is a lazy module: its definition is metadata here, not the
 // slice's registration, so the slice assembly stays unloaded until

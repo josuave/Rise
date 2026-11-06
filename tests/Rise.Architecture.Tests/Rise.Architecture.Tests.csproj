@@ -27,6 +27,7 @@
     <ProjectReference Include="..\..\src\Slices\Rise.Slices.Layout\Rise.Slices.Layout.csproj" />
     <ProjectReference Include="..\..\src\Slices\Rise.Slices.Links\Rise.Slices.Links.csproj" />
     <ProjectReference Include="..\..\src\Slices\Rise.Slices.Notes\Rise.Slices.Notes.csproj" />
+    <ProjectReference Include="..\..\src\Slices\Rise.Slices.OmarchyThemes\Rise.Slices.OmarchyThemes.csproj" />
     <ProjectReference Include="..\..\src\Slices\Rise.Slices.Search\Rise.Slices.Search.csproj" />
     <ProjectReference Include="..\..\src\Slices\Rise.Slices.Settings\Rise.Slices.Settings.csproj" />
     <ProjectReference Include="..\..\src\Slices\Rise.Slices.Settings.Abstractions\Rise.Slices.Settings.Abstractions.csproj" />

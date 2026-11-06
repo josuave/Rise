@@ -34,6 +34,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IPreviewFeatureStore, LocalStoragePreviewFeatureStore>();
         services.AddScoped<IBackgroundStore, LocalStorageBackgroundStore>();
         services.AddScoped<IBackgroundImageStore, JsBackgroundImageStore>();
+        services.AddScoped<IOmarchyThemeCache, LocalStorageOmarchyThemeCache>();
         services.AddScoped<IFileDownloader, BrowserFileDownloader>();
         services.AddScoped<ICustomThemeStore, LocalStorageCustomThemeStore>();
         services.AddScoped<ILayoutCollectionStore, LocalStorageLayoutCollectionStore>();

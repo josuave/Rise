@@ -34,12 +34,15 @@ public class BackupServiceTests
     {
         public string? Stored { get; private set; }
 
+        public event EventHandler? Changed;
+
         public Task<string?> GetStoredThemeAsync(CancellationToken cancellationToken = default) =>
             Task.FromResult(Stored);
 
         public Task SetStoredThemeAsync(string theme, CancellationToken cancellationToken = default)
         {
             Stored = theme;
+            Changed?.Invoke(this, EventArgs.Empty);
             return Task.CompletedTask;
         }
 
@@ -568,5 +571,34 @@ public class BackupServiceTests
 
         Assert.True(result.IsSuccess);
         Assert.Equal("system", target.Theme.Stored);
+    }
+
+    [Fact]
+    public async Task Import_AcceptsPackThemeChoice()
+    {
+        var source = new Fixture();
+        await SeedAsync(source);
+        JsonObject root = JsonNode.Parse(await source.Service.ExportAsync())!.AsObject();
+        root["State"]!.AsObject()["Theme"] = "pack:omarchy:tokyo-night";
+        var target = new Fixture();
+
+        Result<BackupEnvelope> result = await target.Service.ImportAsync(root.ToJsonString());
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal("pack:omarchy:tokyo-night", target.Theme.Stored);
+    }
+
+    [Fact]
+    public async Task Import_RejectsMalformedPackThemeChoice()
+    {
+        var source = new Fixture();
+        await SeedAsync(source);
+        JsonObject root = JsonNode.Parse(await source.Service.ExportAsync())!.AsObject();
+        root["State"]!.AsObject()["Theme"] = "pack:omarchy:";
+        var target = new Fixture();
+
+        Result<BackupEnvelope> result = await target.Service.ImportAsync(root.ToJsonString());
+
+        Assert.False(result.IsSuccess);
     }
 }

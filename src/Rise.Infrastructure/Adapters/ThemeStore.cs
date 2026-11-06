@@ -14,6 +14,9 @@ public sealed class ThemeStore(IJSRuntime js) : IThemeStore
 {
     private const string StorageKey = "rise.theme.v1";
 
+    /// <summary>Raised after the stored theme preference changes, so the quick toggle can follow picks made in Settings.</summary>
+    public event EventHandler? Changed;
+
     public async Task<string?> GetStoredThemeAsync(CancellationToken cancellationToken = default)
     {
         try
@@ -36,6 +39,8 @@ public sealed class ThemeStore(IJSRuntime js) : IThemeStore
         {
             // Theme preference is a nicety; a failed save must not break the page.
         }
+
+        Changed?.Invoke(this, EventArgs.Empty);
     }
 
     public async Task ApplyThemeAsync(string theme, CancellationToken cancellationToken = default)

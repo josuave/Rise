@@ -14,9 +14,10 @@ namespace Rise.Slices.Settings;
 /// theme toggle lives in its own widget (ThemeToggle). It contains no
 /// storage or JS code itself. Custom themes appear in the theme
 /// picker alongside the built-ins; the theme editor edits one.
-/// Sections belonging to a switched-off module are hidden: a module's
-/// sections live in the module's assembly, so the dialog filters by
-/// assembly name.
+/// Pack themes from the Omarchy module appear there too, when the
+/// module is switched on. Sections belonging to a switched-off module
+/// are hidden: a module's sections live in the module's assembly, so
+/// the dialog filters by assembly name.
 /// </summary>
 public partial class SettingsGear : IDisposable
 {
@@ -25,6 +26,14 @@ public partial class SettingsGear : IDisposable
 
     [Inject]
     private CustomThemeService? CustomThemeService { get; set; }
+
+    /// <summary>Null in older tests: no pack themes then, the picker lists only built-ins and customs.</summary>
+    [Inject]
+    private IOmarchyThemeProvider? ThemePackProvider { get; set; }
+
+    /// <summary>Null in older tests: no pack cache then, the before-paint script has no pack palettes to read.</summary>
+    [Inject]
+    private IOmarchyThemeCache? ThemePackCache { get; set; }
 
     /// <summary>
     /// Sections contributed by other slices through the <see cref="ISettingsSection"/>
@@ -46,10 +55,16 @@ public partial class SettingsGear : IDisposable
 
     private bool IsOpen { get; set; }
 
-    /// <summary>Stored preference: "light", "dark", "system" (the default), or "custom:&lt;id&gt;".</summary>
+    /// <summary>Stored preference: "light", "dark", "system" (the default), "custom:&lt;id&gt;", or "pack:omarchy:&lt;slug&gt;".</summary>
     private string StoredTheme { get; set; } = "system";
 
     private IReadOnlyList<CustomTheme> CustomThemes { get; set; } = Array.Empty<CustomTheme>();
+
+    /// <summary>Pack themes to list in the picker: none when the provider is absent or the module is switched off.</summary>
+    private IReadOnlyList<OmarchyTheme> PackThemes =>
+        ThemePackProvider is null || DisabledModules.Contains(OmarchyTheme.ModuleId)
+            ? Array.Empty<OmarchyTheme>()
+            : ThemePackProvider.Themes;
 
     private CustomTheme? EditingTheme { get; set; }
 
@@ -57,6 +72,7 @@ public partial class SettingsGear : IDisposable
     {
         await RefreshDisabledAsync();
         ModuleService?.Changed += OnModulesChanged;
+        await EnsurePackCacheAsync();
 
         if (CustomThemeService is not null)
         {
@@ -83,10 +99,23 @@ public partial class SettingsGear : IDisposable
                 await ThemeStore.ApplyCustomThemeAsync(await CustomThemeService.ResolveHalfAsync(active));
             }
         }
+        else if (stored is not null
+            && OmarchyTheme.TryParseChoice(stored, out string slug)
+            && PackThemes.FirstOrDefault(t => t.Id == slug) is OmarchyTheme pack)
+        {
+            // A pack theme is one palette, not a pair: it applies
+            // as-is, whatever the device prefers.
+            StoredTheme = stored;
+            if (ThemeStore is not null)
+            {
+                await ThemeStore.ApplyCustomThemeAsync(pack.Palette);
+            }
+        }
         else
         {
-            // Unknown or orphaned choice (a deleted custom theme):
-            // repair to the default rather than leaving a dead value.
+            // Unknown or orphaned choice (a deleted custom theme, or
+            // a pack theme whose module is switched off): repair to
+            // the default rather than leaving a dead value.
             StoredTheme = "system";
             if (ThemeStore is not null)
             {
@@ -121,6 +150,37 @@ public partial class SettingsGear : IDisposable
 
     private bool IsActive(CustomTheme theme) =>
         StoredTheme == global::Rise.Application.Services.CustomThemeService.ChoiceFor(theme.Id);
+
+    /// <summary>Activates a pack theme: persists the "pack:omarchy:&lt;slug&gt;" choice and applies its single palette.</summary>
+    private async Task SetPackThemeAsync(OmarchyTheme theme)
+    {
+        if (ThemeStore is null)
+        {
+            return;
+        }
+
+        StoredTheme = OmarchyTheme.ChoiceFor(theme.Id);
+        await ThemeStore.SetStoredThemeAsync(StoredTheme);
+        await ThemeStore.ApplyCustomThemeAsync(theme.Palette);
+    }
+
+    private bool IsPackActive(OmarchyTheme theme) =>
+        StoredTheme == OmarchyTheme.ChoiceFor(theme.Id);
+
+    /// <summary>
+    /// Writes the pack palettes to the browser cache the shell's
+    /// before-paint script reads, so a pack choice applies before
+    /// first paint on later loads. Only when the module is on.
+    /// </summary>
+    private async Task EnsurePackCacheAsync()
+    {
+        if (ThemePackCache is null || ThemePackProvider is null || DisabledModules.Contains(OmarchyTheme.ModuleId))
+        {
+            return;
+        }
+
+        await ThemePackCache.WriteCacheAsync(ThemePackProvider.Themes);
+    }
 
     private async Task CreateThemeAsync()
     {
@@ -183,6 +243,7 @@ public partial class SettingsGear : IDisposable
     private async void OnModulesChanged(object? sender, EventArgs args)
     {
         await RefreshDisabledAsync();
+        await EnsurePackCacheAsync();
         await InvokeAsync(StateHasChanged);
     }
 

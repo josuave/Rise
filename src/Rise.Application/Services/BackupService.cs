@@ -173,6 +173,13 @@ public sealed class BackupService(
                 theme = "system";
             }
         }
+        else if (OmarchyTheme.TryParseChoice(theme, out string _))
+        {
+            // A pack choice is a reference, not data: the palettes
+            // come from the module, so import accepts any well-formed
+            // slug and the app repairs an unresolvable one to system
+            // at load, the same as an orphaned custom theme.
+        }
         else if (theme is not ("light" or "dark" or "system"))
         {
             return Result<ImportedState>.Failure("That backup has a theme choice this app doesn't know.");

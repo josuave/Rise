@@ -128,6 +128,15 @@ error. The image bytes never ride the backup: a restored upload
 arrives with its descriptor and no bytes, so the app prompts for
 a re-upload naming that file.
 
+v1 extension — Omarchy pack choice (compatible, no version bump):
+no new section. The theme string itself may hold a pack choice
+("pack:omarchy:&lt;slug&gt;"), and import accepts any well-formed
+one; the palettes come from the module, not the file, so an
+unknown slug is not an import error — the app repairs it to
+system at load, the same as an orphaned custom theme. A
+malformed pack choice (empty slug, or a pack that is not
+omarchy) is an import error, like an unknown built-in choice.
+
 ## Adding a version (v2 and beyond)
 
 1. Bump `BackupFormat.CurrentVersion` and document the new shape

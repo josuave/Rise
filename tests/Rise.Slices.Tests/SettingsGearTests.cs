@@ -8,6 +8,7 @@ using Rise.Slices.Header;
 using Rise.Slices.Layout;
 using Rise.Slices.Links;
 using Rise.Slices.Notes;
+using Rise.Slices.OmarchyThemes;
 using Rise.Slices.Settings;
 using Rise.Slices.Weather;
 using Rise.Slices.Settings.Abstractions;
@@ -34,6 +35,8 @@ public class SettingsGearTests : BunitContext
         Services.AddScoped<IModuleStore>(_ => new FakeModuleStore());
         Services.AddScoped<ModuleService>();
         Services.AddSingleton<IModuleCatalog>(new FakeModuleCatalog());
+        Services.AddScoped<IOmarchyThemeProvider>(_ => new FakeOmarchyThemeProvider());
+        Services.AddScoped<IOmarchyThemeCache>(_ => new FakeOmarchyThemeCache());
     }
 
     [Fact]
@@ -189,5 +192,75 @@ public class SettingsGearTests : BunitContext
 
         cut.WaitForAssertion(() => Assert.Equal("system", orphanTheme.Stored));
         Assert.Equal("system", orphanTheme.Applied);
+    }
+
+    [Fact]
+    public void PackTheme_Apply_PersistsChoiceAndAppliesPalette()
+    {
+        OmarchyTheme tokyo = OmarchyThemePack.All.Single(t => t.Id == "tokyo-night");
+        OmarchyTheme latte = OmarchyThemePack.All.Single(t => t.Id == "catppuccin-latte");
+        Services.AddScoped<IOmarchyThemeProvider>(_ => new FakeOmarchyThemeProvider
+        {
+            Themes = new[] { tokyo, latte },
+        });
+        IRenderedComponent<SettingsGear> cut = Render<SettingsGear>();
+        cut.Find(".calm-settings-gear").Click();
+
+        cut.Find("[aria-label=\"Use Tokyo Night theme\"]").Click();
+
+        Assert.Equal("pack:omarchy:tokyo-night", _theme.Stored);
+        Assert.Equal(tokyo.Palette, _theme.AppliedPalette);
+    }
+
+    [Fact]
+    public void PackTheme_HiddenWhenModuleDisabled()
+    {
+        var catalog = new FakeModuleCatalog
+        {
+            Modules = new[]
+            {
+                new ModuleInfo("OmarchyThemes", "Omarchy themes", Array.Empty<string>(), "Rise.Slices.OmarchyThemes", IsLazy: false, CanDisable: true),
+            },
+        };
+        var moduleStore = new FakeModuleStore();
+        moduleStore.Stored["OmarchyThemes"] = false;
+        Services.AddSingleton<IModuleCatalog>(catalog);
+        Services.AddScoped<IModuleStore>(_ => moduleStore);
+        Services.AddScoped<ModuleService>();
+        Services.AddScoped<IOmarchyThemeProvider>(_ => new FakeOmarchyThemeProvider
+        {
+            Themes = OmarchyThemePack.All,
+        });
+
+        IRenderedComponent<SettingsGear> cut = Render<SettingsGear>();
+        cut.Find(".calm-settings-gear").Click();
+
+        cut.WaitForAssertion(() => Assert.DoesNotContain("Omarchy", cut.Markup, StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void PackTheme_OrphanedChoice_RepairsToSystemOnOpen()
+    {
+        var orphanTheme = new FakeThemeStore("pack:omarchy:ghost");
+        Services.AddScoped<IThemeStore>(_ => orphanTheme);
+        IRenderedComponent<SettingsGear> cut = Render<SettingsGear>();
+
+        cut.WaitForAssertion(() => Assert.Equal("system", orphanTheme.Stored));
+        Assert.Equal("system", orphanTheme.Applied);
+    }
+
+    [Fact]
+    public void PackTheme_CacheWrittenOnOpen()
+    {
+        var cache = new FakeOmarchyThemeCache();
+        Services.AddScoped<IOmarchyThemeProvider>(_ => new FakeOmarchyThemeProvider
+        {
+            Themes = OmarchyThemePack.All,
+        });
+        Services.AddScoped<IOmarchyThemeCache>(_ => cache);
+
+        IRenderedComponent<SettingsGear> cut = Render<SettingsGear>();
+
+        cut.WaitForAssertion(() => Assert.Equal(23, cache.Written!.Count));
     }
 }

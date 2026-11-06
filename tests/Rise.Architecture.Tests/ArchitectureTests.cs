@@ -23,6 +23,7 @@ public class ArchitectureTests
         "Rise.Slices.Layout",
         "Rise.Slices.Links",
         "Rise.Slices.Notes",
+        "Rise.Slices.OmarchyThemes",
         "Rise.Slices.Search",
         "Rise.Slices.Settings",
         "Rise.Slices.Todo",
@@ -73,6 +74,7 @@ public class ArchitectureTests
     [InlineData("Rise.Slices.Layout")]
     [InlineData("Rise.Slices.Links")]
     [InlineData("Rise.Slices.Notes")]
+    [InlineData("Rise.Slices.OmarchyThemes")]
     [InlineData("Rise.Slices.Search")]
     [InlineData("Rise.Slices.Settings")]
     [InlineData("Rise.Slices.Todo")]
@@ -148,6 +150,7 @@ public class ArchitectureTests
     [InlineData("Rise.Slices.Layout")]
     [InlineData("Rise.Slices.Links")]
     [InlineData("Rise.Slices.Notes")]
+    [InlineData("Rise.Slices.OmarchyThemes")]
     [InlineData("Rise.Slices.Search")]
     [InlineData("Rise.Slices.Settings")]
     [InlineData("Rise.Slices.Settings.Abstractions")]
