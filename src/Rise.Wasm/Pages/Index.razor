@@ -7,11 +7,19 @@
 @inject Rise.Application.Services.ModuleService ModuleService
 @inject Rise.Application.Services.HotkeyService HotkeyService
 @inject Rise.Application.Services.PreviewFeatureService PreviewFeatureService
+@inject Rise.Application.Services.BackgroundService BackgroundService
 @inject Rise.Application.Ports.IModuleCatalog ModuleCatalog
 @inject Rise.Application.Ports.IThemeStore ThemeStore
 @inject IJSInProcessRuntime JSInProcess
 
 <PageTitle>Rise</PageTitle>
+
+@if (BackgroundCss.Length > 0)
+{
+    <div class="calm-background" style="background-image: @(BackgroundCss);">
+        <div class="calm-background-scrim"></div>
+    </div>
+}
 
 <div class="calm-settings-cluster">
     @foreach (var widget in Layout.ClusterWidgets().Where(w => w.Visible && !IsWidgetDisabled(w.Id)))
@@ -103,6 +111,9 @@
     /// <summary>Whether the Calm Board preview treatment is on: the page renders as a board instead of the calm stack.</summary>
     private bool CalmBoardPreview { get; set; }
 
+    /// <summary>The CSS background-image value for the chosen page background; empty means the plain theme background.</summary>
+    private string BackgroundCss { get; set; } = string.Empty;
+
     /// <summary>Whether the landscape-only Calm Board preview is on: the board shows only when the viewport is landscape.</summary>
     private bool CalmBoardLandscapePreview { get; set; }
 
@@ -175,6 +186,9 @@
         await PreviewFeatureService.LoadAsync();
         await RefreshBoardFlagsAsync();
         PreviewFeatureService.Changed += OnPreviewFeaturesChanged;
+        await BackgroundService.LoadAsync();
+        BackgroundCss = await BackgroundService.GetCssAsync();
+        BackgroundService.Changed += OnBackgroundChanged;
         await HotkeyService.LoadAsync();
         HotkeyRef = DotNetObjectReference.Create(this);
         try
@@ -289,6 +303,12 @@
         await InvokeAsync(StateHasChanged);
     }
 
+    private async void OnBackgroundChanged(object? sender, EventArgs args)
+    {
+        BackgroundCss = await BackgroundService.GetCssAsync();
+        await InvokeAsync(StateHasChanged);
+    }
+
     private async Task RefreshBoardFlagsAsync()
     {
         CalmBoardPreview = await PreviewFeatureService.IsEnabledAsync(Rise.Domain.PreviewFeatures.CalmBoard);
@@ -308,6 +328,7 @@
             LayoutService.Changed -= OnLayoutChanged;
             ModuleService.Changed -= OnModulesChanged;
             PreviewFeatureService.Changed -= OnPreviewFeaturesChanged;
+            BackgroundService.Changed -= OnBackgroundChanged;
             try
             {
                 JSInProcess.InvokeVoid("riseHotkeys.unregister");

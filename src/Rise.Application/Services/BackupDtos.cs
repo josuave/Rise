@@ -44,13 +44,19 @@ public sealed record BackupTodoDto(Guid Id, string Text, bool Done);
 /// <summary>One note in a backup: id and text.</summary>
 public sealed record BackupNoteDto(Guid Id, string Text);
 
+/// <summary>The chosen background in a backup: the preset id, plus the image address when the choice is custom, plus the uploaded image's descriptor when the choice is an upload. The bytes never ride the backup — a restored upload shows up as a named re-upload prompt until the file is uploaded again.</summary>
+[SuppressMessage("Design", "CA1054", Justification = "The address is a user-pasted string, stored and serialized as a string; it is validated as an absolute http(s) Uri at the import boundary.")]
+[SuppressMessage("Design", "CA1056", Justification = "The address is a user-pasted string, stored and serialized as a string; it is validated as an absolute http(s) Uri at the import boundary.")]
+public sealed record BackupBackgroundDto(string PresetId, string? CustomUrl, UploadedImage? Upload = null);
+
 /// <summary>
 /// The saved state in a backup: links, theme choice, custom themes,
 /// layouts, per-widget config JSON, the to-do and note lists, the
-/// explicit module choices, the explicit hotkey bindings, and the
-/// explicit preview-feature choices (absent in files that predate
-/// them, which read as empty on import — and, for modules, hotkeys,
-/// and preview features, leave current choices untouched).
+/// explicit module choices, the explicit hotkey bindings, the
+/// explicit preview-feature choices, and the chosen background
+/// (absent in files that predate them, which read as empty on import
+/// — and, for modules, hotkeys, preview features, and the background,
+/// leave current choices untouched).
 /// </summary>
 public sealed record BackupStateDto(
     IReadOnlyList<BackupLinkDto> Links,
@@ -62,7 +68,8 @@ public sealed record BackupStateDto(
     IReadOnlyList<BackupNoteDto>? Notes,
     Dictionary<string, bool>? Modules,
     Dictionary<string, HotkeyBinding>? Hotkeys,
-    Dictionary<string, bool>? PreviewFeatures);
+    Dictionary<string, bool>? PreviewFeatures,
+    BackupBackgroundDto? Background);
 
 /// <summary>A parsed backup file: its version, its export date (ISO 8601), and its state JSON.</summary>
 public sealed record BackupEnvelope(int FormatVersion, string ExportedAt, System.Text.Json.Nodes.JsonObject State);

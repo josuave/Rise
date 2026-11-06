@@ -24,6 +24,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<ModuleService>();
         services.AddScoped<HotkeyService>();
         services.AddScoped<PreviewFeatureService>();
+        services.AddScoped<BackgroundService>();
         services.AddScoped<WeatherService>();
         services.AddScoped<IWeatherClient, OpenMeteoWeatherClient>();
         services.AddScoped<IPlaceGeocoder, OpenMeteoPlaceGeocoder>();
@@ -31,6 +32,8 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IModuleStore, LocalStorageModuleStore>();
         services.AddScoped<IHotkeyStore, LocalStorageHotkeyStore>();
         services.AddScoped<IPreviewFeatureStore, LocalStoragePreviewFeatureStore>();
+        services.AddScoped<IBackgroundStore, LocalStorageBackgroundStore>();
+        services.AddScoped<IBackgroundImageStore, JsBackgroundImageStore>();
         services.AddScoped<IFileDownloader, BrowserFileDownloader>();
         services.AddScoped<ICustomThemeStore, LocalStorageCustomThemeStore>();
         services.AddScoped<ILayoutCollectionStore, LocalStorageLayoutCollectionStore>();

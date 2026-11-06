@@ -1,0 +1,41 @@
+@using Rise.Domain
+
+@if (!Loaded)
+{
+    <p class="calm-background-loading">Loading background…</p>
+}
+else
+{
+    <div class="calm-background-presets">
+        @foreach (var preset in BackgroundPresets.All)
+        {
+            <button type="button" class="calm-background-swatch" aria-pressed="@(IsSelected(preset) ? "true" : "false")" @onclick="() => SelectPresetAsync(preset)">
+                <span class="calm-background-swatch-color" style="background-image: @(preset.Css)"></span>
+                <span class="calm-background-swatch-title">@preset.Title</span>
+            </button>
+        }
+    </div>
+    <div class="calm-background-custom">
+        <label for="background-url">Image address</label>
+        <input id="background-url" type="url" placeholder="https://…" @bind="CustomUrl" />
+        <button type="button" class="calm-background-apply" @onclick="ApplyUrlAsync">Apply image</button>
+    </div>
+    <div class="calm-background-upload">
+        @if (BackgroundService.UploadMissing)
+        {
+            <p class="calm-background-missing">Your background image "@BackgroundService.MissingFileName" is missing — upload the file again to restore it.</p>
+        }
+        <label class="calm-background-upload-label">
+            Upload an image
+            <InputFile OnChange="UploadAsync" accept="image/*" />
+        </label>
+        @if (PendingUpload is not null)
+        {
+            <button type="button" class="calm-background-apply" @onclick="UsePendingUploadAsync">Use this image instead</button>
+        }
+    </div>
+}
+@if (Status is not null)
+{
+    <p class="calm-background-status" role="status">@Status</p>
+}

@@ -55,6 +55,10 @@ builder.Services.AddScoped<ISettingsSection, KeyboardSettingsSection>();
 // app-wide, so the manager lives here, not in a slice.
 builder.Services.AddScoped<ISettingsSection, PreviewSettingsSection>();
 
+// Shell-owned section: the background picker. The background is
+// page-wide, so the picker lives here, not in a slice.
+builder.Services.AddScoped<ISettingsSection, BackgroundSettingsSection>();
+
 // Widget definitions, wired here: adding a widget is a new definition
 // plus one line here, never a change to the layout model or the shell.
 builder.Services.AddHeaderWidgets();

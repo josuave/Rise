@@ -151,6 +151,20 @@ public class BackupServiceTests
         }
     }
 
+    private sealed class FakeBackgroundStore : IBackgroundStore
+    {
+        public BackgroundChoice? Stored { get; private set; }
+
+        public Task<BackgroundChoice?> GetAsync(CancellationToken cancellationToken = default) =>
+            Task.FromResult(Stored);
+
+        public Task SaveAsync(BackgroundChoice choice, CancellationToken cancellationToken = default)
+        {
+            Stored = choice;
+            return Task.CompletedTask;
+        }
+    }
+
     private sealed class FakePreviewFeatureStore : IPreviewFeatureStore
     {
         public Dictionary<string, bool> Stored { get; } = new();
@@ -236,6 +250,8 @@ public class BackupServiceTests
 
         public FakePreviewFeatureStore PreviewFeatures { get; } = new();
 
+        public FakeBackgroundStore Background { get; } = new();
+
         public BackupService Service { get; }
 
         public Fixture(IWidgetDefinition[]? definitions = null)
@@ -249,7 +265,7 @@ public class BackupServiceTests
             });
             var todoService = new TodoService(Todos);
             var notesService = new NotesService(Notes);
-            Service = new BackupService(pageService, themeService, layoutService, todoService, notesService, Links, Theme, Themes, Layouts, Widgets, Todos, Notes, Modules, Hotkeys, PreviewFeatures);
+            Service = new BackupService(pageService, themeService, layoutService, todoService, notesService, Links, Theme, Themes, Layouts, Widgets, Todos, Notes, Modules, Hotkeys, PreviewFeatures, Background);
         }
     }
 
@@ -372,6 +388,37 @@ public class BackupServiceTests
         Assert.True(result.IsSuccess);
         Assert.True(target.PreviewFeatures.Stored.TryGetValue("calm-board", out bool restored));
         Assert.True(restored);
+    }
+
+    [Fact]
+    public async Task Background_RoundTrip_RestoresCustomUrl()
+    {
+        var source = new Fixture();
+        await source.Background.SaveAsync(new BackgroundChoice(BackgroundPresets.Custom, "https://example.com/photo.jpg"));
+        string json = await source.Service.ExportAsync();
+        var target = new Fixture();
+
+        Result<BackupEnvelope> result = await target.Service.ImportAsync(json);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(BackgroundPresets.Custom, target.Background.Stored?.PresetId);
+        Assert.Equal("https://example.com/photo.jpg", target.Background.Stored?.CustomUrl);
+    }
+
+    [Fact]
+    public async Task Background_RoundTrip_RestoresUploadDescriptor()
+    {
+        var source = new Fixture();
+        await source.Background.SaveAsync(new BackgroundChoice(BackgroundPresets.Upload, null, new UploadedImage(new string('A', 64), "sunset.jpg", 12, "image/jpeg")));
+        string json = await source.Service.ExportAsync();
+        var target = new Fixture();
+
+        Result<BackupEnvelope> result = await target.Service.ImportAsync(json);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(BackgroundPresets.Upload, target.Background.Stored?.PresetId);
+        Assert.Equal(new string('A', 64), target.Background.Stored?.Upload?.Hash);
+        Assert.Equal("sunset.jpg", target.Background.Stored?.Upload?.FileName);
     }
 
     [Fact]

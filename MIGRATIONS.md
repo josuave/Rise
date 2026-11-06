@@ -115,6 +115,19 @@ it has no section, and import leaves the current choices untouched
 feature ids are kept, harmless and forward-compatible; a blank
 feature id is an import error.
 
+v1 extension — background choice (compatible, no version bump):
+the state gains `Background`, an object with the preset id and,
+for a custom choice, the image address, and for an upload choice
+the descriptor (`Upload`: hash, file name, size, type). A file
+that predates it has no section, and import leaves the current
+choice untouched (replace semantics only when the section is
+present). An unknown preset id repairs to none; a custom choice
+without a valid absolute http(s) address is an import error; an
+upload choice without valid descriptor details is an import
+error. The image bytes never ride the backup: a restored upload
+arrives with its descriptor and no bytes, so the app prompts for
+a re-upload naming that file.
+
 ## Adding a version (v2 and beyond)
 
 1. Bump `BackupFormat.CurrentVersion` and document the new shape

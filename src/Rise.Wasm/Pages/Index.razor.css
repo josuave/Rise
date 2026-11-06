@@ -4,6 +4,26 @@
     text-align: center;
 }
 
+/* Background layer: fixed behind the page content (above the
+   body's calm background, below everything else). Rendered only
+   when a background is chosen. The scrim tints it with the theme's
+   calm background so text stays readable in both themes. */
+.calm-background {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+.calm-background-scrim {
+    position: absolute;
+    inset: 0;
+    background: var(--calm-bg);
+    opacity: 0.55;
+}
+
 /* Settings cluster (kept subtle so the Calm page stays calm): theme
    toggle immediately left of the gear, fixed top-right. */
 .calm-settings-cluster {

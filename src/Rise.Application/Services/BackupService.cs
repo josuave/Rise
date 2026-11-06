@@ -32,7 +32,8 @@ public sealed class BackupService(
     INoteStore noteStore,
     IModuleStore moduleStore,
     IHotkeyStore hotkeyStore,
-    IPreviewFeatureStore previewFeatureStore)
+    IPreviewFeatureStore previewFeatureStore,
+    IBackgroundStore backgroundStore)
 {
     public async Task<string> ExportAsync(CancellationToken cancellationToken = default)
     {
@@ -46,6 +47,7 @@ public sealed class BackupService(
         Dictionary<string, bool> modules = await moduleStore.GetAllAsync(cancellationToken);
         Dictionary<string, HotkeyBinding> hotkeys = await hotkeyStore.GetAllAsync(cancellationToken);
         Dictionary<string, bool> previewFeatures = await previewFeatureStore.GetAllAsync(cancellationToken);
+        BackgroundChoice? background = await backgroundStore.GetAsync(cancellationToken);
 
         var state = new BackupStateDto(
             page.Links.Select(link => new BackupLinkDto(link.Id, link.Name, link.Url.Value)).ToList(),
@@ -63,7 +65,8 @@ public sealed class BackupService(
             notes.Items.Select(note => new BackupNoteDto(note.Id, note.Text)).ToList(),
             modules,
             hotkeys,
-            previewFeatures);
+            previewFeatures,
+            background is null ? null : new BackupBackgroundDto(background.PresetId, background.CustomUrl, background.Upload));
         JsonObject stateJson = JsonSerializer.SerializeToNode(state)!.AsObject();
         return BackupFormat.Serialize(new BackupEnvelope(
             BackupFormat.CurrentVersion,
@@ -117,6 +120,11 @@ public sealed class BackupService(
         if (state.PreviewFeatures is not null)
         {
             await previewFeatureStore.SaveAllAsync(state.PreviewFeatures, cancellationToken);
+        }
+
+        if (state.Background is not null)
+        {
+            await backgroundStore.SaveAsync(state.Background, cancellationToken);
         }
         foreach (KeyValuePair<string, string> pair in state.WidgetConfigs)
         {
@@ -291,6 +299,49 @@ public sealed class BackupService(
             return Result<ImportedState>.Failure("That backup has a preview feature choice without a name.");
         }
 
+        // The background is a compatible v1 extension like modules:
+        // absent leaves the current choice untouched. An unknown
+        // preset repairs to none (the orphaned-custom-theme
+        // precedent); a custom choice without a valid image address
+        // is an import error.
+        BackgroundChoice? background = null;
+        if (state.Background is not null)
+        {
+            if (state.Background.PresetId == BackgroundPresets.Custom)
+            {
+                string? url = state.Background.CustomUrl?.Trim();
+                if (string.IsNullOrWhiteSpace(url)
+                    || !url.Contains("://", StringComparison.Ordinal)
+                    || !Uri.TryCreate(url, UriKind.Absolute, out Uri? uri)
+                    || uri.Scheme != Uri.UriSchemeHttp && uri.Scheme != Uri.UriSchemeHttps)
+                {
+                    return Result<ImportedState>.Failure("That backup has a background image without a valid address.");
+                }
+
+                background = new BackgroundChoice(BackgroundPresets.Custom, url);
+            }
+            else if (state.Background.PresetId == BackgroundPresets.Upload)
+            {
+                UploadedImage? upload = state.Background.Upload;
+                if (upload is null
+                    || upload.Hash.Length != 64
+                    || string.IsNullOrWhiteSpace(upload.FileName)
+                    || upload.Size <= 0
+                    || !upload.MimeType.StartsWith("image/", StringComparison.Ordinal))
+                {
+                    return Result<ImportedState>.Failure("That backup has a background upload without valid details.");
+                }
+
+                background = new BackgroundChoice(BackgroundPresets.Upload, null, upload);
+            }
+            else
+            {
+                background = BackgroundPresets.All.Any(p => p.Id == state.Background.PresetId)
+                    ? new BackgroundChoice(state.Background.PresetId, null)
+                    : BackgroundChoice.None;
+            }
+        }
+
         return Result<ImportedState>.Success(new ImportedState(
             new StartPage(links),
             theme,
@@ -301,7 +352,8 @@ public sealed class BackupService(
             new NoteList(notes),
             state.Modules,
             state.Hotkeys,
-            state.PreviewFeatures));
+            state.PreviewFeatures,
+            background));
     }
 
     private static BackupThemeDto ToTheme(CustomTheme theme) => new(
@@ -352,5 +404,6 @@ public sealed class BackupService(
         NoteList Notes,
         Dictionary<string, bool>? Modules,
         Dictionary<string, HotkeyBinding>? Hotkeys,
-        Dictionary<string, bool>? PreviewFeatures);
+        Dictionary<string, bool>? PreviewFeatures,
+        BackgroundChoice? Background);
 }
