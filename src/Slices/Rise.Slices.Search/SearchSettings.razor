@@ -1,0 +1,37 @@
+@using Rise.Domain
+
+<div class="calm-search-engine-list">
+    @foreach (SearchEngine engine in Engines)
+    {
+        <div class="calm-search-engine-row">
+            <button type="button"
+                    class="calm-search-engine-option@(IsActive(engine) ? " selected" : "")"
+                    aria-pressed="@(IsActive(engine) ? "true" : "false")"
+                    aria-label="Use @(engine.Name) search"
+                    @onclick="() => SetEngineAsync(engine)">
+                @if (engine.FaviconUrl is null || FaviconFailed.Contains(engine.Id))
+                {
+                    <span class="calm-search-engine-glyph" aria-hidden="true">@(engine.Name[0])</span>
+                }
+                else
+                {
+                    <img class="calm-search-engine-icon" src="@engine.FaviconUrl" alt="" @onerror="() => OnFaviconError(engine.Id)" />
+                }
+                @engine.Name
+            </button>
+            @if (IsCustom(engine))
+            {
+                <button type="button" class="calm-search-engine-delete" aria-label="Delete @(engine.Name) search engine" @onclick="() => DeleteEngineAsync(engine)">×</button>
+            }
+        </div>
+    }
+</div>
+<div class="calm-search-engine-form">
+    <input type="text" class="calm-search-engine-name" placeholder="Name" aria-label="New engine name" @bind="NewEngineName" />
+    <input type="url" class="calm-search-engine-url" placeholder="https://example.com/search?q=%s" aria-label="New engine search URL" @bind="NewEngineUrl" />
+    <button type="button" @onclick="AddEngineAsync">Add engine</button>
+</div>
+@if (!string.IsNullOrEmpty(FormError))
+{
+    <p class="calm-search-form-error">@FormError</p>
+}

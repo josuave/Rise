@@ -33,6 +33,12 @@ public class ServiceTests
         }
     }
 
+    private sealed class FakeEngineProvider(SearchEngine engine) : ISearchEngineProvider
+    {
+        public Task<SearchEngine> GetEngineAsync(CancellationToken cancellationToken = default) =>
+            Task.FromResult(engine);
+    }
+
     [Fact]
     public async Task StartPageService_Load_ReturnsDefaultsWhenStoreIsEmpty()
     {
@@ -95,5 +101,30 @@ public class ServiceTests
 
         Assert.False(await service.LaunchSearchAsync("   "));
         Assert.Single(launcher.Launched);
+    }
+
+    [Fact]
+    public async Task SearchService_UsesConfiguredEngine()
+    {
+        var launcher = new FakeLauncher();
+        var service = new SearchService(launcher, new FakeEngineProvider(SearchEngines.FromId("brave")));
+
+        Assert.True(await service.LaunchSearchAsync("hello world"));
+
+        Assert.Single(launcher.Launched);
+        Assert.Equal("https://search.brave.com/search?q=hello%20world", launcher.Launched[0].AbsoluteUri);
+    }
+
+    [Fact]
+    public async Task SearchService_UsesCustomEngine()
+    {
+        var launcher = new FakeLauncher();
+        var engine = new SearchEngine("custom:mojeek", "Mojeek", "https://www.mojeek.com/search?q=%s");
+        var service = new SearchService(launcher, new FakeEngineProvider(engine));
+
+        Assert.True(await service.LaunchSearchAsync("hello world"));
+
+        Assert.Single(launcher.Launched);
+        Assert.Equal("https://www.mojeek.com/search?q=hello%20world", launcher.Launched[0].AbsoluteUri);
     }
 }

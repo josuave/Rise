@@ -90,6 +90,60 @@ public class DomainTests
     }
 
     [Theory]
+    [InlineData("duckduckgo", "https://duckduckgo.com/?q=hello%20world")]
+    [InlineData("bing", "https://www.bing.com/search?q=hello%20world")]
+    [InlineData("brave", "https://search.brave.com/search?q=hello%20world")]
+    [InlineData("ghost", "https://www.google.com/search?q=hello%20world")]
+    [InlineData(null, "https://www.google.com/search?q=hello%20world")]
+    public void SearchQuery_BuildsEngineUrl(string? engineId, string expected)
+    {
+        Uri? url = SearchQuery.Build("hello world", engineId);
+
+        Assert.Equal(expected, url!.AbsoluteUri);
+    }
+
+    [Fact]
+    public void SearchQuery_BlankInputWithEngine_ReturnsNull() =>
+        Assert.Null(SearchQuery.Build("   ", "brave"));
+
+    [Theory]
+    [InlineData("https://www.mojeek.com/search?q=%s", true)]
+    [InlineData("https://example.com/?q=%s", true)]
+    [InlineData("https://example.com/search", false)]
+    [InlineData("https://example.com/search?q=%s&x=%s", false)]
+    [InlineData("ftp://example.com/search?q=%s", false)]
+    [InlineData(null, false)]
+    [InlineData("not a url", false)]
+    public void SearchEngine_IsValidTemplate(string? template, bool expected) =>
+        Assert.Equal(expected, SearchEngine.IsValidTemplate(template));
+
+    [Fact]
+    public void SearchQuery_BuildsCustomEngineUrl()
+    {
+        var engine = new SearchEngine("custom:mojeek", "Mojeek", "https://www.mojeek.com/search?q=%s");
+
+        Uri? url = SearchQuery.Build("hello world", engine);
+
+        Assert.Equal("https://www.mojeek.com/search?q=hello%20world", url!.AbsoluteUri);
+    }
+
+    [Fact]
+    public void SearchEngine_FaviconUrl_UsesTemplateHost()
+    {
+        SearchEngine engine = SearchEngines.FromId("brave");
+
+        Assert.Equal("https://search.brave.com/favicon.ico", engine.FaviconUrl);
+    }
+
+    [Fact]
+    public void SearchEngine_FaviconUrl_NullForUnusableTemplate()
+    {
+        var engine = new SearchEngine("custom:broken", "Broken", "not a url");
+
+        Assert.Null(engine.FaviconUrl);
+    }
+
+    [Theory]
     [InlineData(0, "Good morning.")]
     [InlineData(11, "Good morning.")]
     [InlineData(12, "Good afternoon.")]

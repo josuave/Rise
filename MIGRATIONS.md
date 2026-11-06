@@ -137,6 +137,17 @@ system at load, the same as an orphaned custom theme. A
 malformed pack choice (empty slug, or a pack that is not
 omarchy) is an import error, like an unknown built-in choice.
 
+v1 extension — Search engine choice (compatible, no version bump):
+no new section. The Search widget's config may hold an
+`EngineId` ("google", "duckduckgo", "bing", or "brave", or a
+"custom:<slug>" id for a user-added engine) and a `CustomEngines`
+list of { `Id`, `Name`, `UrlTemplate` } objects, where the template
+is a search URL with `%s` where the query goes. Absent reads as
+Google, and an unknown id repairs to Google at load; stored custom
+engines with a blank name or an unusable template are skipped.
+The choice rides backup as part of `WidgetConfigs`, like every
+other widget config.
+
 ## Adding a version (v2 and beyond)
 
 1. Bump `BackupFormat.CurrentVersion` and document the new shape
