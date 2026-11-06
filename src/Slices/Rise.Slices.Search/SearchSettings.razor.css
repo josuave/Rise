@@ -4,13 +4,52 @@
     gap: 0.5rem;
 }
 
-.calm-search-engine-option {
+.calm-search-engine-row {
     display: flex;
+    gap: 0.5rem;
+}
+
+.calm-search-engine-row .calm-search-engine-option {
+    display: flex;
+    flex: 1;
     align-items: center;
+    gap: 0.5rem;
     text-align: left;
 }
 
 .calm-search-engine-option.selected {
     background: var(--calm-tile-bg);
     font-weight: 700;
+}
+
+.calm-search-engine-icon {
+    width: 1.1rem;
+    height: 1.1rem;
+    flex: none;
+    border-radius: 4px;
+}
+
+.calm-search-engine-glyph {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.1rem;
+    height: 1.1rem;
+    flex: none;
+    border-radius: 4px;
+    background: var(--calm-tile-bg);
+    color: var(--calm-muted);
+    font-size: 0.85rem;
+    font-weight: 700;
+}
+
+.calm-search-engine-form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+}
+
+.calm-search-form-error {
+    color: var(--calm-error);
 }

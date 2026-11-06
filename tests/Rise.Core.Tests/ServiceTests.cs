@@ -33,10 +33,10 @@ public class ServiceTests
         }
     }
 
-    private sealed class FakeEngineProvider(string engineId) : ISearchEngineProvider
+    private sealed class FakeEngineProvider(SearchEngine engine) : ISearchEngineProvider
     {
-        public Task<string> GetEngineIdAsync(CancellationToken cancellationToken = default) =>
-            Task.FromResult(engineId);
+        public Task<SearchEngine> GetEngineAsync(CancellationToken cancellationToken = default) =>
+            Task.FromResult(engine);
     }
 
     [Fact]
@@ -107,7 +107,7 @@ public class ServiceTests
     public async Task SearchService_UsesConfiguredEngine()
     {
         var launcher = new FakeLauncher();
-        var service = new SearchService(launcher, new FakeEngineProvider("brave"));
+        var service = new SearchService(launcher, new FakeEngineProvider(SearchEngines.FromId("brave")));
 
         Assert.True(await service.LaunchSearchAsync("hello world"));
 
@@ -116,14 +116,15 @@ public class ServiceTests
     }
 
     [Fact]
-    public async Task SearchService_UnknownConfiguredEngine_FallsBackToGoogle()
+    public async Task SearchService_UsesCustomEngine()
     {
         var launcher = new FakeLauncher();
-        var service = new SearchService(launcher, new FakeEngineProvider("ghost"));
+        var engine = new SearchEngine("custom:mojeek", "Mojeek", "https://www.mojeek.com/search?q=%s");
+        var service = new SearchService(launcher, new FakeEngineProvider(engine));
 
         Assert.True(await service.LaunchSearchAsync("hello world"));
 
         Assert.Single(launcher.Launched);
-        Assert.Equal("https://www.google.com/search?q=hello%20world", launcher.Launched[0].AbsoluteUri);
+        Assert.Equal("https://www.mojeek.com/search?q=hello%20world", launcher.Launched[0].AbsoluteUri);
     }
 }

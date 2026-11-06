@@ -98,4 +98,42 @@ public class SearchTests : BunitContext
             "Search DuckDuckGo…",
             cut.Find(".calm-search-input").GetAttribute("placeholder")));
     }
+
+    [Fact]
+    public async Task SearchButton_UsesCustomEngine()
+    {
+        _configs.Stored["Search"] = "{\"EngineId\":\"custom:mojeek\",\"CustomEngines\":[{\"Id\":\"custom:mojeek\",\"Name\":\"Mojeek\",\"UrlTemplate\":\"https://www.mojeek.com/search?q=%s\"}]}";
+
+        IRenderedComponent<SearchComponent> cut = Render<SearchComponent>();
+
+        await cut.WaitForAssertionAsync(() => Assert.Equal(
+            "Search Mojeek…",
+            cut.Find(".calm-search-input").GetAttribute("placeholder")));
+        await cut.Find(".calm-search-input").InputAsync(new ChangeEventArgs { Value = "hello world" });
+        await cut.Find(".calm-search-button").ClickAsync();
+
+        Assert.Single(_launcher.LaunchedUrls);
+        Assert.Equal(
+            "https://www.mojeek.com/search?q=hello%20world",
+            _launcher.LaunchedUrls[0].AbsoluteUri);
+    }
+
+    [Fact]
+    public async Task UnknownStoredEngine_RepairsToGoogle()
+    {
+        _configs.Stored["Search"] = "{\"EngineId\":\"ghost\"}";
+
+        IRenderedComponent<SearchComponent> cut = Render<SearchComponent>();
+
+        await cut.WaitForAssertionAsync(() => Assert.Equal(
+            "Search Google…",
+            cut.Find(".calm-search-input").GetAttribute("placeholder")));
+        await cut.Find(".calm-search-input").InputAsync(new ChangeEventArgs { Value = "hello world" });
+        await cut.Find(".calm-search-button").ClickAsync();
+
+        Assert.Single(_launcher.LaunchedUrls);
+        Assert.Equal(
+            "https://www.google.com/search?q=hello%20world",
+            _launcher.LaunchedUrls[0].AbsoluteUri);
+    }
 }

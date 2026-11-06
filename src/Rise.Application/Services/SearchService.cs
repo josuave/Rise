@@ -8,10 +8,10 @@ public sealed class SearchService(ISearchLauncher launcher, ISearchEngineProvide
 {
     public async Task<bool> LaunchSearchAsync(string? query, CancellationToken cancellationToken = default)
     {
-        string engineId = engineProvider is null
-            ? SearchEngines.Default.Id
-            : await engineProvider.GetEngineIdAsync(cancellationToken);
-        Uri? url = SearchQuery.Build(query, engineId);
+        SearchEngine engine = engineProvider is null
+            ? SearchEngines.Default
+            : await engineProvider.GetEngineAsync(cancellationToken);
+        Uri? url = SearchQuery.Build(query, engine);
         if (url is null)
         {
             return false;
