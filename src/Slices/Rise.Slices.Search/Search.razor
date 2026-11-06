@@ -1,4 +1,6 @@
-<div class="calm-search">
+@using Rise.Domain
+
+<div class="calm-search" @onkeydown="OnKeyDown">
     <input type="search"
            class="calm-search-input"
            placeholder="@SearchPlaceholder"
@@ -6,5 +8,34 @@
            @onkeydown="@SearchOnEnter"
            @bind="SearchString"
            @bind:event="oninput" />
-    <button type="button" class="calm-search-button" @onclick="RunSearch">Search</button>
+    <button type="button" class="calm-search-engine-button" aria-label="Change search engine (currently @(CurrentEngine.Name))" aria-haspopup="true" aria-expanded="@(MenuOpen ? "true" : "false")" @onclick="ToggleMenu">
+        @if (CurrentEngine.FaviconUrl is null || FaviconFailed.Contains(CurrentEngine.Id))
+        {
+            <span class="calm-search-engine-glyph" aria-hidden="true">@(CurrentEngine.Name[0])</span>
+        }
+        else
+        {
+            <img class="calm-search-engine-icon" src="@CurrentEngine.FaviconUrl" alt="" @onerror="() => OnFaviconError(CurrentEngine.Id)" />
+        }
+    </button>
+    @if (MenuOpen)
+    {
+        <div class="calm-search-menu-backdrop" @onclick="CloseMenu"></div>
+        <div class="calm-search-menu" role="menu">
+            @foreach (SearchEngine engine in Engines)
+            {
+                <button type="button" role="menuitem" class="calm-search-menu-option@(IsActive(engine) ? " selected" : "")" aria-pressed="@(IsActive(engine) ? "true" : "false")" aria-label="Use @(engine.Name) search" @onclick="() => SetEngineAsync(engine)">
+                    @if (engine.FaviconUrl is null || FaviconFailed.Contains(engine.Id))
+                    {
+                        <span class="calm-search-engine-glyph" aria-hidden="true">@(engine.Name[0])</span>
+                    }
+                    else
+                    {
+                        <img class="calm-search-engine-icon" src="@engine.FaviconUrl" alt="" @onerror="() => OnFaviconError(engine.Id)" />
+                    }
+                    @engine.Name
+                </button>
+            }
+        </div>
+    }
 </div>

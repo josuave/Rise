@@ -1,6 +1,6 @@
 .calm-search {
+    position: relative;
     display: flex;
-    gap: 0.5rem;
     max-width: 480px;
     margin: 0 auto;
 }
@@ -9,18 +9,86 @@
     flex: 1;
     border: 1px solid var(--calm-border);
     border-radius: 999px;
-    padding: 0.75rem 1.25rem;
+    padding: 0.75rem 1.25rem 0.75rem 3rem;
     font-size: 1rem;
     background: var(--calm-surface);
     color: var(--calm-text);
     min-width: 0;
 }
 
-.calm-search-button {
-    border: 1px solid var(--calm-border);
-    border-radius: 999px;
-    padding: 0.75rem 1.25rem;
-    background: var(--calm-surface);
-    color: var(--calm-text);
+.calm-search-engine-button {
+    position: absolute;
+    left: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.75rem;
+    height: 1.75rem;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
     cursor: pointer;
+}
+
+.calm-search-engine-icon {
+    width: 1.25rem;
+    height: 1.25rem;
+    border-radius: 4px;
+}
+
+.calm-search-engine-glyph {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.25rem;
+    height: 1.25rem;
+    border-radius: 4px;
+    background: var(--calm-tile-bg);
+    color: var(--calm-muted);
+    font-size: 0.85rem;
+    font-weight: 700;
+}
+
+.calm-search-menu-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    background: transparent;
+}
+
+.calm-search-menu {
+    position: absolute;
+    top: calc(100% + 0.5rem);
+    left: 0;
+    z-index: 101;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    min-width: 14rem;
+    padding: 0.5rem;
+    border: 1px solid var(--calm-border);
+    border-radius: 0.75rem;
+    background: var(--calm-surface);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25);
+}
+
+.calm-search-menu-option {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    border: 0;
+    border-radius: 0.5rem;
+    background: transparent;
+    color: var(--calm-text);
+    text-align: left;
+    cursor: pointer;
+}
+
+.calm-search-menu-option.selected {
+    background: var(--calm-tile-bg);
+    font-weight: 700;
 }
