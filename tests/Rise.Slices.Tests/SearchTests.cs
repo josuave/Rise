@@ -55,6 +55,21 @@ public class SearchTests : BunitContext
     }
 
     [Fact]
+    public void AndroidSearchKey_LaunchesSearch()
+    {
+        // Android's soft keyboard sends the search key with key "Enter"
+        // but an empty code (no physical key).
+        IRenderedComponent<SearchComponent> cut = Render<SearchComponent>();
+
+        IElement input = cut.Find(".calm-search-input");
+        input.Input("from android");
+        input.KeyDown(new KeyboardEventArgs { Key = "Enter", Code = string.Empty });
+
+        Assert.Single(_launcher.LaunchedUrls);
+        Assert.Contains("from%20android", _launcher.LaunchedUrls[0].AbsoluteUri, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void BlankQuery_LaunchesNothing()
     {
         IRenderedComponent<SearchComponent> cut = Render<SearchComponent>();
