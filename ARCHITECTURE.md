@@ -397,8 +397,18 @@ re-reads the flag on every open, so toggling the flag inside the
 dialog re-renders it live, and a toggle made while it was closed is
 honored on the next open. The Theme section is hard-coded in the
 dialog, so it is the first card of Appearance; its picker markup is
-duplicated between the flat dialog and the board card, and the two
-copies must stay in sync. A section whose title is in no group
+duplicated between the flat dialog and the board card — the two copies
+share behavior but differ in presentation, so a behavior change must land
+in both. The board copy follows the phone prototype: Light/Dark/System as
+one segmented control, custom themes as pills with a "+ New theme" pill,
+and the Omarchy pack as a single collapsible row (active pack, "23 packs
+available", chevron) expanding to the full list in place. The board header
+is a large serif "Settings" with a "Done" pill instead of the ×, every card
+title carries a small inline SVG icon, and the group headings put a
+hairline rule between label and count. The Background card's board labels
+and chip styling come from a named cascading value (`RiseCalmBoard`) the
+board grid provides, so the shell-owned Background section knows it is in
+the board without the Settings slice referencing the shell. A section whose title is in no group
 renders at the end under no heading, so a new section never
 vanishes. All D styles are scoped under a `calm-dialog-board`
 class on the dialog, so the flat dialog is untouched when the flag

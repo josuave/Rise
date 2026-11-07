@@ -108,3 +108,28 @@
     font: inherit;
     color: var(--calm-text);
 }
+
+/* D-style board presentation: this component renders inside a
+   .calm-dialog-board-card there, so these rules only apply in the
+   board — the flat dialog keeps its titled swatches and row layout.
+   The mock's chips have no titles and the selected chip is
+   double-ringed (surface gap, then a text-colored ring); the custom
+   address stacks label-above-input. */
+.calm-dialog-board-card .calm-background-swatch-title {
+    display: none;
+}
+
+.calm-dialog-board-card .calm-background-swatch[aria-pressed="true"] .calm-background-swatch-color {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--calm-surface), 0 0 0 4px var(--calm-text);
+}
+
+.calm-dialog-board-card .calm-background-custom {
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+.calm-dialog-board-card .calm-background-custom input {
+    width: 100%;
+    box-sizing: border-box;
+}

@@ -325,6 +325,137 @@ public class SettingsGearTests : BunitContext
     }
 
     [Fact]
+    public void FlagOn_DoneButton_ClosesDialog()
+    {
+        _previewFeatures.Stored[PreviewFeatures.CalmSettings] = true;
+        RegisterAllSections();
+
+        IRenderedComponent<SettingsGear> cut = Render<SettingsGear>();
+        cut.Find(".calm-settings-gear").Click();
+        cut.WaitForAssertion(() => Assert.NotNull(cut.Find(".calm-dialog-board")));
+
+        cut.Find(".calm-dialog-done").Click();
+
+        cut.WaitForAssertion(() => Assert.Empty(cut.FindAll(".calm-dialog")));
+    }
+
+    [Fact]
+    public void FlagOn_GroupHeadings_HaveInlineRule()
+    {
+        _previewFeatures.Stored[PreviewFeatures.CalmSettings] = true;
+        RegisterAllSections();
+
+        IRenderedComponent<SettingsGear> cut = Render<SettingsGear>();
+        cut.Find(".calm-settings-gear").Click();
+        cut.WaitForAssertion(() => Assert.NotNull(cut.Find(".calm-dialog-board")));
+
+        Assert.Equal(3, cut.FindAll(".calm-dialog-board-group-rule").Count);
+        IElement heading = cut.FindAll(".calm-dialog-board-group")[0];
+        Assert.Equal(3, heading.Children.Length);
+        Assert.Contains("calm-dialog-board-group-heading", heading.Children[0].ClassName, StringComparison.Ordinal);
+        Assert.Contains("calm-dialog-board-group-rule", heading.Children[1].ClassName, StringComparison.Ordinal);
+        Assert.Contains("calm-dialog-board-count", heading.Children[2].ClassName, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void FlagOn_SegmentedControl_SwitchesTheme()
+    {
+        _previewFeatures.Stored[PreviewFeatures.CalmSettings] = true;
+
+        IRenderedComponent<SettingsGear> cut = Render<SettingsGear>();
+        cut.Find(".calm-settings-gear").Click();
+        cut.WaitForAssertion(() => Assert.NotNull(cut.Find(".calm-dialog-board")));
+
+        IElement dark = cut.FindAll(".calm-theme-segmented .calm-theme-option")
+            .Single(b => b.TextContent.Trim() == "Dark");
+        dark.Click();
+
+        Assert.Equal("dark", _theme.Stored);
+        Assert.Equal("dark", _theme.Applied);
+    }
+
+    [Fact]
+    public void FlagOn_MyThemesPill_SelectsCustomTheme()
+    {
+        _customThemes.StoredThemes = new[]
+        {
+            new CustomTheme("t1", "Evening Paper", ThemePalette.DefaultLight, ThemePalette.DefaultDark),
+        };
+        _previewFeatures.Stored[PreviewFeatures.CalmSettings] = true;
+
+        IRenderedComponent<SettingsGear> cut = Render<SettingsGear>();
+        cut.Find(".calm-settings-gear").Click();
+        cut.WaitForAssertion(() => Assert.NotNull(cut.Find(".calm-dialog-board")));
+
+        cut.FindAll(".calm-theme-pills .calm-theme-option")
+            .Single(b => b.TextContent.Trim() == "Evening Paper")
+            .Click();
+
+        Assert.Equal("custom:t1", _theme.Stored);
+        Assert.Equal(ThemePalette.DefaultLight, _theme.AppliedPalette);
+    }
+
+    [Fact]
+    public void FlagOn_NewThemePill_CreatesAndOpensEditor()
+    {
+        _previewFeatures.Stored[PreviewFeatures.CalmSettings] = true;
+
+        IRenderedComponent<SettingsGear> cut = Render<SettingsGear>();
+        cut.Find(".calm-settings-gear").Click();
+        cut.WaitForAssertion(() => Assert.NotNull(cut.Find(".calm-dialog-board")));
+
+        cut.FindAll("button").Single(b => b.TextContent.Trim() == "+ New theme").Click();
+
+        Assert.NotNull(cut.Find(".calm-theme-editor"));
+        Assert.Single(_customThemes.StoredThemes!);
+        Assert.Equal("New theme", _customThemes.StoredThemes!.Single().Name);
+    }
+
+    [Fact]
+    public void FlagOn_OmarchyRow_ExpandsCollapsesAndSelects()
+    {
+        OmarchyTheme tokyo = OmarchyThemePack.All.Single(t => t.Id == "tokyo-night");
+        OmarchyTheme latte = OmarchyThemePack.All.Single(t => t.Id == "catppuccin-latte");
+        Services.AddScoped<IOmarchyThemeProvider>(_ => new FakeOmarchyThemeProvider
+        {
+            Themes = new[] { tokyo, latte },
+        });
+        _previewFeatures.Stored[PreviewFeatures.CalmSettings] = true;
+
+        IRenderedComponent<SettingsGear> cut = Render<SettingsGear>();
+        cut.Find(".calm-settings-gear").Click();
+        cut.WaitForAssertion(() => Assert.NotNull(cut.Find(".calm-dialog-board")));
+
+        // Collapsed by default: the summary row shows the count, no pack rows render.
+        Assert.Contains("2 packs available", cut.Find(".calm-theme-pack-summary").TextContent, StringComparison.Ordinal);
+        Assert.Empty(cut.FindAll(".calm-theme-pack-row"));
+
+        cut.Find(".calm-theme-pack-summary").Click();
+        Assert.Equal(2, cut.FindAll(".calm-theme-pack-row").Count);
+
+        cut.Find("[aria-label=\"Use Tokyo Night theme\"]").Click();
+        Assert.Equal("pack:omarchy:tokyo-night", _theme.Stored);
+        Assert.Equal(tokyo.Palette, _theme.AppliedPalette);
+        Assert.Contains("Tokyo Night", cut.Find(".calm-theme-pack-summary").TextContent, StringComparison.Ordinal);
+
+        cut.Find(".calm-theme-pack-summary").Click();
+        Assert.Empty(cut.FindAll(".calm-theme-pack-row"));
+    }
+
+    [Fact]
+    public void FlagOn_EveryCardTitle_HasIcon()
+    {
+        _previewFeatures.Stored[PreviewFeatures.CalmSettings] = true;
+        RegisterAllSections();
+
+        IRenderedComponent<SettingsGear> cut = Render<SettingsGear>();
+        cut.Find(".calm-settings-gear").Click();
+        cut.WaitForAssertion(() => Assert.NotNull(cut.Find(".calm-dialog-board")));
+
+        Assert.Equal(15, cut.FindAll(".calm-dialog-board-card h3 svg.calm-card-icon").Count);
+    }
+
+    [Fact]
     public async Task ToggleFlag_ReRendersDialogLive()
     {
         IRenderedComponent<SettingsGear> cut = Render<SettingsGear>();

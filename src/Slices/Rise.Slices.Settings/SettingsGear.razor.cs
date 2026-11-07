@@ -176,6 +176,49 @@ public partial class SettingsGear : IDisposable
         await ThemeStore.ApplyCustomThemeAsync(theme.Palette);
     }
 
+    /// <summary>Whether the Omarchy pack list is expanded in the board Theme card (collapsed by default).</summary>
+    private bool PackListExpanded { get; set; }
+
+    private void TogglePackList() => PackListExpanded = !PackListExpanded;
+
+    /// <summary>The active pack theme's title for the collapsed Omarchy row, or "No pack" when none is active (short, so the row stays one line).</summary>
+    private string ActivePackName =>
+        PackThemes.FirstOrDefault(IsPackActive) is OmarchyTheme active ? active.Title : "No pack";
+
+    /// <summary>"23 packs available" for the collapsed Omarchy row (singular "1 pack available").</summary>
+    private string PackCountText =>
+        PackThemes.Count == 1 ? "1 pack available" : $"{PackThemes.Count} packs available";
+
+    /// <summary>
+    /// One-path line icons for the D-style card titles, keyed by section
+    /// title (24x24, stroke currentColor). A title with no entry falls
+    /// back to the sliders icon, so a new section never renders a blank box.
+    /// </summary>
+    private static readonly Dictionary<string, string> CardIconPaths = new(StringComparer.Ordinal)
+    {
+        ["Theme"] = "M12 12m-4 0a4 4 0 1 0 8 0a4 4 0 1 0-8 0M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4",
+        ["Home screen icon"] = "M3 11l9-7 9 7M5 9.5V20h14V9.5M10 20v-5h4v5",
+        ["Background"] = "M3 5h18v14H3V5zM8.5 10h.01M3 17l5-5 4 4 3-3 6 6",
+        ["Links"] = "M14 4h6v6M20 4L10 14M9 5H5a1 1 0 0 0-1 1v13a1 1 0 0 0 1 1h13a1 1 0 0 0 1-1v-4",
+        ["Search"] = "M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16zM21 21l-4.3-4.3",
+        ["Clock"] = "M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM12 7v5l3 2",
+        ["Greeting"] = "M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z",
+        ["Group"] = "M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75",
+        ["Notes"] = "M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8zM14 2v6h6M9 13h6M9 17h6",
+        ["2048"] = "M3 3h8v8H3zM13 3h8v8h-8zM3 13h8v8H3zM13 13h8v8h-8z",
+        ["Weather"] = "M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z",
+        ["Keyboard"] = "M2 6h20v12H2zM6 10h.01M10 10h.01M14 10h.01M18 10h.01M6 14h.01M18 14h.01M9 14h6",
+        ["Backup"] = "M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3",
+        ["Modules"] = "M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5",
+        ["Preview features"] = "M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1zM4 22v-7",
+    };
+
+    /// <summary>Fallback card icon (sliders) for a section title with no entry above.</summary>
+    private const string FallbackCardIconPath = "M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6";
+
+    private static string CardIconPath(string title) =>
+        CardIconPaths.TryGetValue(title, out string? path) ? path : FallbackCardIconPath;
+
     private bool IsPackActive(OmarchyTheme theme) =>
         StoredTheme == OmarchyTheme.ChoiceFor(theme.Id);
 

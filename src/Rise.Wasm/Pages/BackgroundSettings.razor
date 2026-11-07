@@ -16,7 +16,7 @@ else
         }
     </div>
     <div class="calm-background-custom">
-        <label for="background-url">Image address</label>
+        <label for="background-url">@(IsBoard ? "Custom image URL" : "Image address")</label>
         <input id="background-url" type="url" placeholder="https://…" @bind="CustomUrl" />
         <button type="button" class="calm-background-apply" @onclick="ApplyUrlAsync">Apply image</button>
     </div>
@@ -26,7 +26,7 @@ else
             <p class="calm-background-missing">Your background image "@BackgroundService.MissingFileName" is missing — upload the file again to restore it.</p>
         }
         <label class="calm-background-upload-label">
-            Upload an image
+            @(IsBoard ? "Or use your own photo" : "Upload an image")
             <InputFile OnChange="UploadAsync" accept="image/*" />
         </label>
         @if (PendingUpload is not null)

@@ -8,18 +8,30 @@
         <div class="calm-dialog@(CalmSettingsEnabled ? " calm-dialog-board" : "")" role="dialog" aria-label="Settings" @onclick:stopPropagation="true">
             <div class="calm-dialog-header">
                 <h2>Settings</h2>
-                <button type="button" class="calm-dialog-close" aria-label="Close settings" @onclick="Close">&times;</button>
+                @if (CalmSettingsEnabled)
+                {
+                    @* Board only: the mock's Done pill. The flat dialog keeps its × button. *@
+                    <button type="button" class="calm-dialog-done" @onclick="Close">Done</button>
+                }
+                else
+                {
+                    <button type="button" class="calm-dialog-close" aria-label="Close settings" @onclick="Close">&times;</button>
+                }
             </div>
 
             @if (CalmSettingsEnabled)
             {
                 <p class="calm-dialog-board-sub">Everything in one calm place. The choices you reach for most are already on the cards — nothing to dig for.</p>
 
+                @* Board-only cascade: the Background section (shell-owned)
+                   reads it to render the mock's labels; the flat dialog
+                   has no such ancestor, so its labels stay as they are. *@
+                <CascadingValue TValue="bool" Name="RiseCalmBoard" Value="@true">
                 @foreach (var group in GroupedSections())
                 {
                     @if (group.Heading is not null)
                     {
-                        <h3 class="calm-dialog-board-group"><span class="calm-dialog-board-group-heading">@group.Heading</span><span class="calm-dialog-board-count">@CardCountText(group)</span></h3>
+                        <h3 class="calm-dialog-board-group"><span class="calm-dialog-board-group-heading">@group.Heading</span><span class="calm-dialog-board-group-rule" aria-hidden="true"></span><span class="calm-dialog-board-count">@CardCountText(group)</span></h3>
                     }
                     <div class="calm-dialog-board-grid">
                         @foreach (var card in group.Cards)
@@ -27,7 +39,7 @@
                             @if (card.Section is ISettingsSection section)
                             {
                                 <section class="calm-dialog-board-card">
-                                    <h3>@section.Title</h3>
+                                    <h3><svg class="calm-card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="@CardIconPath(section.Title)" /></svg><span>@section.Title</span></h3>
                                     @if (!string.IsNullOrEmpty(section.Description))
                                     {
                                         <p class="calm-dialog-note">@section.Description</p>
@@ -45,27 +57,32 @@
                             else
                             {
                                 @* The Theme picker, duplicated from the flat dialog below:
-                                   the two copies must stay in sync — the flat copy renders
-                                   when the flag is off, this card when it is on. *@
+                                   the two copies share behavior (same handlers, same
+                                   state) but not presentation — the flat copy renders
+                                   the legacy buttons, this card renders the mock's
+                                   segmented control, theme pills, and collapsible
+                                   pack list. When behavior changes, update both. *@
                                 <section class="calm-dialog-board-card">
-                                    <h3>Theme</h3>
+                                    <h3><svg class="calm-card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="@CardIconPath("Theme")" /></svg><span>Theme</span></h3>
                                     <p class="calm-dialog-note">System follows your device setting.</p>
-                                    <div class="calm-theme-options">
-                                        <button type="button" class="calm-theme-option@(StoredTheme == "light" ? " selected" : "")" aria-pressed="@(StoredTheme == "light")" @onclick='() => SetThemeAsync("light")'>Light</button>
-                                        <button type="button" class="calm-theme-option@(StoredTheme == "dark" ? " selected" : "")" aria-pressed="@(StoredTheme == "dark")" @onclick='() => SetThemeAsync("dark")'>Dark</button>
-                                        <button type="button" class="calm-theme-option@(StoredTheme == "system" ? " selected" : "")" aria-pressed="@(StoredTheme == "system")" @onclick='() => SetThemeAsync("system")'>System</button>
+                                    <div class="calm-theme-segmented" role="group" aria-label="Theme">
+                                        <button type="button" class="calm-theme-option@(StoredTheme == "light" ? " selected" : "")" aria-pressed="@(StoredTheme == "light" ? "true" : "false")" @onclick='() => SetThemeAsync("light")'>Light</button>
+                                        <button type="button" class="calm-theme-option@(StoredTheme == "dark" ? " selected" : "")" aria-pressed="@(StoredTheme == "dark" ? "true" : "false")" @onclick='() => SetThemeAsync("dark")'>Dark</button>
+                                        <button type="button" class="calm-theme-option@(StoredTheme == "system" ? " selected" : "")" aria-pressed="@(StoredTheme == "system" ? "true" : "false")" @onclick='() => SetThemeAsync("system")'>System</button>
                                     </div>
 
-                                    @foreach (var custom in CustomThemes)
-                                    {
-                                        <div class="calm-theme-custom-row">
-                                            <button type="button" class="calm-theme-option@(IsActive(custom) ? " selected" : "")" aria-pressed="@IsActive(custom)" @onclick="() => SetCustomThemeAsync(custom)">@custom.Name</button>
-                                            <button type="button" aria-label="Edit @custom.Name" @onclick="() => EditingTheme = custom">Edit</button>
-                                            <button type="button" aria-label="Delete @custom.Name" @onclick="() => DeleteThemeAsync(custom.Id)">Delete</button>
-                                        </div>
-                                    }
-
-                                    <button type="button" class="calm-theme-new" @onclick="CreateThemeAsync">New theme</button>
+                                    <p class="calm-theme-label">My themes</p>
+                                    <div class="calm-theme-pills">
+                                        @foreach (var custom in CustomThemes)
+                                        {
+                                            <span class="calm-theme-pill-wrap">
+                                                <button type="button" class="calm-theme-option@(IsActive(custom) ? " selected" : "")" aria-pressed="@(IsActive(custom) ? "true" : "false")" @onclick="() => SetCustomThemeAsync(custom)">@custom.Name</button>
+                                                <button type="button" class="calm-theme-pill-action" aria-label="Edit @custom.Name" @onclick="() => EditingTheme = custom">Edit</button>
+                                                <button type="button" class="calm-theme-pill-action" aria-label="Delete @custom.Name" @onclick="() => DeleteThemeAsync(custom.Id)">Delete</button>
+                                            </span>
+                                        }
+                                        <button type="button" class="calm-theme-option" @onclick="CreateThemeAsync">+ New theme</button>
+                                    </div>
 
                                     @if (EditingTheme is not null)
                                     {
@@ -74,17 +91,25 @@
 
                                     @if (PackThemes.Count > 0)
                                     {
-                                        <h4>Omarchy</h4>
-                                        <p class="calm-dialog-note">Supplied by the Omarchy themes module — switch it off under Modules to hide these.</p>
-                                        @foreach (var pack in PackThemes)
+                                        <p class="calm-theme-label">Omarchy theme pack</p>
+                                        <button type="button" class="calm-theme-pack-summary" aria-expanded="@(PackListExpanded ? "true" : "false")" @onclick="TogglePackList">
+                                            <span class="calm-theme-pack-name">@ActivePackName</span>
+                                            <span class="calm-theme-pack-count">@PackCountText</span>
+                                            <span class="calm-theme-pack-chevron" aria-hidden="true">›</span>
+                                        </button>
+                                        @if (PackListExpanded)
                                         {
-                                            <div class="calm-theme-pack-row">
-                                                <button type="button" class="calm-theme-option@(IsPackActive(pack) ? " selected" : "")" aria-pressed="@(IsPackActive(pack) ? "true" : "false")" aria-label="Use @pack.Title theme" @onclick="() => SetPackThemeAsync(pack)">
-                                                    <span class="calm-theme-swatch" style="background: @(pack.Palette.Background); border-color: @(pack.Accent);"></span>
-                                                    @pack.Title
-                                                    <span class="calm-theme-mode">@(pack.IsDark ? "Dark" : "Light")</span>
-                                                </button>
-                                            </div>
+                                            <p class="calm-dialog-note">Supplied by the Omarchy themes module — switch it off under Modules to hide these.</p>
+                                            @foreach (var pack in PackThemes)
+                                            {
+                                                <div class="calm-theme-pack-row">
+                                                    <button type="button" class="calm-theme-option@(IsPackActive(pack) ? " selected" : "")" aria-pressed="@(IsPackActive(pack) ? "true" : "false")" aria-label="Use @pack.Title theme" @onclick="() => SetPackThemeAsync(pack)">
+                                                        <span class="calm-theme-swatch" style="background: @(pack.Palette.Background); border-color: @(pack.Accent);"></span>
+                                                        @pack.Title
+                                                        <span class="calm-theme-mode">@(pack.IsDark ? "Dark" : "Light")</span>
+                                                    </button>
+                                                </div>
+                                            }
                                         }
                                     }
                                 </section>
@@ -92,10 +117,14 @@
                         }
                     </div>
                 }
+                </CascadingValue>
             }
             else
             {
-                @* The Theme picker: keep in sync with the board card above. *@
+                @* The Theme picker: shares behavior with the board card
+                   above (same handlers, same state), not presentation —
+                   this copy keeps the legacy buttons. When behavior
+                   changes, update both. *@
                 <section>
                     <h3>Theme</h3>
                     <p class="calm-dialog-note">System follows your device setting.</p>

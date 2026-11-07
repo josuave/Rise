@@ -24,6 +24,19 @@ public partial class BackgroundSettings : IDisposable
     [Inject]
     private BackgroundService BackgroundService { get; set; } = null!;
 
+    /// <summary>
+    /// True when this section renders inside the D-style settings
+    /// board (the dialog provides a CascadingValue named
+    /// "RiseCalmBoard" around its board grid; the flat dialog provides
+    /// none, so this stays false there). Only the labels switch on it:
+    /// the board shows the mock's "Custom image URL" / "Or use your
+    /// own photo", the flat dialog keeps "Image address" / "Upload an
+    /// image". The chip presentation switches by scoped CSS instead
+    /// (see the .calm-dialog-board-card rules below).
+    /// </summary>
+    [CascadingParameter(Name = "RiseCalmBoard")]
+    public bool IsBoard { get; set; }
+
     private BackgroundChoice Choice { get; set; } = BackgroundChoice.None;
 
     private bool Loaded { get; set; }
