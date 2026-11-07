@@ -8,6 +8,7 @@ on:
     # redeployed the site).
     paths:
       - 'src/**'
+      - 'tools/**'
       - 'global.json'
 
 jobs:
@@ -21,6 +22,12 @@ jobs:
         uses: actions/setup-dotnet@v5
         with:
           dotnet-version: '11.0.x'
+
+      - name: Generate home-screen icons
+        if: hashFiles('tools/gen-icons.py') != ''
+        run: |
+          python3 -m pip install --break-system-packages pillow
+          python3 tools/gen-icons.py
 
       - name: Publish Blazor project
         run: dotnet publish src/Rise.Wasm/Rise.Wasm.csproj -c Release -o release --nologo
