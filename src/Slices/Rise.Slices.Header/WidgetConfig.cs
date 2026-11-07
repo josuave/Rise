@@ -44,7 +44,8 @@ public sealed class ClockConfig(WidgetConfigService service) : SelfMigratingWidg
 /// <summary>
 /// The greeting widget's configuration: a self-managing object over
 /// its JSON. It owns its schema (custom text, blank meaning the
-/// automatic time-based greeting) and its evolution (currently v1:
+/// automatic time-based greeting; name, used in the automatic
+/// greeting when set) and its evolution (currently v1:
 /// no migrations yet, so Migrate is an identity); the widget-config
 /// service runs the migration on load and saves the migrated JSON
 /// back. A missing key reads as the default.
@@ -72,6 +73,22 @@ public sealed class GreetingConfig(WidgetConfigService service) : SelfMigratingW
             else
             {
                 Data[nameof(CustomText)] = value;
+            }
+        }
+    }
+
+    public string? Name
+    {
+        get => WidgetConfigJson.GetString(Data, nameof(Name));
+        set
+        {
+            if (value is null)
+            {
+                Data.Remove(nameof(Name));
+            }
+            else
+            {
+                Data[nameof(Name)] = value;
             }
         }
     }

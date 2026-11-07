@@ -387,6 +387,10 @@ public partial class SettingsGear : IDisposable
         return groups;
     }
 
+    /// <summary>Card count for a D-style group heading, e.g. "3 cards" (singular "1 card").</summary>
+    private static string CardCountText(SettingsGroup group) =>
+        group.Cards.Count == 1 ? "1 card" : $"{group.Cards.Count} cards";
+
     private static Dictionary<string, object?> LazySectionParameters(ILazySettingsSection lazy) =>
         new() { ["Section"] = lazy };
 

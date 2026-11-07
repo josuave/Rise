@@ -1,4 +1,9 @@
 <label class="calm-widget-config-row">
+    Name
+    <input type="text" aria-label="Name" value="@Config.Name" @onchange="SetNameAsync" />
+</label>
+<p class="calm-dialog-note">The name is used in the automatic greeting.</p>
+<label class="calm-widget-config-row">
     Custom greeting
     <input type="text" aria-label="Custom greeting" value="@Config.CustomText" @onchange="SetCustomTextAsync" />
 </label>

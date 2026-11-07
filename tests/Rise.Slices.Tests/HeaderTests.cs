@@ -8,6 +8,7 @@ using Xunit;
 using DateComponent = Rise.Slices.Header.HeaderDate;
 using ClockComponent = Rise.Slices.Header.HeaderClock;
 using GreetingComponent = Rise.Slices.Header.HeaderGreeting;
+using GreetingEditor = Rise.Slices.Header.GreetingConfigEditor;
 
 namespace Rise.Slices.Tests;
 
@@ -37,7 +38,10 @@ public class HeaderTests : BunitContext
 
         IRenderedComponent<ClockComponent> cut = Render<ClockComponent>();
 
-        cut.WaitForAssertion(() => Assert.Contains("9:30 AM", cut.Markup, StringComparison.Ordinal));
+        // The clock renders as split spans (digits, seconds, meridiem)
+        // so the hero clock can size the parts; the rendered text is
+        // exactly the formatted time.
+        cut.WaitForAssertion(() => Assert.Contains("9:30 AM", cut.Find(".calm-clock").TextContent, StringComparison.Ordinal));
         Assert.Contains("calm-clock", cut.Markup, StringComparison.Ordinal);
     }
 
@@ -56,7 +60,7 @@ public class HeaderTests : BunitContext
 
         IRenderedComponent<ClockComponent> cut = Render<ClockComponent>();
 
-        cut.WaitForAssertion(() => Assert.Contains("09:30:07", cut.Markup, StringComparison.Ordinal));
+        cut.WaitForAssertion(() => Assert.Contains("09:30:07", cut.Find(".calm-clock").TextContent, StringComparison.Ordinal));
     }
 
     [Fact]
@@ -92,5 +96,78 @@ public class HeaderTests : BunitContext
 
         cut.WaitForAssertion(() => Assert.Contains("Hey there.", cut.Markup, StringComparison.Ordinal));
         Assert.DoesNotContain(Greeting.For(moment), cut.Markup, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Greeting_RendersName_WhenConfigured()
+    {
+        var moment = new DateTime(2026, 11, 1, 9, 30, 0, DateTimeKind.Local);
+        Services.AddSingleton<IClock>(_ => new FakeClock(moment));
+        Services.AddScoped<IWidgetConfigStore>(_ => new FakeWidgetConfigStore(new Dictionary<string, string>
+        {
+            ["Greeting"] = "{\"Name\":\"Joseph\"}",
+        }));
+        Services.AddScoped<WidgetConfigService>();
+        Services.AddScoped<ClockConfig>();
+        Services.AddScoped<GreetingConfig>();
+
+        IRenderedComponent<GreetingComponent> cut = Render<GreetingComponent>();
+
+        cut.WaitForAssertion(() => Assert.Contains("Good morning, Joseph.", cut.Markup, StringComparison.Ordinal));
+        Assert.DoesNotContain(Greeting.For(moment), cut.Markup, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Greeting_RendersPlainGreeting_WhenNameIsBlank()
+    {
+        var moment = new DateTime(2026, 11, 1, 9, 30, 0, DateTimeKind.Local);
+        Services.AddSingleton<IClock>(_ => new FakeClock(moment));
+        Services.AddScoped<IWidgetConfigStore>(_ => new FakeWidgetConfigStore(new Dictionary<string, string>
+        {
+            ["Greeting"] = "{\"Name\":\"   \"}",
+        }));
+        Services.AddScoped<WidgetConfigService>();
+        Services.AddScoped<ClockConfig>();
+        Services.AddScoped<GreetingConfig>();
+
+        IRenderedComponent<GreetingComponent> cut = Render<GreetingComponent>();
+
+        cut.WaitForAssertion(() => Assert.Contains(Greeting.For(moment), cut.Markup, StringComparison.Ordinal));
+        Assert.DoesNotContain("Good morning,", cut.Markup, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Greeting_RendersCustomText_WhenNameAlsoConfigured()
+    {
+        var moment = new DateTime(2026, 11, 1, 9, 30, 0, DateTimeKind.Local);
+        Services.AddSingleton<IClock>(_ => new FakeClock(moment));
+        Services.AddScoped<IWidgetConfigStore>(_ => new FakeWidgetConfigStore(new Dictionary<string, string>
+        {
+            ["Greeting"] = "{\"CustomText\":\"Hey there.\",\"Name\":\"Joseph\"}",
+        }));
+        Services.AddScoped<WidgetConfigService>();
+        Services.AddScoped<ClockConfig>();
+        Services.AddScoped<GreetingConfig>();
+
+        IRenderedComponent<GreetingComponent> cut = Render<GreetingComponent>();
+
+        cut.WaitForAssertion(() => Assert.Contains("Hey there.", cut.Markup, StringComparison.Ordinal));
+        Assert.DoesNotContain("Good morning, Joseph.", cut.Markup, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void GreetingEditor_RendersStoredName()
+    {
+        Services.AddScoped<IWidgetConfigStore>(_ => new FakeWidgetConfigStore(new Dictionary<string, string>
+        {
+            ["Greeting"] = "{\"Name\":\"Joseph\"}",
+        }));
+        Services.AddScoped<WidgetConfigService>();
+        Services.AddScoped<GreetingConfig>();
+
+        IRenderedComponent<GreetingEditor> cut = Render<GreetingEditor>();
+
+        cut.WaitForAssertion(() => Assert.Equal("Joseph", cut.Find("[aria-label=\"Name\"]").GetAttribute("value")));
+        Assert.Contains("The name is used in the automatic greeting.", cut.Markup, StringComparison.Ordinal);
     }
 }

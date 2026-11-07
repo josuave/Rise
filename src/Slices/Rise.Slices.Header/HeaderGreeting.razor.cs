@@ -6,10 +6,11 @@ using Rise.Domain;
 namespace Rise.Slices.Header;
 
 /// <summary>
-/// The greeting widget: the time-based greeting, or the user's
-/// custom text when one is saved. Refreshed once a minute, which
-/// covers the morning/afternoon/evening boundaries, and reloaded
-/// when the layout editor saves a new custom text.
+/// The greeting widget: the time-based greeting (with the user's
+/// name when one is saved), or the user's custom text when one is
+/// saved. Refreshed once a minute, which covers the
+/// morning/afternoon/evening boundaries, and reloaded when the
+/// layout editor saves a new custom text.
 /// </summary>
 public partial class HeaderGreeting : IDisposable
 {
@@ -29,7 +30,7 @@ public partial class HeaderGreeting : IDisposable
         get
         {
             string? custom = Config.CustomText?.Trim();
-            return string.IsNullOrEmpty(custom) ? Greeting.For(Clock.Now) : custom;
+            return string.IsNullOrEmpty(custom) ? Greeting.For(Clock.Now, Config.Name) : custom;
         }
     }
 
