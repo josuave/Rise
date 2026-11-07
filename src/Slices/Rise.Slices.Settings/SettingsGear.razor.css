@@ -160,16 +160,20 @@
 .calm-dialog-board h3.calm-dialog-board-group {
     display: flex;
     justify-content: space-between;
-    align-items: baseline;
-    gap: 1rem;
+    align-items: center;
+    gap: 0.75rem;
     margin: 1.5rem 0 0.75rem;
-    padding-bottom: 0.4rem;
-    border-bottom: 1px solid var(--calm-border-soft);
     color: var(--calm-muted);
     font-size: 0.85rem;
     font-weight: 400;
     letter-spacing: 0.08em;
     text-transform: uppercase;
+}
+
+/* The hairline stretches between the label and the count, like the mock. */
+.calm-dialog-board-group-rule {
+    flex: 1;
+    border-top: 1px solid var(--calm-border-soft);
 }
 
 .calm-dialog-board-count {
@@ -192,8 +196,129 @@
 }
 
 .calm-dialog-board .calm-dialog-board-card h3 {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
     margin: 0 0 0.5rem;
     font-weight: 400;
+}
+
+/* One-path line icon before each card title, like the mock's sun
+   and image icons. The svg carries no text, so the card-title
+   assertions still read the plain title. */
+.calm-card-icon {
+    width: 1.25rem;
+    height: 1.25rem;
+    flex: none;
+    color: var(--calm-muted);
+}
+
+/* Board header (calm-settings flag only): the mock's large serif
+   title and a Done pill instead of the ×. The flat dialog keeps its
+   light h2 and × button. */
+.calm-dialog-board .calm-dialog-header h2 {
+    font-family: Georgia, 'Times New Roman', serif;
+    font-weight: 700;
+    font-size: 1.75rem;
+}
+
+.calm-dialog-board .calm-dialog-done {
+    border-radius: 999px;
+    padding: 0.5rem 1.25rem;
+    font-weight: 600;
+}
+
+/* Theme card (board only): the mock's segmented control — one pill
+   group, the active segment filled with the text color so it inverts
+   in both themes. */
+.calm-theme-segmented {
+    display: flex;
+    border: 1px solid var(--calm-border);
+    border-radius: 0.75rem;
+    overflow: hidden;
+}
+
+.calm-theme-segmented .calm-theme-option {
+    flex: 1;
+    border: none;
+    border-radius: 0;
+    background: transparent;
+    padding: 0.6rem 0.25rem;
+    text-align: center;
+}
+
+.calm-theme-segmented .calm-theme-option.selected {
+    background: var(--calm-text);
+    color: var(--calm-bg);
+}
+
+/* Small muted labels over the Theme card's groups, like the mock's
+   "My themes" and "Omarchy theme pack". */
+.calm-theme-label {
+    margin: 1rem 0 0.5rem;
+    color: var(--calm-muted);
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.calm-theme-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.calm-theme-pill-wrap {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+/* The per-theme Edit/Delete stay beside their pill, as small muted
+   text buttons — the mock shows clean pills, but the behavior (edit
+   and delete a custom theme) has to stay. */
+.calm-theme-pills .calm-theme-pill-action {
+    border: none;
+    background: none;
+    color: var(--calm-muted);
+    font-size: 0.85rem;
+    padding: 0.25rem;
+    cursor: pointer;
+}
+
+/* The Omarchy pack list collapses into one compact row: the active
+   pack, how many packs there are, and a chevron that turns down
+   when the list is open. */
+.calm-theme-pack-summary {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    width: 100%;
+    text-align: left;
+}
+
+/* Long pack names ellipsize instead of wrapping the row taller. */
+.calm-theme-pack-name {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.calm-theme-pack-count {
+    margin-left: auto;
+    color: var(--calm-muted);
+    font-size: 0.9rem;
+    white-space: nowrap;
+}
+
+.calm-theme-pack-chevron {
+    color: var(--calm-muted);
+    transition: transform 0.15s ease;
+}
+
+.calm-theme-pack-summary[aria-expanded="true"] .calm-theme-pack-chevron {
+    transform: rotate(90deg);
 }
 
 @media (orientation: portrait) {
