@@ -7,6 +7,14 @@
     line-height: 1;
 }
 
+/* Stacking order (keep in sync with the board bar): switch menu
+   overlay 20 / switch button + menu 21 < dialog overlay 30
+   < command palette 100 < search picker 100/101 < Blazor error
+   UI 1000. The overlay renders inside .calm-settings-cluster, so
+   its z-index is relative to the cluster's stacking context — the
+   cluster itself is z-index 30, which is what lifts the dialog
+   above the board bar so the Switch layout button cannot paint
+   over it. */
 .calm-dialog-overlay {
     position: fixed;
     inset: 0;
@@ -17,7 +25,7 @@
     padding: 2rem 1rem;
     box-sizing: border-box;
     overflow-y: auto;
-    z-index: 20;
+    z-index: 30;
 }
 
 .calm-dialog {
