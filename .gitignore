@@ -348,3 +348,9 @@ MigrationBackup/
 
 # Ionide (cross platform F# VS Code tools) working folder
 .ionide/
+
+# Rise: generated home-screen icons — tools/gen-icons.py regenerates them
+# from OmarchyThemePack.cs; do not commit the outputs.
+src/Rise.Wasm/wwwroot/icons/
+src/Rise.Wasm/wwwroot/Rise-maskable-*.png
+src/Rise.Wasm/wwwroot/Rise-monochrome-*.png

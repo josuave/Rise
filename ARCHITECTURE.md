@@ -114,6 +114,35 @@ Rules for a slice:
    theme is never duplicated per slice: scoped files reference the
    shared variables.
 
+   Home screen icon (PWA install icon follows the theme): the static
+   manifest (`wwwroot/manifest.json`) uses the calm light palette
+   (`background_color` and `theme_color` `#f7f5f0`) and declares
+   `any`, `maskable`, and `monochrome` icons at 192 and 512.
+   Per-theme icons live under `wwwroot/icons/<slug>-512.png` /
+   `-192.png` (one per Omarchy theme, plus `calm-light` /
+   `calm-dark` for the built-ins): the theme's Background fills the
+   canvas and the R body takes the theme's Accent (falling back to
+   Text when Accent contrast against Background is below 3.0); the
+   red/cyan glitch strokes keep the brand colours. They are generated, not hand-drawn, and not committed:
+   `tools/gen-icons.py` (Pillow required, `pip install pillow`)
+   parses `OmarchyThemePack.cs` and writes all 54 PNGs. It runs in
+   CI before the build and manually via `python3 tools/gen-icons.py`
+   from the repo root; the outputs are git-ignored (`wwwroot/icons/`
+   and `wwwroot/Rise-maskable-*.png` / `Rise-monochrome-*.png`).
+   The source mark `wwwroot/Rise-512.png` is committed. The install-time manifest is built
+   in the browser: `window.riseHomeIcon` (`wwwroot/index.html`)
+   swaps the manifest `<link>` for a blob manifest for the active
+   theme, with absolute icon URLs resolved against the static
+   manifest's URL (so the `/Rise/` subpath works), and swaps the
+   `apple-touch-icon` links the same way. The preference is
+   `rise.home-icon.v1` (`follow` / `static`, default `follow`),
+   toggled in the shell-owned "Home screen icon" Settings section
+   (Order 90). Honest limit: this picks the icon at install time
+   only — Chrome re-reads only the static manifest for an installed
+   app, so changing the theme later never changes an installed icon.
+   `rise.home-icon.v1` does not ride backup yet (needs a
+   BackupService change).
+
 Current slices: Links (tiles, persisted via `ILinkStore`), Search
 (query box, launched via `ISearchLauncher`; the engine is a Domain
 registry, `SearchEngines` — Google, DuckDuckGo, Bing, Brave — plus
@@ -236,7 +265,22 @@ slice's scoped CSS still loads at boot, and a disabled eager
 module still downloads at boot (skipping that needs every module
 lazy). Grouped lazy widgets render through the same container
 branch, but grouping a lazy widget has not been browser-verified
-yet.
+yet. 2048 is the second lazy module, after Notes, and the pattern
+it confirms: a lazy widget is metadata in the shell, not a slice
+registration. `LazyWidgetDefinition` carries one instance per lazy
+widget (id, title, order, assembly file, component type name) —
+`LazyWidgetDefinition.Notes` and `LazyWidgetDefinition.Game2048`
+— and the lazy container loads the assembly named by the
+definition it resolved, so a third lazy widget is one more
+instance plus one catalog entry, never a change to the container.
+The module's settings section lives in the module's own assembly
+behind `ILazySettingsSection` (`LazyGame2048SettingsSection`,
+Order 145), and its assembly is excluded from the service-worker
+precache by one regex per lazy module. Game state is not widget
+config: the board, score, and best live under `rise.game2048.v1`
+through `IGame2048Store` / `LocalStorageGame2048Store`, with the
+pure merge rules in `Game2048Board` in the Domain and the dice in
+`Game2048Service`, seedable from tests.
 
 Keyboard-first: the shell owns a command palette and a hotkey
 system, both shell-rendered, not widgets. The palette

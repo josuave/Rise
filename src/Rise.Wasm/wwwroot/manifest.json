@@ -3,19 +3,45 @@
   "short_name": "Rise",
   "start_url": "./",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#03173d",
+  "background_color": "#f7f5f0",
+  "theme_color": "#f7f5f0",
   "prefer_related_applications": false,
   "icons": [
     {
       "src": "Rise-512.png",
       "type": "image/png",
-      "sizes": "512x512"
+      "sizes": "512x512",
+      "purpose": "any"
     },
     {
       "src": "Rise-192.png",
       "type": "image/png",
-      "sizes": "192x192"
+      "sizes": "192x192",
+      "purpose": "any"
+    },
+    {
+      "src": "Rise-maskable-512.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "maskable"
+    },
+    {
+      "src": "Rise-maskable-192.png",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "maskable"
+    },
+    {
+      "src": "Rise-monochrome-512.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "monochrome"
+    },
+    {
+      "src": "Rise-monochrome-192.png",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "monochrome"
     }
   ]
 }

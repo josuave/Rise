@@ -20,6 +20,7 @@ internal sealed class StaticModuleCatalog : IModuleCatalog
     private static readonly string[] BackupWidgets = { "Backup" };
     private static readonly string[] TodoWidgets = { "Todo" };
     private static readonly string[] NotesWidgets = { "Notes" };
+    private static readonly string[] Game2048Widgets = { "Game2048" };
     private static readonly string[] LayoutWidgets = { "Group" };
     private static readonly string[] SettingsWidgets = { "Theme", "Settings" };
     private static readonly string[] OmarchyThemeWidgets = Array.Empty<string>();
@@ -33,6 +34,7 @@ internal sealed class StaticModuleCatalog : IModuleCatalog
         new ModuleInfo("Backup", "Backup", BackupWidgets, "Rise.Slices.Backup", IsLazy: false, CanDisable: true),
         new ModuleInfo("Todo", "To-do", TodoWidgets, "Rise.Slices.Todo", IsLazy: false, CanDisable: true),
         new ModuleInfo("Notes", "Notes", NotesWidgets, "Rise.Slices.Notes", IsLazy: true, CanDisable: true),
+        new ModuleInfo("Game2048", "2048", Game2048Widgets, "Rise.Slices.Game2048", IsLazy: true, CanDisable: true),
         new ModuleInfo("Layout", "Groups", LayoutWidgets, "Rise.Slices.Layout", IsLazy: false, CanDisable: true),
         new ModuleInfo("Settings", "Settings", SettingsWidgets, "Rise.Slices.Settings", IsLazy: false, CanDisable: false),
         // A module with no widgets: the slice only supplies the

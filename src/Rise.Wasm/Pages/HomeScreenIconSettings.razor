@@ -1,0 +1,26 @@
+@if (!Loaded)
+{
+    <p class="calm-home-icon-loading">Loading home screen icon…</p>
+}
+else
+{
+    <label class="calm-home-icon-row">
+        <input type="checkbox" checked="@FollowsTheme" @onchange="e => ToggleAsync(e.Value is true)" />
+        <span class="calm-home-icon-text">
+            <span class="calm-home-icon-title">Home screen icon follows theme</span>
+            <span class="calm-home-icon-description">Install Rise with an icon in your current theme's colours.</span>
+        </span>
+    </label>
+    <div class="calm-home-icon-preview">
+        @if (IconHref is not null)
+        {
+            <img src="@IconHref" alt="Home screen icon preview" class="calm-home-icon-image" />
+        }
+        <span class="calm-home-icon-caption">@PreviewCaption</span>
+    </div>
+    <p class="calm-home-icon-note">Applies when you install; changing theme later won't change the installed icon.</p>
+    @if (Status is not null)
+    {
+        <p class="calm-home-icon-status" role="status">@Status</p>
+    }
+}

@@ -1,0 +1,36 @@
+@using Rise.Domain
+
+<div class="calm-game2048">
+    <div class="calm-game2048-header">
+        <h2 class="calm-game2048-title">2048</h2>
+        <div class="calm-game2048-scores">
+            <span class="calm-game2048-score">Score <strong>@State.Score</strong></span>
+            <span class="calm-game2048-score">Best <strong>@State.Best</strong></span>
+        </div>
+    </div>
+    <div class="calm-game2048-board" tabindex="0" role="application" aria-label="2048 board. Use arrow keys or swipe to play." @onkeydown="OnKeyDown" @ontouchstart="OnTouchStart" @ontouchend="OnTouchEnd">
+        @for (int row = 0; row < Game2048Board.Size; row++)
+        {
+            @for (int column = 0; column < Game2048Board.Size; column++)
+            {
+                int value = State.Board[row, column];
+                <div class="@TileClass(value)" aria-label="@TileLabel(value)">@TileText(value)</div>
+            }
+        }
+    </div>
+    @if (ShowWin)
+    {
+        <p class="calm-game2048-win" role="status">
+            You reached 2048!
+            <button type="button" class="calm-game2048-dismiss" @onclick="DismissWin">Keep playing</button>
+        </p>
+    }
+    @if (IsGameOver)
+    {
+        <p class="calm-game2048-over" role="status">Game over — no moves left.</p>
+    }
+    <div class="calm-game2048-footer">
+        <button type="button" class="calm-game2048-new" @onclick="NewGameAsync">New game</button>
+        <span class="calm-game2048-hint">Click the board, then arrow keys or swipe.</span>
+    </div>
+</div>

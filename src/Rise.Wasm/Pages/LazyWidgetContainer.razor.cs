@@ -50,14 +50,14 @@ public partial class LazyWidgetContainer
 
         try
         {
-            IEnumerable<System.Reflection.Assembly> assemblies = await AssemblyLoader.LoadAssembliesAsync(new[] { LazyWidgetDefinition.AssemblyFile });
-            ResolvedType = assemblies.Select(a => a.GetType(LazyWidgetDefinition.ComponentTypeName)).FirstOrDefault(t => t is not null)
+            IEnumerable<System.Reflection.Assembly> assemblies = await AssemblyLoader.LoadAssembliesAsync(new[] { definition.AssemblyFile });
+            ResolvedType = assemblies.Select(a => a.GetType(definition.ComponentTypeName)).FirstOrDefault(t => t is not null)
                 // A second load of an already-loaded assembly does not
                 // return it again, so fall back to the loaded assemblies.
-                ?? AppDomain.CurrentDomain.GetAssemblies().Select(a => a.GetType(LazyWidgetDefinition.ComponentTypeName)).FirstOrDefault(t => t is not null);
+                ?? AppDomain.CurrentDomain.GetAssemblies().Select(a => a.GetType(definition.ComponentTypeName)).FirstOrDefault(t => t is not null);
             if (ResolvedType is null)
             {
-                Error = $"Loaded {LazyWidgetDefinition.AssemblyFile} but found no {LazyWidgetDefinition.ComponentTypeName}.";
+                Error = $"Loaded {definition.AssemblyFile} but found no {definition.ComponentTypeName}.";
             }
             else
             {
