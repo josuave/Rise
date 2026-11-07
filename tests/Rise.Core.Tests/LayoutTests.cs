@@ -146,4 +146,46 @@ public class LayoutTests
 
         Assert.Equal(GroupMembers, hidden.GroupChildren);
     }
+
+    private static readonly string[] ArrangedOrder = new[] { "Links", "Search", "LinkEditor", "Theme", "Settings" };
+    private static readonly string[] ArrangementIds = new[] { "Links", "Search" };
+    private static readonly string[] GhostArrangementIds = new[] { "Ghost", "Links" };
+
+    [Fact]
+    public void ApplyArrangement_ReordersSetsVisibilityAndClearsGroup()
+    {
+        PageLayout layout = GroupedSample();
+
+        PageLayout arranged = layout.ApplyArrangement(
+            ArrangementIds,
+            new HashSet<string> { "Links" });
+
+        // Listed first in the listed order, with the listed
+        // visibility; the group is cleared, so both render top-level.
+        Assert.Equal(
+            ArrangedOrder,
+            arranged.Widgets.Select(w => w.Id));
+        Assert.True(arranged.Widgets.Single(w => w.Id == "Links").Visible);
+        Assert.False(arranged.Widgets.Single(w => w.Id == "Search").Visible);
+        Assert.Empty(arranged.GroupChildren);
+
+        // Unlisted widgets keep their visibility and relative order.
+        Assert.False(arranged.Widgets.Single(w => w.Id == "LinkEditor").Visible);
+        Assert.True(arranged.Widgets.Single(w => w.Id == "Theme").Visible);
+    }
+
+    [Fact]
+    public void ApplyArrangement_IgnoresUnknownIds()
+    {
+        PageLayout layout = Sample();
+
+        PageLayout arranged = layout.ApplyArrangement(
+            GhostArrangementIds,
+            new HashSet<string> { "Ghost", "Links" });
+
+        Assert.Equal(
+            ArrangedOrder,
+            arranged.Widgets.Select(w => w.Id));
+        Assert.DoesNotContain(arranged.Widgets, w => w.Id == "Ghost");
+    }
 }

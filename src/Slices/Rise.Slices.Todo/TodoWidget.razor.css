@@ -6,6 +6,13 @@
     font-weight: 600;
 }
 
+/* Today line: full-board only — one muted line under the title. */
+.calm-todo-today {
+    color: var(--calm-muted);
+    font-size: 0.9rem;
+    margin: 0 0 0.75rem;
+}
+
 .calm-todo-list {
     margin-top: 0.75rem;
 }

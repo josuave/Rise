@@ -12,10 +12,50 @@ public class TodoWidgetTests : BunitContext
 {
     private readonly FakeTodoStore _store = new();
 
+    private readonly FakePreviewFeatureStore _previewStore = new();
+
     public TodoWidgetTests()
     {
         Services.AddScoped<ITodoStore>(_ => _store);
         Services.AddScoped<TodoService>();
+        // The widget injects the preview service (nullable): a
+        // nullable [Inject] still throws at activation when
+        // unregistered, so every test registers it.
+        Services.AddScoped<IPreviewFeatureStore>(_ => _previewStore);
+        Services.AddScoped<PreviewFeatureService>();
+    }
+
+    [Fact]
+    public void FullBoardFlag_On_ShowsTodayProgressLine()
+    {
+        var seeded = new FakeTodoStore(new TodoList(new[]
+        {
+            new TodoItem(Guid.NewGuid(), "Buy milk", true),
+            new TodoItem(Guid.NewGuid(), "Walk dog", false),
+        }));
+        Services.AddScoped<ITodoStore>(_ => seeded);
+        _previewStore.Stored[PreviewFeatures.CalmBoardFull] = true;
+
+        IRenderedComponent<TodoWidget> cut = Render<TodoWidget>();
+
+        cut.WaitForAssertion(() => Assert.Contains("Today · 1 of 2 done", cut.Markup, StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void FullBoardFlag_Off_HidesTodayProgressLine()
+    {
+        var seeded = new FakeTodoStore(new TodoList(new[]
+        {
+            new TodoItem(Guid.NewGuid(), "Buy milk", true),
+            new TodoItem(Guid.NewGuid(), "Walk dog", false),
+        }));
+        Services.AddScoped<ITodoStore>(_ => seeded);
+
+        IRenderedComponent<TodoWidget> cut = Render<TodoWidget>();
+
+        // The items prove init ran; the line stays off without the flag.
+        cut.WaitForAssertion(() => Assert.Contains("Walk dog", cut.Markup, StringComparison.Ordinal));
+        Assert.DoesNotContain("Today ·", cut.Markup, StringComparison.Ordinal);
     }
 
     [Fact]
