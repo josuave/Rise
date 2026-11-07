@@ -1,4 +1,5 @@
 @import '_content/Rise.Slices.Backup/Rise.Slices.Backup.zq894chd7t.bundle.scp.css';
+@import '_content/Rise.Slices.Game2048/Rise.Slices.Game2048.sgj4hbd8sx.bundle.scp.css';
 @import '_content/Rise.Slices.Header/Rise.Slices.Header.ekhny4f6kv.bundle.scp.css';
 @import '_content/Rise.Slices.Layout/Rise.Slices.Layout.j2bs4u8var.bundle.scp.css';
 @import '_content/Rise.Slices.Links/Rise.Slices.Links.nioz298xbz.bundle.scp.css';
@@ -195,6 +196,74 @@
     padding: 0.5rem 0.75rem 0.25rem;
     color: var(--calm-faint);
     font-size: 0.85rem;
+}
+/* /Pages/HomeScreenIconSettings.razor.rz.scp.css */
+/* Home screen icon rows: one toggle row in the Preview section's
+   quiet style, a small preview of the install-time icon, and the
+   honest-limit note. The component owns its own classes — colocated
+   CSS is scoped, so nothing here can leak into other slices. */
+.calm-home-icon-row[b-0iuf1h6t2y] {
+    display: flex;
+    gap: 0.75rem;
+    align-items: flex-start;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid var(--calm-border-soft);
+    cursor: pointer;
+}
+
+.calm-home-icon-row input[type="checkbox"][b-0iuf1h6t2y] {
+    accent-color: var(--calm-muted);
+    width: 1.1rem;
+    height: 1.1rem;
+    margin-top: 0.15rem;
+    flex-shrink: 0;
+}
+
+.calm-home-icon-text[b-0iuf1h6t2y] {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+}
+
+.calm-home-icon-title[b-0iuf1h6t2y] {
+    font-weight: 600;
+}
+
+.calm-home-icon-description[b-0iuf1h6t2y] {
+    color: var(--calm-muted);
+    font-size: 0.9rem;
+}
+
+.calm-home-icon-preview[b-0iuf1h6t2y] {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 0;
+}
+
+.calm-home-icon-image[b-0iuf1h6t2y] {
+    width: 3rem;
+    height: 3rem;
+    border-radius: 0.5rem;
+    border: 1px solid var(--calm-border-soft);
+}
+
+.calm-home-icon-caption[b-0iuf1h6t2y] {
+    color: var(--calm-muted);
+    font-size: 0.9rem;
+}
+
+.calm-home-icon-note[b-0iuf1h6t2y] {
+    color: var(--calm-muted);
+    font-size: 0.9rem;
+    margin-top: 0.5rem;
+}
+
+.calm-home-icon-status[b-0iuf1h6t2y],
+.calm-home-icon-loading[b-0iuf1h6t2y] {
+    color: var(--calm-muted);
+    font-size: 0.9rem;
+    margin-top: 0.75rem;
 }
 /* /Pages/Index.razor.rz.scp.css */
 .calm-page[b-cw8acn2iox] {
