@@ -23,7 +23,7 @@ jobs:
         with:
           dotnet-version: '11.0.x'
 
-     - name: Generate home-screen icons
+      - name: Generate home-screen icons
         if: hashFiles('tools/gen-icons.py') != ''
         run: |
           python3 -m pip install --break-system-packages pillow
