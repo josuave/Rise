@@ -53,15 +53,19 @@ public partial class NotesWidget : IDisposable
     private async Task AddAsync()
     {
         Result<NoteList> result = await NotesService.AddNoteAsync(List, NewText);
-        if (result.IsSuccess && result.Value is not null)
+        switch (result)
         {
-            List = result.Value;
-            NewText = string.Empty;
-            FormError = null;
-        }
-        else
-        {
-            FormError = result.Error;
+            case Ok<NoteList> ok:
+                List = ok.Value;
+                NewText = string.Empty;
+                FormError = null;
+                break;
+            case Error error:
+                FormError = error.Message;
+                break;
+            case null:
+                FormError = null;
+                break;
         }
     }
 
@@ -82,15 +86,19 @@ public partial class NotesWidget : IDisposable
         }
 
         Result<NoteList> result = await NotesService.UpdateNoteAsync(List, EditingId.Value, EditText);
-        if (result.IsSuccess && result.Value is not null)
+        switch (result)
         {
-            List = result.Value;
-            EditingId = null;
-            FormError = null;
-        }
-        else
-        {
-            FormError = result.Error;
+            case Ok<NoteList> ok:
+                List = ok.Value;
+                EditingId = null;
+                FormError = null;
+                break;
+            case Error error:
+                FormError = error.Message;
+                break;
+            case null:
+                FormError = null;
+                break;
         }
     }
 

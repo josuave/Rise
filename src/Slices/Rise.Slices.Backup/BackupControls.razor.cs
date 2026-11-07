@@ -68,14 +68,19 @@ public partial class BackupControls
         }
 
         Result<BackupEnvelope> result = await BackupService.ImportAsync(ImportJson);
-        if (!result.IsSuccess || result.Value is null)
+        switch (result)
         {
-            Status = result.Error ?? "That backup couldn't be imported.";
-            return;
+            case Ok<BackupEnvelope> ok:
+                Status = $"Imported a v{ok.Value.FormatVersion} backup. Reloading…";
+                Navigation.NavigateTo("/", forceLoad: true);
+                break;
+            case Error error:
+                Status = error.Message;
+                break;
+            case null:
+                Status = "That backup couldn't be imported.";
+                break;
         }
-
-        Status = $"Imported a v{result.Value.FormatVersion} backup. Reloading…";
-        Navigation.NavigateTo("/", forceLoad: true);
     }
 
     private async Task MigrateFileSelected(InputFileChangeEventArgs args)
@@ -89,16 +94,22 @@ public partial class BackupControls
         }
 
         Result<BackupEnvelope> parsed = BackupFormat.Parse(MigrateJson);
-        if (!parsed.IsSuccess || parsed.Value is null)
+        switch (parsed)
         {
-            MigrateEnvelope = null;
-            Status = parsed.Error ?? "That file couldn't be read.";
-            return;
+            case Ok<BackupEnvelope> ok:
+                MigrateEnvelope = ok.Value;
+                MigrateTargetVersion = BackupFormat.CurrentVersion;
+                Status = $"Selected {args.File.Name} (v{MigrateEnvelope.FormatVersion}).";
+                break;
+            case Error error:
+                MigrateEnvelope = null;
+                Status = error.Message;
+                break;
+            case null:
+                MigrateEnvelope = null;
+                Status = "That file couldn't be read.";
+                break;
         }
-
-        MigrateEnvelope = parsed.Value;
-        MigrateTargetVersion = BackupFormat.CurrentVersion;
-        Status = $"Selected {args.File.Name} (v{MigrateEnvelope.FormatVersion}).";
     }
 
     private async Task MigrateAsync()
@@ -109,16 +120,24 @@ public partial class BackupControls
         }
 
         Result<BackupEnvelope> migrated = BackupFormat.Migrate(MigrateEnvelope, MigrateTargetVersion);
-        if (!migrated.IsSuccess || migrated.Value is null)
+        BackupEnvelope envelope;
+        switch (migrated)
         {
-            Status = migrated.Error ?? "That backup couldn't be migrated.";
-            return;
+            case Ok<BackupEnvelope> ok:
+                envelope = ok.Value;
+                break;
+            case Error error:
+                Status = error.Message;
+                return;
+            case null:
+                Status = "That backup couldn't be migrated.";
+                return;
         }
 
         try
         {
             string filename = $"rise-backup-v{MigrateTargetVersion}-{Clock.Now:yyyy-MM-dd}.json";
-            await FileDownloader.DownloadAsync(filename, BackupFormat.Serialize(migrated.Value));
+            await FileDownloader.DownloadAsync(filename, BackupFormat.Serialize(envelope));
             Status = $"Migrated v{MigrateEnvelope.FormatVersion} to v{MigrateTargetVersion} and downloaded it. This page is unchanged.";
         }
         catch (InvalidOperationException)

@@ -41,11 +41,10 @@ public class TodoServiceTests
 
         Result<TodoList> result = await service.AddTodoAsync(TodoList.Empty(), "Buy milk");
 
-        Assert.True(result.IsSuccess);
-        Assert.NotNull(result.Value);
-        Assert.Single(result.Value.Items);
-        Assert.Equal("Buy milk", result.Value.Items[0].Text);
-        Assert.False(result.Value.Items[0].Done);
+        TodoList added = ResultAssertions.RequireOk(result);
+        Assert.Single(added.Items);
+        Assert.Equal("Buy milk", added.Items[0].Text);
+        Assert.False(added.Items[0].Done);
         Assert.NotNull(store.Stored);
         Assert.Single(store.Stored.Items);
     }
@@ -58,7 +57,7 @@ public class TodoServiceTests
 
         Result<TodoList> result = await service.AddTodoAsync(TodoList.Empty(), "   ");
 
-        Assert.False(result.IsSuccess);
+        Assert.NotEmpty(ResultAssertions.RequireError(result));
         Assert.Null(store.Stored);
     }
 
@@ -68,9 +67,9 @@ public class TodoServiceTests
         var store = new FakeTodoStore();
         var service = new TodoService(store);
         Result<TodoList> added = await service.AddTodoAsync(TodoList.Empty(), "Buy milk");
-        Assert.NotNull(added.Value);
+        TodoList addedList = ResultAssertions.RequireOk(added);
 
-        TodoList toggled = await service.ToggleTodoAsync(added.Value, added.Value.Items[0].Id);
+        TodoList toggled = await service.ToggleTodoAsync(addedList, addedList.Items[0].Id);
 
         Assert.True(toggled.Items[0].Done);
         Assert.NotNull(store.Stored);
@@ -83,11 +82,11 @@ public class TodoServiceTests
         var store = new FakeTodoStore();
         var service = new TodoService(store);
         Result<TodoList> first = await service.AddTodoAsync(TodoList.Empty(), "Buy milk");
-        Assert.NotNull(first.Value);
-        Result<TodoList> second = await service.AddTodoAsync(first.Value, "Walk dog");
-        Assert.NotNull(second.Value);
+        TodoList firstList = ResultAssertions.RequireOk(first);
+        Result<TodoList> second = await service.AddTodoAsync(firstList, "Walk dog");
+        TodoList secondList = ResultAssertions.RequireOk(second);
 
-        TodoList deleted = await service.DeleteTodoAsync(second.Value, second.Value.Items[0].Id);
+        TodoList deleted = await service.DeleteTodoAsync(secondList, secondList.Items[0].Id);
 
         Assert.Single(deleted.Items);
         Assert.Equal("Walk dog", deleted.Items[0].Text);
@@ -101,10 +100,10 @@ public class TodoServiceTests
         var store = new FakeTodoStore();
         var service = new TodoService(store);
         Result<TodoList> first = await service.AddTodoAsync(TodoList.Empty(), "Buy milk");
-        Assert.NotNull(first.Value);
-        Result<TodoList> second = await service.AddTodoAsync(first.Value, "Walk dog");
-        Assert.NotNull(second.Value);
-        TodoList toggled = await service.ToggleTodoAsync(second.Value, second.Value.Items[0].Id);
+        TodoList firstList = ResultAssertions.RequireOk(first);
+        Result<TodoList> second = await service.AddTodoAsync(firstList, "Walk dog");
+        TodoList secondList = ResultAssertions.RequireOk(second);
+        TodoList toggled = await service.ToggleTodoAsync(secondList, secondList.Items[0].Id);
 
         TodoList cleared = await service.ClearCompletedAsync(toggled);
 

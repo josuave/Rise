@@ -25,7 +25,7 @@ public class WeatherTests
 
         Result<GeocodedPlace> result = await service.GeocodeAsync("  ");
 
-        Assert.False(result.IsSuccess);
+        Assert.NotEmpty(ResultAssertions.RequireError(result));
         Assert.False(geocoder.Called);
     }
 
@@ -37,7 +37,7 @@ public class WeatherTests
 
         Result<WeatherForecast> result = await service.GetForecastAsync(43.37, -73.61, 3);
 
-        Assert.True(result.IsSuccess);
+        _ = ResultAssertions.RequireOk(result);
         Assert.Equal(43.37, client.RequestedLatitude);
         Assert.Equal(3, client.RequestedDays);
     }

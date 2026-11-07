@@ -310,11 +310,10 @@ public class BackupServiceTests
         string json = await fixture.Service.ExportAsync();
 
         Result<BackupEnvelope> parsed = BackupFormat.Parse(json);
-        Assert.True(parsed.IsSuccess);
-        Assert.NotNull(parsed.Value);
-        Assert.Equal(BackupFormat.CurrentVersion, parsed.Value.FormatVersion);
+        BackupEnvelope parsedEnvelope = ResultAssertions.RequireOk(parsed);
+        Assert.Equal(BackupFormat.CurrentVersion, parsedEnvelope.FormatVersion);
         BackupStateDto state = System.Text.Json.JsonSerializer.Deserialize<BackupStateDto>(
-            parsed.Value.State.ToJsonString())!;
+            parsedEnvelope.State.ToJsonString())!;
         Assert.Single(state.Links);
         Assert.Equal("Example", state.Links[0].Name);
         Assert.Equal("dark", state.Theme);
@@ -343,7 +342,7 @@ public class BackupServiceTests
 
         Result<BackupEnvelope> result = await target.Service.ImportAsync(json);
 
-        Assert.True(result.IsSuccess);
+        _ = ResultAssertions.RequireOk(result);
         Assert.NotNull(target.Links.Stored);
         Assert.Single(target.Links.Stored.Links);
         Assert.Equal("Example", target.Links.Stored.Links[0].Name);
@@ -373,7 +372,7 @@ public class BackupServiceTests
 
         Result<BackupEnvelope> result = await target.Service.ImportAsync(json);
 
-        Assert.True(result.IsSuccess);
+        _ = ResultAssertions.RequireOk(result);
         Assert.True(target.Hotkeys.Stored.TryGetValue("toggle-theme", out HotkeyBinding? restored));
         Assert.Equal("y", restored.Key);
     }
@@ -388,7 +387,7 @@ public class BackupServiceTests
 
         Result<BackupEnvelope> result = await target.Service.ImportAsync(json);
 
-        Assert.True(result.IsSuccess);
+        _ = ResultAssertions.RequireOk(result);
         Assert.True(target.PreviewFeatures.Stored.TryGetValue("calm-board", out bool restored));
         Assert.True(restored);
     }
@@ -397,31 +396,30 @@ public class BackupServiceTests
     public async Task Background_RoundTrip_RestoresCustomUrl()
     {
         var source = new Fixture();
-        await source.Background.SaveAsync(new BackgroundChoice(BackgroundPresets.Custom, "https://example.com/photo.jpg"));
+        await source.Background.SaveAsync(new CustomBackground("https://example.com/photo.jpg"));
         string json = await source.Service.ExportAsync();
         var target = new Fixture();
 
         Result<BackupEnvelope> result = await target.Service.ImportAsync(json);
 
-        Assert.True(result.IsSuccess);
-        Assert.Equal(BackgroundPresets.Custom, target.Background.Stored?.PresetId);
-        Assert.Equal("https://example.com/photo.jpg", target.Background.Stored?.CustomUrl);
+        _ = ResultAssertions.RequireOk(result);
+        Assert.True(target.Background.Stored is CustomBackground { Url: "https://example.com/photo.jpg" });
     }
 
     [Fact]
     public async Task Background_RoundTrip_RestoresUploadDescriptor()
     {
         var source = new Fixture();
-        await source.Background.SaveAsync(new BackgroundChoice(BackgroundPresets.Upload, null, new UploadedImage(new string('A', 64), "sunset.jpg", 12, "image/jpeg")));
+        await source.Background.SaveAsync(new UploadBackground(new UploadedImage(new string('A', 64), "sunset.jpg", 12, "image/jpeg")));
         string json = await source.Service.ExportAsync();
         var target = new Fixture();
 
         Result<BackupEnvelope> result = await target.Service.ImportAsync(json);
 
-        Assert.True(result.IsSuccess);
-        Assert.Equal(BackgroundPresets.Upload, target.Background.Stored?.PresetId);
-        Assert.Equal(new string('A', 64), target.Background.Stored?.Upload?.Hash);
-        Assert.Equal("sunset.jpg", target.Background.Stored?.Upload?.FileName);
+        _ = ResultAssertions.RequireOk(result);
+        UploadedImage? restored = target.Background.Stored?.UploadImage;
+        Assert.Equal(new string('A', 64), restored?.Hash);
+        Assert.Equal("sunset.jpg", restored?.FileName);
     }
 
     [Fact]
@@ -435,7 +433,7 @@ public class BackupServiceTests
 
         Result<BackupEnvelope> result = await target.Service.ImportAsync(root.ToJsonString());
 
-        Assert.False(result.IsSuccess);
+        Assert.NotEmpty(ResultAssertions.RequireError(result));
         Assert.Null(target.Links.Stored);
         Assert.Null(target.Theme.Stored);
         Assert.Null(target.Themes.Stored);
@@ -452,7 +450,7 @@ public class BackupServiceTests
 
         Result<BackupEnvelope> result = await target.Service.ImportAsync("not json");
 
-        Assert.False(result.IsSuccess);
+        Assert.NotEmpty(ResultAssertions.RequireError(result));
         Assert.Null(target.Links.Stored);
     }
 
@@ -467,7 +465,7 @@ public class BackupServiceTests
 
         Result<BackupEnvelope> result = await target.Service.ImportAsync(root.ToJsonString());
 
-        Assert.False(result.IsSuccess);
+        Assert.NotEmpty(ResultAssertions.RequireError(result));
         Assert.Null(target.Links.Stored);
         Assert.Null(target.Theme.Stored);
     }
@@ -498,7 +496,7 @@ public class BackupServiceTests
 
         Result<BackupEnvelope> result = await target.Service.ImportAsync(json);
 
-        Assert.True(result.IsSuccess);
+        _ = ResultAssertions.RequireOk(result);
         Assert.NotNull(target.Layouts.Stored);
         PageLayout imported = target.Layouts.Stored.Layouts[0].Layout;
         Assert.Equal(GroupedLinks, imported.GroupChildren);
@@ -516,7 +514,7 @@ public class BackupServiceTests
 
         Result<BackupEnvelope> result = await target.Service.ImportAsync(root.ToJsonString());
 
-        Assert.True(result.IsSuccess);
+        _ = ResultAssertions.RequireOk(result);
         Assert.NotNull(target.Layouts.Stored);
         Assert.Empty(target.Layouts.Stored.Layouts[0].Layout.GroupChildren);
     }
@@ -533,7 +531,7 @@ public class BackupServiceTests
 
         Result<BackupEnvelope> result = await target.Service.ImportAsync(root.ToJsonString());
 
-        Assert.True(result.IsSuccess);
+        _ = ResultAssertions.RequireOk(result);
         Assert.NotNull(target.Todos.Stored);
         Assert.Empty(target.Todos.Stored.Items);
         Assert.NotNull(target.Notes.Stored);
@@ -551,7 +549,7 @@ public class BackupServiceTests
 
         Result<BackupEnvelope> result = await target.Service.ImportAsync(root.ToJsonString());
 
-        Assert.False(result.IsSuccess);
+        Assert.NotEmpty(ResultAssertions.RequireError(result));
         Assert.Null(target.Links.Stored);
         Assert.Null(target.Todos.Stored);
         Assert.Null(target.Notes.Stored);
@@ -569,7 +567,7 @@ public class BackupServiceTests
 
         Result<BackupEnvelope> result = await target.Service.ImportAsync(root.ToJsonString());
 
-        Assert.True(result.IsSuccess);
+        _ = ResultAssertions.RequireOk(result);
         Assert.Equal("system", target.Theme.Stored);
     }
 
@@ -584,7 +582,7 @@ public class BackupServiceTests
 
         Result<BackupEnvelope> result = await target.Service.ImportAsync(root.ToJsonString());
 
-        Assert.True(result.IsSuccess);
+        _ = ResultAssertions.RequireOk(result);
         Assert.Equal("pack:omarchy:tokyo-night", target.Theme.Stored);
     }
 
@@ -599,6 +597,6 @@ public class BackupServiceTests
 
         Result<BackupEnvelope> result = await target.Service.ImportAsync(root.ToJsonString());
 
-        Assert.False(result.IsSuccess);
+        Assert.NotEmpty(ResultAssertions.RequireError(result));
     }
 }

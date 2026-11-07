@@ -32,7 +32,15 @@ public sealed class BackgroundService(IBackgroundStore store, IBackgroundImageSt
     public bool UploadMissing => _uploadMissing;
 
     /// <summary>The missing file's name, when UploadMissing is true.</summary>
-    public string? MissingFileName => _uploadMissing ? _cached?.Upload?.FileName : null;
+    public string? MissingFileName => !_uploadMissing
+        ? null
+        : _cached switch
+        {
+            UploadBackground upload => upload.Image.FileName,
+            PresetBackground => null,
+            CustomBackground => null,
+            null => null,
+        };
 
     /// <summary>Warms the cache; call once at startup so later reads never touch storage.</summary>
     public async Task LoadAsync(CancellationToken cancellationToken = default) =>
@@ -41,7 +49,7 @@ public sealed class BackgroundService(IBackgroundStore store, IBackgroundImageSt
     public async Task<BackgroundChoice> GetChoiceAsync(CancellationToken cancellationToken = default)
     {
         _cached ??= await store.GetAsync(cancellationToken) ?? BackgroundChoice.None;
-        return _cached;
+        return _cached.Value;
     }
 
     /// <summary>
@@ -54,7 +62,7 @@ public sealed class BackgroundService(IBackgroundStore store, IBackgroundImageSt
     public async Task<string> GetCssAsync(CancellationToken cancellationToken = default)
     {
         BackgroundChoice choice = await GetChoiceAsync(cancellationToken);
-        if (choice.PresetId != BackgroundPresets.Upload || choice.Upload is null)
+        if (choice is not UploadBackground upload)
         {
             return choice.Css;
         }
@@ -62,7 +70,7 @@ public sealed class BackgroundService(IBackgroundStore store, IBackgroundImageSt
         if (!_resolutionAttempted)
         {
             _resolutionAttempted = true;
-            _resolvedUrl = await imageStore.GetUrlAsync(choice.Upload.Hash, cancellationToken);
+            _resolvedUrl = await imageStore.GetUrlAsync(upload.Image.Hash, cancellationToken);
             _uploadMissing = _resolvedUrl is null;
         }
 
@@ -76,7 +84,7 @@ public sealed class BackgroundService(IBackgroundStore store, IBackgroundImageSt
             return Result<BackgroundChoice>.Failure("Unknown background.");
         }
 
-        return await SaveAsync(new BackgroundChoice(presetId, null), cancellationToken);
+        return await SaveAsync(new PresetBackground(presetId), cancellationToken);
     }
 
     public async Task<Result<BackgroundChoice>> SetCustomUrlAsync(string? address, CancellationToken cancellationToken = default)
@@ -92,7 +100,7 @@ public sealed class BackgroundService(IBackgroundStore store, IBackgroundImageSt
             return Result<BackgroundChoice>.Failure("Enter an image address starting with http:// or https://.");
         }
 
-        return await SaveAsync(new BackgroundChoice(BackgroundPresets.Custom, text), cancellationToken);
+        return await SaveAsync(new CustomBackground(text), cancellationToken);
     }
 
     /// <summary>
@@ -116,9 +124,10 @@ public sealed class BackgroundService(IBackgroundStore store, IBackgroundImageSt
         }
 
         BackgroundChoice current = await GetChoiceAsync(cancellationToken);
-        if (current.Upload is not null && current.Upload.Hash != image.Hash)
+        UploadedImage? currentImage = current.UploadImage;
+        if (currentImage is not null && currentImage.Hash != image.Hash)
         {
-            await imageStore.DeleteAsync(current.Upload.Hash, cancellationToken);
+            await imageStore.DeleteAsync(currentImage.Hash, cancellationToken);
         }
 
         if (!await imageStore.SaveAsync(image.Hash, bytes, image.MimeType, cancellationToken))
@@ -126,7 +135,7 @@ public sealed class BackgroundService(IBackgroundStore store, IBackgroundImageSt
             return Result<BackgroundChoice>.Failure("Couldn't store that image in this browser.");
         }
 
-        return await SaveAsync(new BackgroundChoice(BackgroundPresets.Upload, null, image), cancellationToken);
+        return await SaveAsync(new UploadBackground(image), cancellationToken);
     }
 
     public async Task<Result<BackgroundChoice>> ClearAsync(CancellationToken cancellationToken = default) =>
@@ -138,7 +147,7 @@ public sealed class BackgroundService(IBackgroundStore store, IBackgroundImageSt
         _resolvedUrl = null;
         _resolutionAttempted = false;
         _uploadMissing = false;
-        if (choice.PresetId != BackgroundPresets.Upload)
+        if (choice is not UploadBackground)
         {
             await imageStore.ClearUrlAsync(cancellationToken);
         }
