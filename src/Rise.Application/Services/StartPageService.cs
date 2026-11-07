@@ -26,11 +26,17 @@ public sealed class StartPageService(ILinkStore store)
     public async Task<Result<StartPage>> AddLinkAsync(StartPage page, string name, string url, CancellationToken cancellationToken = default)
     {
         Result<StartPage> result = page.AddLink(name, url);
-        if (result.IsSuccess && result.Value is not null)
+        switch (result)
         {
-            await store.SaveAsync(result.Value, cancellationToken);
-            Changed?.Invoke(this, EventArgs.Empty);
+            case Ok<StartPage> ok:
+                await store.SaveAsync(ok.Value, cancellationToken);
+                Changed?.Invoke(this, EventArgs.Empty);
+                break;
+            case Error:
+            case null:
+                break;
         }
+
         return result;
     }
 

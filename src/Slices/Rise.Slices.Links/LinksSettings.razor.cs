@@ -38,16 +38,20 @@ public partial class LinksSettings
         }
 
         Result<StartPage> result = await StartPageService.AddLinkAsync(Page, NewName, NewUrl);
-        if (result.IsSuccess && result.Value is not null)
+        switch (result)
         {
-            Page = result.Value;
-            NewName = string.Empty;
-            NewUrl = string.Empty;
-            FormError = null;
-        }
-        else
-        {
-            FormError = result.Error;
+            case Ok<StartPage> ok:
+                Page = ok.Value;
+                NewName = string.Empty;
+                NewUrl = string.Empty;
+                FormError = null;
+                break;
+            case Error error:
+                FormError = error.Message;
+                break;
+            case null:
+                FormError = null;
+                break;
         }
     }
 

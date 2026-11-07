@@ -23,10 +23,15 @@ public sealed class TodoService(ITodoStore store)
     public async Task<Result<TodoList>> AddTodoAsync(TodoList list, string text, CancellationToken cancellationToken = default)
     {
         Result<TodoList> result = list.AddTodo(text);
-        if (result.IsSuccess && result.Value is not null)
+        switch (result)
         {
-            await store.SaveAsync(result.Value, cancellationToken);
-            Changed?.Invoke(this, EventArgs.Empty);
+            case Ok<TodoList> ok:
+                await store.SaveAsync(ok.Value, cancellationToken);
+                Changed?.Invoke(this, EventArgs.Empty);
+                break;
+            case Error:
+            case null:
+                break;
         }
 
         return result;

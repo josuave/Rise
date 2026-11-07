@@ -34,9 +34,9 @@ public class DomainTests
         var page = StartPage.Default();
         Result<StartPage> result = page.AddLink("Example", "example.com");
 
-        Assert.True(result.IsSuccess);
-        Assert.Equal(page.Links.Count + 1, result.Value!.Links.Count);
-        Assert.Equal("Example", result.Value.Links[^1].Name);
+        StartPage updated = ResultAssertions.RequireOk(result);
+        Assert.Equal(page.Links.Count + 1, updated.Links.Count);
+        Assert.Equal("Example", updated.Links[^1].Name);
         // Pure core: the original page is untouched.
         Assert.Equal(page.Links.Count, StartPage.Default().Links.Count);
     }
@@ -49,8 +49,7 @@ public class DomainTests
 
         Result<StartPage> result = page.AddLink("Again", existing);
 
-        Assert.False(result.IsSuccess);
-        Assert.NotNull(result.Error);
+        Assert.NotEmpty(ResultAssertions.RequireError(result));
     }
 
     [Theory]
@@ -59,7 +58,7 @@ public class DomainTests
     [InlineData("Example", "")]
     [InlineData("Example", "ftp://example.com")]
     public void StartPage_AddLink_RejectsBadInput(string name, string input) =>
-        Assert.False(StartPage.Default().AddLink(name, input).IsSuccess);
+        Assert.NotEmpty(ResultAssertions.RequireError(StartPage.Default().AddLink(name, input)));
 
     [Fact]
     public void StartPage_RemoveLink_RemovesOnlyThatLink()

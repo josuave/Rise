@@ -58,7 +58,7 @@ public class ServiceTests
 
         Result<StartPage> result = await service.AddLinkAsync(page, "Example", "example.com");
 
-        Assert.True(result.IsSuccess);
+        _ = ResultAssertions.RequireOk(result);
         Assert.NotNull(store.Stored);
         Assert.Contains(store.Stored!.Links, l => l.Name == "Example");
     }
@@ -72,7 +72,7 @@ public class ServiceTests
 
         Result<StartPage> result = await service.AddLinkAsync(page, "Example", "ftp://example.com");
 
-        Assert.False(result.IsSuccess);
+        Assert.NotEmpty(ResultAssertions.RequireError(result));
         Assert.Null(store.Stored);
     }
 

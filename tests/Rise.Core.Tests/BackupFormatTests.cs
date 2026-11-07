@@ -26,9 +26,8 @@ public class BackupFormatTests
 
         Result<BackupEnvelope> parsed = BackupFormat.Parse(json);
 
-        Assert.True(parsed.IsSuccess);
-        Assert.NotNull(parsed.Value);
-        Assert.Equal(1, parsed.Value.FormatVersion);
+        BackupEnvelope envelope = ResultAssertions.RequireOk(parsed);
+        Assert.Equal(1, envelope.FormatVersion);
     }
 
     [Fact]
@@ -36,8 +35,7 @@ public class BackupFormatTests
     {
         Result<BackupEnvelope> parsed = BackupFormat.Parse("not json");
 
-        Assert.False(parsed.IsSuccess);
-        Assert.NotNull(parsed.Error);
+        Assert.NotEmpty(ResultAssertions.RequireError(parsed));
     }
 
     [Fact]
@@ -48,8 +46,7 @@ public class BackupFormatTests
 
         Result<BackupEnvelope> parsed = BackupFormat.Parse(root.ToJsonString());
 
-        Assert.False(parsed.IsSuccess);
-        Assert.Contains("newer", parsed.Error, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("newer", ResultAssertions.RequireError(parsed), StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -60,7 +57,7 @@ public class BackupFormatTests
 
         Result<BackupEnvelope> parsed = BackupFormat.Parse(root.ToJsonString());
 
-        Assert.False(parsed.IsSuccess);
+        Assert.NotEmpty(ResultAssertions.RequireError(parsed));
     }
 
     [Fact]
@@ -70,10 +67,9 @@ public class BackupFormatTests
 
         Result<BackupEnvelope> migrated = BackupFormat.Migrate(envelope, 1);
 
-        Assert.True(migrated.IsSuccess);
-        Assert.NotNull(migrated.Value);
-        Assert.Equal(1, migrated.Value.FormatVersion);
-        Assert.Equal(envelope.State.ToJsonString(), migrated.Value.State.ToJsonString());
+        BackupEnvelope migratedEnvelope = ResultAssertions.RequireOk(migrated);
+        Assert.Equal(1, migratedEnvelope.FormatVersion);
+        Assert.Equal(envelope.State.ToJsonString(), migratedEnvelope.State.ToJsonString());
     }
 
     [Fact]
@@ -81,7 +77,7 @@ public class BackupFormatTests
     {
         Result<BackupEnvelope> migrated = BackupFormat.Migrate(V1Envelope(), 0);
 
-        Assert.False(migrated.IsSuccess);
+        Assert.NotEmpty(ResultAssertions.RequireError(migrated));
     }
 
     [Fact]
@@ -89,7 +85,7 @@ public class BackupFormatTests
     {
         Result<BackupEnvelope> migrated = BackupFormat.Migrate(V1Envelope(), BackupFormat.CurrentVersion + 1);
 
-        Assert.False(migrated.IsSuccess);
+        Assert.NotEmpty(ResultAssertions.RequireError(migrated));
     }
 
     [Fact]
@@ -99,10 +95,9 @@ public class BackupFormatTests
 
         Result<BackupEnvelope> parsed = BackupFormat.Parse(BackupFormat.Serialize(envelope));
 
-        Assert.True(parsed.IsSuccess);
-        Assert.NotNull(parsed.Value);
-        Assert.Equal(envelope.FormatVersion, parsed.Value.FormatVersion);
-        Assert.Equal(envelope.ExportedAt, parsed.Value.ExportedAt);
-        Assert.Equal(envelope.State.ToJsonString(), parsed.Value.State.ToJsonString());
+        BackupEnvelope roundTripped = ResultAssertions.RequireOk(parsed);
+        Assert.Equal(envelope.FormatVersion, roundTripped.FormatVersion);
+        Assert.Equal(envelope.ExportedAt, roundTripped.ExportedAt);
+        Assert.Equal(envelope.State.ToJsonString(), roundTripped.State.ToJsonString());
     }
 }

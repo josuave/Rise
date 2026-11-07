@@ -41,10 +41,9 @@ public class NotesServiceTests
 
         Result<NoteList> result = await service.AddNoteAsync(NoteList.Empty(), "First note");
 
-        Assert.True(result.IsSuccess);
-        Assert.NotNull(result.Value);
-        Assert.Single(result.Value.Items);
-        Assert.Equal("First note", result.Value.Items[0].Text);
+        NoteList added = ResultAssertions.RequireOk(result);
+        Assert.Single(added.Items);
+        Assert.Equal("First note", added.Items[0].Text);
         Assert.NotNull(store.Stored);
         Assert.Single(store.Stored.Items);
     }
@@ -57,7 +56,7 @@ public class NotesServiceTests
 
         Result<NoteList> result = await service.AddNoteAsync(NoteList.Empty(), "   ");
 
-        Assert.False(result.IsSuccess);
+        Assert.NotEmpty(ResultAssertions.RequireError(result));
         Assert.Null(store.Stored);
     }
 
@@ -67,13 +66,12 @@ public class NotesServiceTests
         var store = new FakeNoteStore();
         var service = new NotesService(store);
         Result<NoteList> added = await service.AddNoteAsync(NoteList.Empty(), "First note");
-        Assert.NotNull(added.Value);
+        NoteList addedList = ResultAssertions.RequireOk(added);
 
-        Result<NoteList> updated = await service.UpdateNoteAsync(added.Value, added.Value.Items[0].Id, "  Edited note  ");
+        Result<NoteList> updated = await service.UpdateNoteAsync(addedList, addedList.Items[0].Id, "  Edited note  ");
 
-        Assert.True(updated.IsSuccess);
-        Assert.NotNull(updated.Value);
-        Assert.Equal("Edited note", updated.Value.Items[0].Text);
+        NoteList updatedList = ResultAssertions.RequireOk(updated);
+        Assert.Equal("Edited note", updatedList.Items[0].Text);
         Assert.NotNull(store.Stored);
         Assert.Equal("Edited note", store.Stored.Items[0].Text);
     }
@@ -84,11 +82,11 @@ public class NotesServiceTests
         var store = new FakeNoteStore();
         var service = new NotesService(store);
         Result<NoteList> added = await service.AddNoteAsync(NoteList.Empty(), "First note");
-        Assert.NotNull(added.Value);
+        NoteList addedList = ResultAssertions.RequireOk(added);
 
-        Result<NoteList> result = await service.UpdateNoteAsync(added.Value, added.Value.Items[0].Id, "   ");
+        Result<NoteList> result = await service.UpdateNoteAsync(addedList, addedList.Items[0].Id, "   ");
 
-        Assert.False(result.IsSuccess);
+        Assert.NotEmpty(ResultAssertions.RequireError(result));
         Assert.NotNull(store.Stored);
         Assert.Equal("First note", store.Stored.Items[0].Text);
     }
@@ -99,11 +97,11 @@ public class NotesServiceTests
         var store = new FakeNoteStore();
         var service = new NotesService(store);
         Result<NoteList> first = await service.AddNoteAsync(NoteList.Empty(), "First note");
-        Assert.NotNull(first.Value);
-        Result<NoteList> second = await service.AddNoteAsync(first.Value, "Second note");
-        Assert.NotNull(second.Value);
+        NoteList firstList = ResultAssertions.RequireOk(first);
+        Result<NoteList> second = await service.AddNoteAsync(firstList, "Second note");
+        NoteList secondList = ResultAssertions.RequireOk(second);
 
-        NoteList deleted = await service.DeleteNoteAsync(second.Value, second.Value.Items[0].Id);
+        NoteList deleted = await service.DeleteNoteAsync(secondList, secondList.Items[0].Id);
 
         Assert.Single(deleted.Items);
         Assert.Equal("Second note", deleted.Items[0].Text);

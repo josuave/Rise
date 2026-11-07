@@ -62,15 +62,19 @@ public partial class TodoWidget : IDisposable
     private async Task AddAsync()
     {
         Result<TodoList> result = await TodoService.AddTodoAsync(List, NewText);
-        if (result.IsSuccess && result.Value is not null)
+        switch (result)
         {
-            List = result.Value;
-            NewText = string.Empty;
-            FormError = null;
-        }
-        else
-        {
-            FormError = result.Error;
+            case Ok<TodoList> ok:
+                List = ok.Value;
+                NewText = string.Empty;
+                FormError = null;
+                break;
+            case Error error:
+                FormError = error.Message;
+                break;
+            case null:
+                FormError = null;
+                break;
         }
     }
 

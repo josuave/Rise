@@ -42,7 +42,8 @@ The split is deliberately Gary Bernhardt's: the core is pure functions
 over immutable data, the shell is thin and does all the effects.
 
 - Pure core: `StartPage.AddLink` / `RemoveLink` take a page and return a
-  new page (or a `Result` failure) — they never save anything.
+  new page (or a `Result` failure — the C# 15 union's `Error` case, with
+  `Ok` carrying the new page) — they never save anything.
   `LinkUrl.TryCreate` validates and normalizes without touching a browser.
   `SearchQuery.Build` turns text into a URI. `Greeting.For` turns a
   `DateTime` into words. These are trivially testable with no mocks,
@@ -340,8 +341,21 @@ the dialog widens to 860px under the flag so two columns breathe.
 
 Backgrounds: one chosen background for the page — a built-in calm
 gradient preset (None, Dawn, Mist, Dusk, Forest, registered in
-Domain) or a custom image address pasted in Settings. The choice
-lives under `rise.background.v1` through the same port/adapter/
+Domain) or a custom image address pasted in Settings. The choice is
+a C# 15 union in Domain, `BackgroundChoice(PresetBackground,
+CustomBackground, UploadBackground)` — top-level case records, so
+no nested public types — and its `Css` is an exhaustive switch over
+the cases with an explicit `null` arm for a default union value,
+never a `_` arm (a new case must warn at every switch that does
+not handle it yet). Persistence stays string-shaped: the stored
+JSON under `rise.background.v1` and the backup DTO still carry a
+preset id plus an optional address/descriptor, and the union maps
+to and from that shape only at the two boundaries
+(`BackgroundChoice.FromStored` / `ToStored`, used by the
+localStorage adapter and the backup service); the union itself
+lives in memory only. The `BackgroundPresets.Custom` / `.Upload`
+constants remain as the string wire tags for those two cases.
+The choice lives under `rise.background.v1` through the same port/adapter/
 service shape as the preview features, and the Background section
 in Settings (Order 170, shell-owned like the preview manager)
 applies it live through the service's Changed event, no restart.
