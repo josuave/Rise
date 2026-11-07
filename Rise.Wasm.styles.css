@@ -4,8 +4,8 @@
 @import '_content/Rise.Slices.Links/Rise.Slices.Links.nioz298xbz.bundle.scp.css';
 @import '_content/Rise.Slices.Notes/Rise.Slices.Notes.53lbpdfpti.bundle.scp.css';
 @import '_content/Rise.Slices.Search/Rise.Slices.Search.8hl6uk3oje.bundle.scp.css';
-@import '_content/Rise.Slices.Settings/Rise.Slices.Settings.orhrosbcw0.bundle.scp.css';
-@import '_content/Rise.Slices.Todo/Rise.Slices.Todo.8lgqz1uc4m.bundle.scp.css';
+@import '_content/Rise.Slices.Settings/Rise.Slices.Settings.wg6nd41qth.bundle.scp.css';
+@import '_content/Rise.Slices.Todo/Rise.Slices.Todo.amvfccnemv.bundle.scp.css';
 @import '_content/Rise.Slices.Weather/Rise.Slices.Weather.i964rxdoj4.bundle.scp.css';
 
 /* /Pages/BackgroundSettings.razor.rz.scp.css */
@@ -335,6 +335,133 @@
     }
 }
 
+/* Full Calm Board (mock-up D, calm-board-full flag): the same board
+   treatment as calm-board, plus a calm top — Date, Clock, Greeting,
+   and Search render as full-width unboxed rows above the board — an
+   Edit board bar above the board, and an add-widget slot last in
+   the grid. Precedence lives in Index.BoardClass: when the flag is
+   on the page carries only calm-board-full, so this block alone
+   decides the treatment and the v0 and landscape rules never fight
+   it. The Clock is a top row here, full-width by construction, so
+   it stays the hero. No card grips: there is no drag yet, and a
+   grip that does nothing would be dishonest UI. */
+.calm-board-full[b-cw8acn2iox] {
+    max-width: 860px;
+}
+
+.calm-board-full .calm-widget-board[b-cw8acn2iox] {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.calm-board-full .calm-widget-slot[b-cw8acn2iox] {
+    display: block;
+    background: var(--calm-surface);
+    border: 1px solid var(--calm-border-soft);
+    border-radius: 0.75rem;
+    padding: 1rem;
+    min-width: 0;
+}
+
+.calm-board-full .calm-widget-slot[data-widget="Clock"][b-cw8acn2iox] {
+    grid-column: 1 / -1;
+}
+
+.calm-board-full .calm-board-top[b-cw8acn2iox] {
+    margin-top: 1rem;
+}
+
+.calm-board-full .calm-board-top .calm-widget-slot[b-cw8acn2iox] {
+    display: block;
+    background: none;
+    border: none;
+    border-radius: 0;
+    padding: 0;
+}
+
+/* Edit board bar: quiet — muted text, one hairline under it. */
+.calm-board-bar[b-cw8acn2iox] {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem 1rem;
+    color: var(--calm-muted);
+    font-size: 0.9rem;
+    border-bottom: 1px solid var(--calm-border-soft);
+    padding-bottom: 0.75rem;
+    margin-top: 1rem;
+}
+
+.calm-board-bar-name[b-cw8acn2iox] {
+    font-weight: 600;
+}
+
+.calm-board-bar-switch[b-cw8acn2iox] {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.calm-board-bar-switch select[b-cw8acn2iox] {
+    background: none;
+    color: inherit;
+    border: 1px solid var(--calm-border-soft);
+    border-radius: 0.5rem;
+    padding: 0.25rem 0.5rem;
+    font: inherit;
+}
+
+.calm-board-bar-button[b-cw8acn2iox] {
+    background: none;
+    border: none;
+    color: var(--calm-muted);
+    cursor: pointer;
+    font: inherit;
+    padding: 0;
+}
+
+/* Add-widget slot: the button is the card's content — italic,
+   muted, full-width — and its menu lists the hidden widgets as
+   plain buttons. */
+.calm-add-widget-button[b-cw8acn2iox] {
+    background: none;
+    border: none;
+    color: var(--calm-muted);
+    cursor: pointer;
+    font: inherit;
+    font-style: italic;
+    width: 100%;
+    min-height: 4rem;
+    padding: 0;
+}
+
+.calm-add-widget-button:disabled[b-cw8acn2iox] {
+    color: var(--calm-faint);
+    cursor: default;
+}
+
+.calm-add-widget-menu[b-cw8acn2iox] {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.calm-add-widget-menu button[b-cw8acn2iox] {
+    background: none;
+    border: none;
+    color: var(--calm-muted);
+    cursor: pointer;
+    font: inherit;
+    padding: 0.25rem 0;
+    text-align: left;
+}
+
+.calm-add-widget-cancel[b-cw8acn2iox] {
+    color: var(--calm-faint);
+}
+
 /* Phone widths: the board collapses to one column. Two columns
    below ~560px force the grid wider than the viewport — each
    track's content minimum (the 3.5rem clock, the search row) adds
@@ -343,10 +470,13 @@
    inside the viewport; the Clock span is a no-op in one column.
    The landscape selector is harmless in portrait: its grid rule
    lives inside the orientation query, so on a display:contents
-   board this only sets a column count that never applies. */
+   board this only sets a column count that never applies. The
+   full-board selector carries the same one-column rule: the mock's
+   720px breakpoint is not the phone rule. */
 @media (max-width: 560px) {
     .calm-board .calm-widget-board[b-cw8acn2iox],
-    .calm-board-landscape .calm-widget-board[b-cw8acn2iox] {
+    .calm-board-landscape .calm-widget-board[b-cw8acn2iox],
+    .calm-board-full .calm-widget-board[b-cw8acn2iox] {
         grid-template-columns: 1fr;
     }
 }
