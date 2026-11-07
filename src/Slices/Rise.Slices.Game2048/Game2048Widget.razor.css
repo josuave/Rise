@@ -132,7 +132,8 @@
 }
 
 .calm-game2048-new,
-.calm-game2048-dismiss {
+.calm-game2048-dismiss,
+.calm-game2048-fullscreen {
     border: 1px solid var(--calm-border);
     border-radius: 8px;
     padding: 0.25rem 0.75rem;
@@ -140,6 +141,7 @@
     color: var(--calm-text);
     cursor: pointer;
     font-size: 0.9rem;
+    white-space: nowrap;
 }
 
 .calm-game2048-dismiss {
@@ -149,4 +151,31 @@
 .calm-game2048-hint {
     color: var(--calm-faint);
     font-size: 0.85rem;
+}
+
+/* Fullscreen: the widget root becomes the viewport, so it needs
+   its own background (a fullscreen element paints over black by
+   default) and room for a larger board, with the header and footer
+   the same width as the board. */
+.calm-game2048:fullscreen {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    padding: 1.5rem;
+    box-sizing: border-box;
+    overflow: auto;
+    background: var(--calm-bg);
+}
+
+.calm-game2048:fullscreen .calm-game2048-header,
+.calm-game2048:fullscreen .calm-game2048-footer {
+    width: min(80vmin, 480px);
+}
+
+.calm-game2048:fullscreen .calm-game2048-board {
+    width: 100%;
+    max-width: min(80vmin, 480px);
 }

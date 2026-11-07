@@ -301,6 +301,47 @@
                 window.riseHotkeys.ref = null;
             }
         };
+        // Fullscreen toggle for the 2048 widget. requestFullscreen
+        // on the widget root puts scores + board fullscreen
+        // together; the fullscreenchange listener reports back into
+        // .NET so the button label stays right when the user exits
+        // with Escape or the browser chrome. iOS Safari has no
+        // requestFullscreen on arbitrary elements, so supported()
+        // is false there and the button stays hidden. Entering
+        // focuses the board so arrow keys keep working without
+        // another click.
+        window.riseFullscreen = {
+            ref: null,
+            handler: function () {
+                if (!window.riseFullscreen.ref) { return; }
+                window.riseFullscreen.ref.invokeMethodAsync('OnFullscreenChanged', !!document.fullscreenElement);
+            },
+            supported: function () {
+                return !!document.documentElement.requestFullscreen;
+            },
+            toggle: function (element) {
+                if (document.fullscreenElement) {
+                    document.exitFullscreen();
+                    return;
+                }
+                if (!element || !element.requestFullscreen) { return; }
+                var entered = element.requestFullscreen();
+                if (entered && entered.then) {
+                    entered.then(function () {
+                        var board = element.querySelector('.calm-game2048-board');
+                        if (board) { board.focus(); }
+                    }).catch(function () { /* not allowed: stay as-is */ });
+                }
+            },
+            register: function (dotNetRef) {
+                window.riseFullscreen.ref = dotNetRef;
+                document.addEventListener('fullscreenchange', window.riseFullscreen.handler);
+            },
+            unregister: function () {
+                document.removeEventListener('fullscreenchange', window.riseFullscreen.handler);
+                window.riseFullscreen.ref = null;
+            }
+        };
         // Download helper for the Backup slice. Kept in the shell
         // (not in a component) so slices stay free of JS interop.
         window.riseDownload = {

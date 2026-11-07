@@ -1,6 +1,6 @@
 @using Rise.Domain
 
-<div class="calm-game2048">
+<div class="calm-game2048" @ref="RootElement">
     <div class="calm-game2048-header">
         <h2 class="calm-game2048-title">2048</h2>
         <div class="calm-game2048-scores">
@@ -31,6 +31,10 @@
     }
     <div class="calm-game2048-footer">
         <button type="button" class="calm-game2048-new" @onclick="NewGameAsync">New game</button>
+        @if (FullscreenSupported)
+        {
+            <button type="button" class="calm-game2048-fullscreen" @onclick="ToggleFullscreenAsync" aria-pressed="@(IsFullscreen ? "true" : "false")">@FullscreenLabel</button>
+        }
         <span class="calm-game2048-hint">Click the board, then arrow keys or swipe.</span>
     </div>
 </div>

@@ -2,6 +2,7 @@ using AngleSharp.Dom;
 using Bunit;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.JSInterop;
 using Rise.Application.Ports;
 using Rise.Application.Services;
 using Rise.Domain;
@@ -18,6 +19,17 @@ public class Game2048WidgetTests : BunitContext
     {
         Services.AddScoped<IGame2048Store>(_ => _store);
         Services.AddScoped<Game2048Service>(_ => new Game2048Service(_store, new Random(7)));
+        // The widget unregisters its fullscreen listener synchronously
+        // on dispose, like the shell's Index page: that needs the
+        // in-process runtime, which the app registers in Program.cs
+        // but bUnit doesn't, so this mirrors the composition root.
+        Services.AddScoped<IJSInProcessRuntime>(_ => (IJSInProcessRuntime)JSInterop.JSRuntime);
+        // The widget asks JS once at init whether fullscreen exists,
+        // and registers the fullscreenchange callback when it does.
+        JSInterop.Setup<bool>("riseFullscreen.supported", _ => true).SetResult(true);
+        JSInterop.SetupVoid("riseFullscreen.register", _ => true).SetVoidResult();
+        JSInterop.SetupVoid("riseFullscreen.unregister", _ => true).SetVoidResult();
+        JSInterop.SetupVoid("riseFullscreen.toggle", _ => true).SetVoidResult();
     }
 
     private static readonly int[] FullBoardNoMoves =
@@ -113,6 +125,57 @@ public class Game2048WidgetTests : BunitContext
 
         Assert.Contains("Score 0", cut.FindAll(".calm-game2048-score")[0].TextContent, StringComparison.Ordinal);
         Assert.Equal(0, _store.StoredState?.Score ?? -1);
+    }
+
+    [Fact]
+    public void FullscreenButton_Renders_WhenSupported()
+    {
+        IRenderedComponent<Game2048Widget> cut = Render<Game2048Widget>();
+        cut.WaitForAssertion(() => Assert.Contains("2048", cut.Markup, StringComparison.Ordinal));
+
+        IElement button = cut.Find(".calm-game2048-fullscreen");
+        Assert.Equal("Full screen", button.TextContent.Trim());
+        Assert.Equal("false", button.GetAttribute("aria-pressed"));
+    }
+
+    [Fact]
+    public void FullscreenButton_Click_InvokesToggle()
+    {
+        IRenderedComponent<Game2048Widget> cut = Render<Game2048Widget>();
+        cut.WaitForAssertion(() => Assert.NotNull(cut.Find(".calm-game2048-fullscreen")));
+
+        cut.Find(".calm-game2048-fullscreen").Click();
+
+        JSInterop.VerifyInvoke("riseFullscreen.toggle");
+    }
+
+    [Fact]
+    public async Task FullscreenChanged_FlipsButtonLabel()
+    {
+        IRenderedComponent<Game2048Widget> cut = Render<Game2048Widget>();
+        await cut.WaitForAssertionAsync(() => Assert.Equal("Full screen", cut.Find(".calm-game2048-fullscreen").TextContent.Trim()));
+
+        await cut.InvokeAsync(() => cut.Instance.OnFullscreenChanged(true));
+
+        await cut.WaitForAssertionAsync(() => Assert.Equal("Exit full screen", cut.Find(".calm-game2048-fullscreen").TextContent.Trim()));
+        await cut.WaitForAssertionAsync(() => Assert.Equal("true", cut.Find(".calm-game2048-fullscreen").GetAttribute("aria-pressed")));
+
+        await cut.InvokeAsync(() => cut.Instance.OnFullscreenChanged(false));
+
+        await cut.WaitForAssertionAsync(() => Assert.Equal("Full screen", cut.Find(".calm-game2048-fullscreen").TextContent.Trim()));
+    }
+
+    [Fact]
+    public void FullscreenButton_Hidden_WhenUnsupported()
+    {
+        // The latest matching handler wins, so this overrides the
+        // constructor's supported=true for this render only.
+        JSInterop.Setup<bool>("riseFullscreen.supported", _ => true).SetResult(false);
+
+        IRenderedComponent<Game2048Widget> cut = Render<Game2048Widget>();
+        cut.WaitForAssertion(() => Assert.Contains("2048", cut.Markup, StringComparison.Ordinal));
+
+        Assert.Empty(cut.FindAll(".calm-game2048-fullscreen"));
     }
 
     [Fact]
