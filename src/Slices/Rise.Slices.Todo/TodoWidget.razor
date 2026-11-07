@@ -2,6 +2,10 @@
 
 <div class="calm-todo">
     <h2 class="calm-todo-title">Todo</h2>
+    @if (CalmBoardFull)
+    {
+        <p class="calm-todo-today">Today · @DoneCount of @TotalCount done</p>
+    }
     <div class="calm-add-form">
         <input type="text" placeholder="Something to do" aria-label="New todo" @bind="NewText" />
         <button type="button" @onclick="AddAsync">Add</button>

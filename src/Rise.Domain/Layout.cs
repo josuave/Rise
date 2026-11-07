@@ -103,6 +103,32 @@ public sealed record PageLayout(IReadOnlyList<WidgetPlacement> Widgets, IReadOnl
         return new PageLayout(next, GroupChildren);
     }
 
+    /// <summary>
+    /// Applies a named arrangement: the listed widgets take the given
+    /// visibility and move to the front in the listed order, and any
+    /// grouping is cleared — an arrangement is a flat board, and a
+    /// grouped widget would otherwise stay hidden inside a group the
+    /// arrangement hides. Widgets the arrangement doesn't list keep
+    /// their visibility and their relative order behind the listed
+    /// ones, so cluster widgets and future widgets are untouched.
+    /// Ids the arrangement lists but the layout doesn't have are
+    /// ignored: this never invents placements.
+    /// </summary>
+    public PageLayout ApplyArrangement(IReadOnlyList<string> orderedIds, IReadOnlySet<string> visibleIds)
+    {
+        var order = orderedIds
+            .Select((id, index) => (id, index))
+            .GroupBy(pair => pair.id)
+            .ToDictionary(group => group.Key, group => group.First().index);
+        var next = Widgets
+            .Select(w => order.ContainsKey(w.Id)
+                ? new WidgetPlacement(w.Id, w.Zone, visibleIds.Contains(w.Id))
+                : w)
+            .OrderBy(w => order.TryGetValue(w.Id, out int index) ? index : int.MaxValue)
+            .ToList();
+        return new PageLayout(next, Array.Empty<string>());
+    }
+
     public PageLayout AddToGroup(string id) =>
         GroupChildren.Contains(id)
             ? this

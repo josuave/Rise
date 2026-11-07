@@ -32,8 +32,64 @@
 </div>
 
 <div class="calm-page@(BoardClass)">
+    @if (CalmBoardFullPreview)
+    {
+        <div class="calm-board-bar">
+            <span class="calm-board-bar-name">@ActiveLayoutName</span>
+            <label class="calm-board-bar-switch">
+                Layout
+                <select aria-label="Switch layout" value="@Collection.ActiveId" @onchange="SwitchLayoutAsync">
+                    @foreach (var saved in Collection.Layouts)
+                    {
+                        <option value="@saved.Id">@saved.Name</option>
+                    }
+                </select>
+            </label>
+            <button type="button" class="calm-board-bar-button" @onclick="() => EditingLayout = !EditingLayout">
+                @(EditingLayout ? "Done" : "Edit board")
+            </button>
+            <button type="button" class="calm-board-bar-button" @onclick="ApplyDArrangementAsync">Apply D arrangement</button>
+        </div>
+        <div class="calm-board-top">
+        @foreach (string id in CalmTopIds())
+        {
+            @if (IsGroup(id))
+            {
+                <div class="calm-widget-slot" data-widget="@id">
+                <Rise.Slices.Layout.GroupWidget>
+                    <ChildContent>
+                        @foreach (var child in Layout.GroupedWidgets().Where(w => w.Visible && !IsWidgetDisabled(w.Id)))
+                        {
+                            @if (IsLazy(child.Id))
+                            {
+                                <LazyWidgetContainer WidgetId="@child.Id" />
+                            }
+                            else if (ComponentFor(child.Id) is Type childComponent)
+                            {
+                                <DynamicComponent Type="@childComponent" />
+                            }
+                        }
+                    </ChildContent>
+                </Rise.Slices.Layout.GroupWidget>
+                </div>
+            }
+            else if (IsLazy(id))
+            {
+                <div class="calm-widget-slot" data-widget="@id">
+                <LazyWidgetContainer WidgetId="@id" />
+                </div>
+            }
+            else if (ComponentFor(id) is Type topComponent)
+            {
+                <div class="calm-widget-slot" data-widget="@id">
+                <DynamicComponent Type="@topComponent" />
+                </div>
+            }
+        }
+        </div>
+    }
     <div class="calm-widget-board">
-    @foreach (string id in MainTopLevelIds())
+    @foreach (string id in BoardIds())
     {
         @if (IsGroup(id))
         {
@@ -68,6 +124,25 @@
             </div>
         }
     }
+    @if (CalmBoardFullPreview)
+    {
+        <div class="calm-widget-slot calm-add-widget-slot" data-widget="AddWidget">
+        @if (AddWidgetMenuOpen)
+        {
+            <div class="calm-add-widget-menu">
+                @foreach (var hidden in HiddenMainWidgets())
+                {
+                    <button type="button" @onclick="() => ShowHiddenWidgetAsync(hidden.Id)">@hidden.Title</button>
+                }
+                <button type="button" class="calm-add-widget-cancel" @onclick="() => AddWidgetMenuOpen = false">Cancel</button>
+            </div>
+        }
+        else
+        {
+            <button type="button" class="calm-add-widget-button" disabled="@(!HiddenMainWidgets().Any())" @onclick="() => AddWidgetMenuOpen = true">+ Add a widget</button>
+        }
+        </div>
+    }
     </div>
 
     @if (ShowHint)
@@ -101,6 +176,11 @@
     private Rise.Domain.PageLayout Layout { get; set; } =
         new Rise.Domain.PageLayout(Array.Empty<Rise.Domain.WidgetPlacement>());
 
+    /// <summary>The saved layouts, for the Edit board bar's name and switch control; kept in step with Layout.</summary>
+    private Rise.Domain.LayoutCollection Collection { get; set; } = new Rise.Domain.LayoutCollection(
+        Rise.Domain.LayoutCollection.DefaultId,
+        Array.Empty<Rise.Domain.NamedLayout>());
+
     /// <summary>Ids of modules currently switched off. Disabled widgets render nothing, but their placements survive in the layout.</summary>
     private HashSet<string> DisabledModules { get; set; } = new();
 
@@ -117,15 +197,31 @@
     /// <summary>Whether the landscape-only Calm Board preview is on: the board shows only when the viewport is landscape.</summary>
     private bool CalmBoardLandscapePreview { get; set; }
 
+    /// <summary>Whether the full Calm Board preview (mock-up D) is on: calm top over a board of warm-paper cards.</summary>
+    private bool CalmBoardFullPreview { get; set; }
+
+    /// <summary>Whether the add-widget menu is open (full board only).</summary>
+    private bool AddWidgetMenuOpen { get; set; }
+
     /// <summary>
-    /// The board classes for the page root: the always-board class, the
-    /// landscape-only class, or both — both on means the always-board
-    /// wins, since its rules are not orientation-gated.
+    /// The board classes for the page root. Precedence: the full board
+    /// wins — when it is on, the page carries only calm-board-full,
+    /// and the v0 and landscape classes are suppressed, so the full
+    /// rules alone decide the board treatment. Otherwise the
+    /// always-board class, the landscape-only class, or both — both
+    /// on means the always-board wins, since its rules are not
+    /// orientation-gated. The full flag is independent: it neither
+    /// requires calm-board on nor forces it.
     /// </summary>
     private string BoardClass
     {
         get
         {
+            if (CalmBoardFullPreview)
+            {
+                return " calm-board-full";
+            }
+
             List<string> classes = new();
             if (CalmBoardPreview)
             {
@@ -154,7 +250,11 @@
     /// switch on widget kinds anywhere in this page. A widget whose
     /// definition is missing is skipped rather than rendered. A group
     /// renders its member widgets inside its shell; every other widget
-    /// renders on its own. The shell re-renders only when the layout
+    /// renders on its own. The slot markup is written out in both the
+    /// calm-top loop and the board loop rather than shared through a
+    /// child component: the slot divs must stay in this file's own
+    /// markup, or this file's scoped CSS (the board card treatment)
+    /// stops matching them. The shell re-renders only when the layout
     /// changes; each widget owns its own refresh (the date, clock, and
     /// greeting widgets each own a timer).
     /// </summary>
@@ -164,6 +264,32 @@
     /// <summary>Ids of visible Main widgets that aren't inside the group: the page's top-level Main rows.</summary>
     private IEnumerable<string> MainTopLevelIds() =>
         Layout.TopLevelWidgets().Where(w => w.Zone == Rise.Domain.WidgetZone.Main && w.Visible && !IsWidgetDisabled(w.Id)).Select(w => w.Id);
+
+    /// <summary>
+    /// The calm-top ids, in layout order: with the full board on, the
+    /// top widgets render as full-width unboxed rows above the board.
+    /// Visibility and relative order always come from the stored
+    /// layout; the split only partitions by the top-id set.
+    /// </summary>
+    private IEnumerable<string> CalmTopIds() =>
+        CalmBoardFullPreview
+            ? MainTopLevelIds().Where(id => Rise.Application.CalmBoardArrangement.TopIds.Contains(id))
+            : Array.Empty<string>();
+
+    /// <summary>The board ids: with the full board on, the Main rows minus the calm top; otherwise every Main row.</summary>
+    private IEnumerable<string> BoardIds() =>
+        CalmBoardFullPreview
+            ? MainTopLevelIds().Where(id => !Rise.Application.CalmBoardArrangement.TopIds.Contains(id))
+            : MainTopLevelIds();
+
+    /// <summary>Currently-hidden, non-disabled Main widgets the add-widget slot can show, with their titles.</summary>
+    private IEnumerable<(string Id, string Title)> HiddenMainWidgets() =>
+        Layout.TopLevelWidgets()
+            .Where(w => w.Zone == Rise.Domain.WidgetZone.Main && !w.Visible && !IsWidgetDisabled(w.Id))
+            .Select(w => (w.Id, WidgetDefinitions.FirstOrDefault(d => d.Id == w.Id)?.Title ?? w.Id));
+
+    /// <summary>The active layout's name, for the Edit board bar.</summary>
+    private string ActiveLayoutName => Collection.Active?.Name ?? Rise.Domain.LayoutCollection.DefaultName;
 
     /// <summary>Whether a widget's module is switched off. Unclaimed widgets are never filtered.</summary>
     private bool IsWidgetDisabled(string id) =>
@@ -176,9 +302,27 @@
     private bool IsGroup(string id) =>
         WidgetDefinitions.FirstOrDefault(d => d.Id == id)?.IsGroup ?? false;
 
+    private async Task SwitchLayoutAsync(ChangeEventArgs args)
+    {
+        if (args.Value is string id)
+        {
+            await LayoutService.SetActiveLayoutAsync(id);
+        }
+    }
+
+    private async Task ApplyDArrangementAsync() =>
+        await LayoutService.ApplyCalmBoardArrangementAsync();
+
+    private async Task ShowHiddenWidgetAsync(string id)
+    {
+        await LayoutService.ShowWidgetAsync(id);
+        AddWidgetMenuOpen = false;
+    }
+
     protected override async Task OnInitializedAsync()
     {
         Layout = await LayoutService.LoadAsync();
+        Collection = await LayoutService.LoadCollectionAsync();
         LayoutService.Changed += OnLayoutChanged;
         await RefreshDisabledAsync();
         ModuleService.Changed += OnModulesChanged;
@@ -288,6 +432,7 @@
     private async void OnLayoutChanged(object? sender, EventArgs args)
     {
         Layout = await LayoutService.LoadAsync();
+        Collection = await LayoutService.LoadCollectionAsync();
         await InvokeAsync(StateHasChanged);
     }
 
@@ -313,6 +458,7 @@
     {
         CalmBoardPreview = await PreviewFeatureService.IsEnabledAsync(Rise.Domain.PreviewFeatures.CalmBoard);
         CalmBoardLandscapePreview = await PreviewFeatureService.IsEnabledAsync(Rise.Domain.PreviewFeatures.CalmBoardLandscape);
+        CalmBoardFullPreview = await PreviewFeatureService.IsEnabledAsync(Rise.Domain.PreviewFeatures.CalmBoardFull);
     }
 
     public void Dispose()

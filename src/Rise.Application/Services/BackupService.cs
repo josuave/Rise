@@ -66,7 +66,7 @@ public sealed class BackupService(
             modules,
             hotkeys,
             previewFeatures,
-            background is null ? null : new BackupBackgroundDto(background.PresetId, background.CustomUrl, background.Upload));
+            background is null ? null : ToBackgroundDto(background.Value));
         JsonObject stateJson = JsonSerializer.SerializeToNode(state)!.AsObject();
         return BackupFormat.Serialize(new BackupEnvelope(
             BackupFormat.CurrentVersion,
@@ -77,30 +77,46 @@ public sealed class BackupService(
     public async Task<Result<BackupEnvelope>> ImportAsync(string json, CancellationToken cancellationToken = default)
     {
         Result<BackupEnvelope> parsed = BackupFormat.Parse(json);
-        if (!parsed.IsSuccess || parsed.Value is null)
+        BackupEnvelope envelope;
+        switch (parsed)
         {
-            return Result<BackupEnvelope>.Failure(parsed.Error ?? "That backup couldn't be read.");
+            case Ok<BackupEnvelope> ok:
+                envelope = ok.Value;
+                break;
+            case Error error:
+                return Result<BackupEnvelope>.Failure(error.Message);
+            case null:
+                return Result<BackupEnvelope>.Failure("That backup couldn't be read.");
         }
 
-        BackupEnvelope envelope = parsed.Value;
         if (envelope.FormatVersion < BackupFormat.CurrentVersion)
         {
             Result<BackupEnvelope> migrated = BackupFormat.Migrate(envelope, BackupFormat.CurrentVersion);
-            if (!migrated.IsSuccess || migrated.Value is null)
+            switch (migrated)
             {
-                return Result<BackupEnvelope>.Failure(migrated.Error ?? "That backup couldn't be migrated.");
+                case Ok<BackupEnvelope> ok:
+                    envelope = ok.Value;
+                    break;
+                case Error error:
+                    return Result<BackupEnvelope>.Failure(error.Message);
+                case null:
+                    return Result<BackupEnvelope>.Failure("That backup couldn't be migrated.");
             }
-
-            envelope = migrated.Value;
         }
 
         Result<ImportedState> mapped = MapToDomain(envelope);
-        if (!mapped.IsSuccess || mapped.Value is null)
+        ImportedState state;
+        switch (mapped)
         {
-            return Result<BackupEnvelope>.Failure(mapped.Error ?? "That backup's saved state couldn't be read.");
+            case Ok<ImportedState> ok:
+                state = ok.Value;
+                break;
+            case Error error:
+                return Result<BackupEnvelope>.Failure(error.Message);
+            case null:
+                return Result<BackupEnvelope>.Failure("That backup's saved state couldn't be read.");
         }
 
-        ImportedState state = mapped.Value;
         await linkStore.SaveAsync(state.Page, cancellationToken);
         await themeStore.SetStoredThemeAsync(state.Theme, cancellationToken);
         await customThemeStore.SaveAsync(state.Themes, cancellationToken);
@@ -124,7 +140,7 @@ public sealed class BackupService(
 
         if (state.Background is not null)
         {
-            await backgroundStore.SaveAsync(state.Background, cancellationToken);
+            await backgroundStore.SaveAsync(state.Background.Value, cancellationToken);
         }
         foreach (KeyValuePair<string, string> pair in state.WidgetConfigs)
         {
@@ -195,7 +211,31 @@ public sealed class BackupService(
 
             Result<ThemePalette> light = ToPalette(dto.Light);
             Result<ThemePalette> dark = ToPalette(dto.Dark);
-            if (!light.IsSuccess || light.Value is null || !dark.IsSuccess || dark.Value is null)
+            ThemePalette? lightPalette;
+            switch (light)
+            {
+                case Ok<ThemePalette> ok:
+                    lightPalette = ok.Value;
+                    break;
+                case Error:
+                case null:
+                    lightPalette = null;
+                    break;
+            }
+
+            ThemePalette? darkPalette;
+            switch (dark)
+            {
+                case Ok<ThemePalette> ok:
+                    darkPalette = ok.Value;
+                    break;
+                case Error:
+                case null:
+                    darkPalette = null;
+                    break;
+            }
+
+            if (lightPalette is null || darkPalette is null)
             {
                 return Result<ImportedState>.Failure("That backup has a custom theme with a missing palette.");
             }
@@ -203,8 +243,8 @@ public sealed class BackupService(
             themes.Add(new CustomTheme(
                 dto.Id,
                 string.IsNullOrWhiteSpace(dto.Name) ? "Untitled" : dto.Name,
-                light.Value,
-                dark.Value));
+                lightPalette,
+                darkPalette));
         }
 
         if (string.IsNullOrWhiteSpace(state.Layouts.ActiveId))
@@ -325,7 +365,7 @@ public sealed class BackupService(
                     return Result<ImportedState>.Failure("That backup has a background image without a valid address.");
                 }
 
-                background = new BackgroundChoice(BackgroundPresets.Custom, url);
+                background = new CustomBackground(url);
             }
             else if (state.Background.PresetId == BackgroundPresets.Upload)
             {
@@ -339,12 +379,12 @@ public sealed class BackupService(
                     return Result<ImportedState>.Failure("That backup has a background upload without valid details.");
                 }
 
-                background = new BackgroundChoice(BackgroundPresets.Upload, null, upload);
+                background = new UploadBackground(upload);
             }
             else
             {
                 background = BackgroundPresets.All.Any(p => p.Id == state.Background.PresetId)
-                    ? new BackgroundChoice(state.Background.PresetId, null)
+                    ? new PresetBackground(state.Background.PresetId)
                     : BackgroundChoice.None;
             }
         }
@@ -361,6 +401,12 @@ public sealed class BackupService(
             state.Hotkeys,
             state.PreviewFeatures,
             background));
+    }
+
+    private static BackupBackgroundDto ToBackgroundDto(BackgroundChoice choice)
+    {
+        (string presetId, string? customUrl, UploadedImage? upload) = choice.ToStored();
+        return new BackupBackgroundDto(presetId, customUrl, upload);
     }
 
     private static BackupThemeDto ToTheme(CustomTheme theme) => new(

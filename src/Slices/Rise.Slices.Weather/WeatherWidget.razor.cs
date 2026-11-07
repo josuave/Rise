@@ -56,32 +56,44 @@ public partial class WeatherWidget : IDisposable
         if (Config.Latitude is null || Config.Longitude is null)
         {
             Result<GeocodedPlace> geocoded = await WeatherService.GeocodeAsync(Config.Place);
-            if (!geocoded.IsSuccess || geocoded.Value is null)
+            switch (geocoded)
             {
-                Status = geocoded.Error ?? "Couldn't find that place.";
-                Forecast = null;
-                await InvokeAsync(StateHasChanged);
-                return;
+                case Ok<GeocodedPlace> ok:
+                    Config.Place = ok.Value.Name;
+                    Config.Latitude = ok.Value.Latitude;
+                    Config.Longitude = ok.Value.Longitude;
+                    await Config.SaveAsync();
+                    break;
+                case Error error:
+                    Status = error.Message;
+                    Forecast = null;
+                    await InvokeAsync(StateHasChanged);
+                    return;
+                case null:
+                    Status = "Couldn't find that place.";
+                    Forecast = null;
+                    await InvokeAsync(StateHasChanged);
+                    return;
             }
-
-            Config.Place = geocoded.Value.Name;
-            Config.Latitude = geocoded.Value.Latitude;
-            Config.Longitude = geocoded.Value.Longitude;
-            await Config.SaveAsync();
         }
 
         int days = Config.ShowForecast ? Config.ForecastDays : 1;
         Result<WeatherForecast> result = await WeatherService.GetForecastAsync(
             Config.Latitude.Value, Config.Longitude.Value, days);
-        if (result.IsSuccess && result.Value is not null)
+        switch (result)
         {
-            Forecast = result.Value;
-            Status = null;
-        }
-        else
-        {
-            Status = result.Error ?? "Couldn't load the weather.";
-            Forecast = null;
+            case Ok<WeatherForecast> ok:
+                Forecast = ok.Value;
+                Status = null;
+                break;
+            case Error error:
+                Status = error.Message;
+                Forecast = null;
+                break;
+            case null:
+                Status = "Couldn't load the weather.";
+                Forecast = null;
+                break;
         }
 
         await InvokeAsync(StateHasChanged);

@@ -1,75 +1,161 @@
 @using Microsoft.AspNetCore.Components
 
-<button type="button" class="calm-settings-gear" aria-label="Settings" @onclick="Open">&#9881;</button>
+<button type="button" class="calm-settings-gear" aria-label="Settings" @onclick="OpenAsync">&#9881;</button>
 
 @if (IsOpen)
 {
     <div class="calm-dialog-overlay" @onclick="Close">
-        <div class="calm-dialog" role="dialog" aria-label="Settings" @onclick:stopPropagation="true">
+        <div class="calm-dialog@(CalmSettingsEnabled ? " calm-dialog-board" : "")" role="dialog" aria-label="Settings" @onclick:stopPropagation="true">
             <div class="calm-dialog-header">
                 <h2>Settings</h2>
                 <button type="button" class="calm-dialog-close" aria-label="Close settings" @onclick="Close">&times;</button>
             </div>
 
-            <section>
-                <h3>Theme</h3>
-                <p class="calm-dialog-note">System follows your device setting.</p>
-                <div class="calm-theme-options">
-                    <button type="button" class="calm-theme-option@(StoredTheme == "light" ? " selected" : "")" aria-pressed="@(StoredTheme == "light")" @onclick='() => SetThemeAsync("light")'>Light</button>
-                    <button type="button" class="calm-theme-option@(StoredTheme == "dark" ? " selected" : "")" aria-pressed="@(StoredTheme == "dark")" @onclick='() => SetThemeAsync("dark")'>Dark</button>
-                    <button type="button" class="calm-theme-option@(StoredTheme == "system" ? " selected" : "")" aria-pressed="@(StoredTheme == "system")" @onclick='() => SetThemeAsync("system")'>System</button>
-                </div>
+            @if (CalmSettingsEnabled)
+            {
+                <p class="calm-dialog-board-sub">Everything about your start page, in one place.</p>
 
-                @foreach (var custom in CustomThemes)
+                @foreach (var group in GroupedSections())
                 {
-                    <div class="calm-theme-custom-row">
-                        <button type="button" class="calm-theme-option@(IsActive(custom) ? " selected" : "")" aria-pressed="@IsActive(custom)" @onclick="() => SetCustomThemeAsync(custom)">@custom.Name</button>
-                        <button type="button" aria-label="Edit @custom.Name" @onclick="() => EditingTheme = custom">Edit</button>
-                        <button type="button" aria-label="Delete @custom.Name" @onclick="() => DeleteThemeAsync(custom.Id)">Delete</button>
+                    @if (group.Heading is not null)
+                    {
+                        <h3 class="calm-dialog-board-group">@group.Heading</h3>
+                    }
+                    <div class="calm-dialog-board-grid">
+                        @foreach (var card in group.Cards)
+                        {
+                            @if (card.Section is ISettingsSection section)
+                            {
+                                <section class="calm-dialog-board-card">
+                                    <h3>@section.Title</h3>
+                                    @if (!string.IsNullOrEmpty(section.Description))
+                                    {
+                                        <p class="calm-dialog-note">@section.Description</p>
+                                    }
+                                    @if (section is ILazySettingsSection lazy)
+                                    {
+                                        <DynamicComponent Type="@section.ComponentType" Parameters="@LazySectionParameters(lazy)" />
+                                    }
+                                    else
+                                    {
+                                        <DynamicComponent Type="@section.ComponentType" />
+                                    }
+                                </section>
+                            }
+                            else
+                            {
+                                @* The Theme picker, duplicated from the flat dialog below:
+                                   the two copies must stay in sync — the flat copy renders
+                                   when the flag is off, this card when it is on. *@
+                                <section class="calm-dialog-board-card">
+                                    <h3>Theme</h3>
+                                    <p class="calm-dialog-note">System follows your device setting.</p>
+                                    <div class="calm-theme-options">
+                                        <button type="button" class="calm-theme-option@(StoredTheme == "light" ? " selected" : "")" aria-pressed="@(StoredTheme == "light")" @onclick='() => SetThemeAsync("light")'>Light</button>
+                                        <button type="button" class="calm-theme-option@(StoredTheme == "dark" ? " selected" : "")" aria-pressed="@(StoredTheme == "dark")" @onclick='() => SetThemeAsync("dark")'>Dark</button>
+                                        <button type="button" class="calm-theme-option@(StoredTheme == "system" ? " selected" : "")" aria-pressed="@(StoredTheme == "system")" @onclick='() => SetThemeAsync("system")'>System</button>
+                                    </div>
+
+                                    @foreach (var custom in CustomThemes)
+                                    {
+                                        <div class="calm-theme-custom-row">
+                                            <button type="button" class="calm-theme-option@(IsActive(custom) ? " selected" : "")" aria-pressed="@IsActive(custom)" @onclick="() => SetCustomThemeAsync(custom)">@custom.Name</button>
+                                            <button type="button" aria-label="Edit @custom.Name" @onclick="() => EditingTheme = custom">Edit</button>
+                                            <button type="button" aria-label="Delete @custom.Name" @onclick="() => DeleteThemeAsync(custom.Id)">Delete</button>
+                                        </div>
+                                    }
+
+                                    <button type="button" class="calm-theme-new" @onclick="CreateThemeAsync">New theme</button>
+
+                                    @if (EditingTheme is not null)
+                                    {
+                                        <ThemeEditor Theme="EditingTheme" OnSave="SaveThemeAsync" OnCancel="CancelEdit" />
+                                    }
+
+                                    @if (PackThemes.Count > 0)
+                                    {
+                                        <h4>Omarchy</h4>
+                                        <p class="calm-dialog-note">Supplied by the Omarchy themes module — switch it off under Modules to hide these.</p>
+                                        @foreach (var pack in PackThemes)
+                                        {
+                                            <div class="calm-theme-pack-row">
+                                                <button type="button" class="calm-theme-option@(IsPackActive(pack) ? " selected" : "")" aria-pressed="@(IsPackActive(pack) ? "true" : "false")" aria-label="Use @pack.Title theme" @onclick="() => SetPackThemeAsync(pack)">
+                                                    <span class="calm-theme-swatch" style="background: @(pack.Palette.Background); border-color: @(pack.Accent);"></span>
+                                                    @pack.Title
+                                                    <span class="calm-theme-mode">@(pack.IsDark ? "Dark" : "Light")</span>
+                                                </button>
+                                            </div>
+                                        }
+                                    }
+                                </section>
+                            }
+                        }
                     </div>
                 }
+            }
+            else
+            {
+                @* The Theme picker: keep in sync with the board card above. *@
+                <section>
+                    <h3>Theme</h3>
+                    <p class="calm-dialog-note">System follows your device setting.</p>
+                    <div class="calm-theme-options">
+                        <button type="button" class="calm-theme-option@(StoredTheme == "light" ? " selected" : "")" aria-pressed="@(StoredTheme == "light")" @onclick='() => SetThemeAsync("light")'>Light</button>
+                        <button type="button" class="calm-theme-option@(StoredTheme == "dark" ? " selected" : "")" aria-pressed="@(StoredTheme == "dark")" @onclick='() => SetThemeAsync("dark")'>Dark</button>
+                        <button type="button" class="calm-theme-option@(StoredTheme == "system" ? " selected" : "")" aria-pressed="@(StoredTheme == "system")" @onclick='() => SetThemeAsync("system")'>System</button>
+                    </div>
 
-                <button type="button" class="calm-theme-new" @onclick="CreateThemeAsync">New theme</button>
-
-                @if (EditingTheme is not null)
-                {
-                    <ThemeEditor Theme="EditingTheme" OnSave="SaveThemeAsync" OnCancel="CancelEdit" />
-                }
-
-                @if (PackThemes.Count > 0)
-                {
-                    <h4>Omarchy</h4>
-                    <p class="calm-dialog-note">Supplied by the Omarchy themes module — switch it off under Modules to hide these.</p>
-                    @foreach (var pack in PackThemes)
+                    @foreach (var custom in CustomThemes)
                     {
-                        <div class="calm-theme-pack-row">
-                            <button type="button" class="calm-theme-option@(IsPackActive(pack) ? " selected" : "")" aria-pressed="@(IsPackActive(pack) ? "true" : "false")" aria-label="Use @pack.Title theme" @onclick="() => SetPackThemeAsync(pack)">
-                                <span class="calm-theme-swatch" style="background: @(pack.Palette.Background); border-color: @(pack.Accent);"></span>
-                                @pack.Title
-                                <span class="calm-theme-mode">@(pack.IsDark ? "Dark" : "Light")</span>
-                            </button>
+                        <div class="calm-theme-custom-row">
+                            <button type="button" class="calm-theme-option@(IsActive(custom) ? " selected" : "")" aria-pressed="@IsActive(custom)" @onclick="() => SetCustomThemeAsync(custom)">@custom.Name</button>
+                            <button type="button" aria-label="Edit @custom.Name" @onclick="() => EditingTheme = custom">Edit</button>
+                            <button type="button" aria-label="Delete @custom.Name" @onclick="() => DeleteThemeAsync(custom.Id)">Delete</button>
                         </div>
                     }
-                }
-            </section>
 
-            @foreach (var section in VisibleSections())
-            {
-                <section>
-                    <h3>@section.Title</h3>
-                    @if (!string.IsNullOrEmpty(section.Description))
+                    <button type="button" class="calm-theme-new" @onclick="CreateThemeAsync">New theme</button>
+
+                    @if (EditingTheme is not null)
                     {
-                        <p class="calm-dialog-note">@section.Description</p>
+                        <ThemeEditor Theme="EditingTheme" OnSave="SaveThemeAsync" OnCancel="CancelEdit" />
                     }
-                    @if (section is ILazySettingsSection lazy)
+
+                    @if (PackThemes.Count > 0)
                     {
-                        <DynamicComponent Type="@section.ComponentType" Parameters="@LazySectionParameters(lazy)" />
-                    }
-                    else
-                    {
-                        <DynamicComponent Type="@section.ComponentType" />
+                        <h4>Omarchy</h4>
+                        <p class="calm-dialog-note">Supplied by the Omarchy themes module — switch it off under Modules to hide these.</p>
+                        @foreach (var pack in PackThemes)
+                        {
+                            <div class="calm-theme-pack-row">
+                                <button type="button" class="calm-theme-option@(IsPackActive(pack) ? " selected" : "")" aria-pressed="@(IsPackActive(pack) ? "true" : "false")" aria-label="Use @pack.Title theme" @onclick="() => SetPackThemeAsync(pack)">
+                                    <span class="calm-theme-swatch" style="background: @(pack.Palette.Background); border-color: @(pack.Accent);"></span>
+                                    @pack.Title
+                                    <span class="calm-theme-mode">@(pack.IsDark ? "Dark" : "Light")</span>
+                                </button>
+                            </div>
+                        }
                     }
                 </section>
+
+                @foreach (var section in VisibleSections())
+                {
+                    <section>
+                        <h3>@section.Title</h3>
+                        @if (!string.IsNullOrEmpty(section.Description))
+                        {
+                            <p class="calm-dialog-note">@section.Description</p>
+                        }
+                        @if (section is ILazySettingsSection lazy)
+                        {
+                            <DynamicComponent Type="@section.ComponentType" Parameters="@LazySectionParameters(lazy)" />
+                        }
+                        else
+                        {
+                            <DynamicComponent Type="@section.ComponentType" />
+                        }
+                    </section>
+                }
             }
         </div>
     </div>

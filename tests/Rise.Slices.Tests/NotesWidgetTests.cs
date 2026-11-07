@@ -14,12 +14,58 @@ public class NotesWidgetTests : BunitContext
 
     private readonly FakeWidgetConfigStore _configStore = new();
 
+    private readonly FakePreviewFeatureStore _previewStore = new();
+
     public NotesWidgetTests()
     {
         Services.AddScoped<INoteStore>(_ => _store);
         Services.AddScoped<NotesService>();
         Services.AddScoped<IWidgetConfigStore>(_ => _configStore);
         Services.AddScoped<WidgetConfigService>();
+        // The widget injects the preview service (nullable): a
+        // nullable [Inject] still throws at activation when
+        // unregistered, so every test registers it.
+        Services.AddScoped<IPreviewFeatureStore>(_ => _previewStore);
+        Services.AddScoped<PreviewFeatureService>();
+    }
+
+    [Fact]
+    public void FullBoardFlag_On_WithNoStoredChoice_ShowsPostItsByDefault()
+    {
+        _previewStore.Stored[PreviewFeatures.CalmBoardFull] = true;
+
+        IRenderedComponent<NotesWidget> cut = Render<NotesWidget>();
+
+        cut.WaitForAssertion(() => Assert.Contains("calm-notes-postits", cut.Markup, StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void FullBoardFlag_On_WithStoredListChoice_StaysInListView()
+    {
+        var seeded = new FakeNoteStore(new NoteList(new[]
+        {
+            new Note(Guid.NewGuid(), "First note"),
+        }));
+        Services.AddScoped<INoteStore>(_ => seeded);
+        _previewStore.Stored[PreviewFeatures.CalmBoardFull] = true;
+        _configStore.Stored["Notes"] = """{"PostItView":false}""";
+
+        IRenderedComponent<NotesWidget> cut = Render<NotesWidget>();
+
+        // The note text proves init ran; the stored choice wins over the flag default.
+        cut.WaitForAssertion(() => Assert.Contains("First note", cut.Markup, StringComparison.Ordinal));
+        Assert.Contains("calm-notes-list", cut.Markup, StringComparison.Ordinal);
+        Assert.DoesNotContain("calm-notes-postits", cut.Markup, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void FullBoardFlag_Off_WithNoStoredChoice_StaysInListView()
+    {
+        IRenderedComponent<NotesWidget> cut = Render<NotesWidget>();
+
+        cut.WaitForAssertion(() => Assert.Contains("Notes", cut.Markup, StringComparison.Ordinal));
+        Assert.Contains("calm-notes-list", cut.Markup, StringComparison.Ordinal);
+        Assert.DoesNotContain("calm-notes-postits", cut.Markup, StringComparison.Ordinal);
     }
 
     [Fact]

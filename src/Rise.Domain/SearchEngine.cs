@@ -62,7 +62,7 @@ public sealed record SearchEngine(string Id, string Name, string UrlTemplate)
             slug = "engine";
         }
 
-        var taken = new HashSet<string>(takenIds, StringComparer.Ordinal);
+        HashSet<string> taken = [with(StringComparer.Ordinal), .. takenIds];
         string id = CustomPrefix + slug;
         int suffix = 2;
         while (taken.Contains(id))

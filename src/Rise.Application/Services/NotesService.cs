@@ -23,10 +23,15 @@ public sealed class NotesService(INoteStore store)
     public async Task<Result<NoteList>> AddNoteAsync(NoteList list, string text, CancellationToken cancellationToken = default)
     {
         Result<NoteList> result = list.AddNote(text);
-        if (result.IsSuccess && result.Value is not null)
+        switch (result)
         {
-            await store.SaveAsync(result.Value, cancellationToken);
-            Changed?.Invoke(this, EventArgs.Empty);
+            case Ok<NoteList> ok:
+                await store.SaveAsync(ok.Value, cancellationToken);
+                Changed?.Invoke(this, EventArgs.Empty);
+                break;
+            case Error:
+            case null:
+                break;
         }
 
         return result;
@@ -35,10 +40,15 @@ public sealed class NotesService(INoteStore store)
     public async Task<Result<NoteList>> UpdateNoteAsync(NoteList list, Guid id, string text, CancellationToken cancellationToken = default)
     {
         Result<NoteList> result = list.UpdateNote(id, text);
-        if (result.IsSuccess && result.Value is not null)
+        switch (result)
         {
-            await store.SaveAsync(result.Value, cancellationToken);
-            Changed?.Invoke(this, EventArgs.Empty);
+            case Ok<NoteList> ok:
+                await store.SaveAsync(ok.Value, cancellationToken);
+                Changed?.Invoke(this, EventArgs.Empty);
+                break;
+            case Error:
+            case null:
+                break;
         }
 
         return result;

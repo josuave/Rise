@@ -210,6 +210,36 @@ public sealed class LayoutService(ILayoutCollectionStore store, IEnumerable<IWid
     }
 
     /// <summary>
+    /// Applies the full Calm Board (mock-up D) arrangement to the
+    /// active layout: the D widgets visible in definition Order,
+    /// Backup and the group hidden, any grouping cleared so every D
+    /// widget renders as its own board card. Explicit-apply only: the
+    /// flag never rewrites a stored layout on its own — this runs when
+    /// the user asks for it from the Edit board bar. Mirrors
+    /// ResetAsync: through ApplyToActiveAsync, persisted, Changed
+    /// raised, other layouts untouched.
+    /// </summary>
+    public async Task<PageLayout> ApplyCalmBoardArrangementAsync(CancellationToken cancellationToken = default)
+    {
+        PageLayout layout = await LoadAsync(cancellationToken);
+        PageLayout next = layout.ApplyArrangement(
+            OrderedArrangementIds(),
+            new HashSet<string>(CalmBoardArrangement.VisibleIds));
+        return await ApplyToActiveAsync(next, cancellationToken);
+    }
+
+    /// <summary>Applies a caller-built placement set to the active layout, on the same path as ResetAsync.</summary>
+    public async Task<PageLayout> ApplyArrangementAsync(PageLayout arrangement, CancellationToken cancellationToken = default) =>
+        await ApplyToActiveAsync(arrangement, cancellationToken);
+
+    /// <summary>The arrangement's Main widgets, in definition Order (_definitions is Order-sorted).</summary>
+    private List<string> OrderedArrangementIds() =>
+        _definitions
+            .Where(d => d.Zone == WidgetZone.Main && CalmBoardArrangement.AllIds.Contains(d.Id))
+            .Select(d => d.Id)
+            .ToList();
+
+    /// <summary>
     /// Convenience for widgets that don't own the layout: show (or hide)
     /// one widget in the active layout, whatever it currently is.
     /// </summary>

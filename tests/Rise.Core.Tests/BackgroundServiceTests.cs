@@ -62,7 +62,7 @@ public class BackgroundServiceTests
 
         BackgroundChoice choice = await service.GetChoiceAsync();
 
-        Assert.Equal(BackgroundPresets.None, choice.PresetId);
+        Assert.True(choice == BackgroundChoice.None);
         Assert.Equal(string.Empty, choice.Css);
     }
 
@@ -74,9 +74,9 @@ public class BackgroundServiceTests
 
         Result<BackgroundChoice> result = await service.SetPresetAsync("dawn");
 
-        Assert.True(result.IsSuccess);
-        Assert.Equal("dawn", store.Stored?.PresetId);
-        Assert.Contains("linear-gradient", result.Value?.Css ?? string.Empty, StringComparison.Ordinal);
+        BackgroundChoice choice = ResultAssertions.RequireOk(result);
+        Assert.True(store.Stored is PresetBackground { Id: "dawn" });
+        Assert.Contains("linear-gradient", choice.Css, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -86,8 +86,7 @@ public class BackgroundServiceTests
 
         Result<BackgroundChoice> result = await service.SetPresetAsync("nope");
 
-        Assert.False(result.IsSuccess);
-        Assert.Equal("Unknown background.", result.Error);
+        Assert.Equal("Unknown background.", ResultAssertions.RequireError(result));
     }
 
     [Fact]
@@ -98,9 +97,9 @@ public class BackgroundServiceTests
 
         Result<BackgroundChoice> result = await service.SetCustomUrlAsync("https://example.com/photo.jpg");
 
-        Assert.True(result.IsSuccess);
-        Assert.Equal(BackgroundPresets.Custom, store.Stored?.PresetId);
-        Assert.Equal("url('https://example.com/photo.jpg')", result.Value?.Css);
+        BackgroundChoice choice = ResultAssertions.RequireOk(result);
+        Assert.True(store.Stored is CustomBackground { Url: "https://example.com/photo.jpg" });
+        Assert.Equal("url('https://example.com/photo.jpg')", choice.Css);
     }
 
     [Fact]
@@ -108,11 +107,11 @@ public class BackgroundServiceTests
     {
         BackgroundService service = ServiceWith(new FakeBackgroundStore(), new FakeBackgroundImageStore());
 
-        Assert.False((await service.SetCustomUrlAsync("not a url")).IsSuccess);
-        Assert.False((await service.SetCustomUrlAsync("example.com/photo.jpg")).IsSuccess);
-        Assert.False((await service.SetCustomUrlAsync("ftp://example.com/photo.jpg")).IsSuccess);
-        Assert.False((await service.SetCustomUrlAsync("https://example.com/ph\"oto.jpg")).IsSuccess);
-        Assert.False((await service.SetCustomUrlAsync(null)).IsSuccess);
+        Assert.NotEmpty(ResultAssertions.RequireError(await service.SetCustomUrlAsync("not a url")));
+        Assert.NotEmpty(ResultAssertions.RequireError(await service.SetCustomUrlAsync("example.com/photo.jpg")));
+        Assert.NotEmpty(ResultAssertions.RequireError(await service.SetCustomUrlAsync("ftp://example.com/photo.jpg")));
+        Assert.NotEmpty(ResultAssertions.RequireError(await service.SetCustomUrlAsync("https://example.com/ph\"oto.jpg")));
+        Assert.NotEmpty(ResultAssertions.RequireError(await service.SetCustomUrlAsync(null)));
     }
 
     [Fact]
@@ -124,7 +123,7 @@ public class BackgroundServiceTests
 
         await service.ClearAsync();
 
-        Assert.Equal(BackgroundPresets.None, store.Stored?.PresetId);
+        Assert.True(store.Stored == BackgroundChoice.None);
         Assert.Equal(string.Empty, (await service.GetChoiceAsync()).Css);
     }
 
@@ -150,9 +149,8 @@ public class BackgroundServiceTests
 
         Result<BackgroundChoice> result = await service.SetUploadAsync(image, new byte[] { 1, 2, 3 });
 
-        Assert.True(result.IsSuccess);
-        Assert.Equal(BackgroundPresets.Upload, store.Stored?.PresetId);
-        Assert.Equal("sunset.jpg", store.Stored?.Upload?.FileName);
+        _ = ResultAssertions.RequireOk(result);
+        Assert.True(store.Stored is UploadBackground { Image: { FileName: "sunset.jpg" } });
         Assert.True(images.Blobs.ContainsKey(new string('A', 64)));
     }
 
@@ -162,10 +160,10 @@ public class BackgroundServiceTests
         BackgroundService service = ServiceWith(new FakeBackgroundStore(), new FakeBackgroundImageStore());
         byte[] bytes = new byte[] { 1 };
 
-        Assert.False((await service.SetUploadAsync(new UploadedImage("short", "a.jpg", 1, "image/jpeg"), bytes)).IsSuccess);
-        Assert.False((await service.SetUploadAsync(new UploadedImage(new string('A', 64), "", 1, "image/jpeg"), bytes)).IsSuccess);
-        Assert.False((await service.SetUploadAsync(new UploadedImage(new string('A', 64), "a.jpg", 0, "image/jpeg"), bytes)).IsSuccess);
-        Assert.False((await service.SetUploadAsync(new UploadedImage(new string('A', 64), "a.jpg", 1, "text/plain"), bytes)).IsSuccess);
+        Assert.NotEmpty(ResultAssertions.RequireError(await service.SetUploadAsync(new UploadedImage("short", "a.jpg", 1, "image/jpeg"), bytes)));
+        Assert.NotEmpty(ResultAssertions.RequireError(await service.SetUploadAsync(new UploadedImage(new string('A', 64), "", 1, "image/jpeg"), bytes)));
+        Assert.NotEmpty(ResultAssertions.RequireError(await service.SetUploadAsync(new UploadedImage(new string('A', 64), "a.jpg", 0, "image/jpeg"), bytes)));
+        Assert.NotEmpty(ResultAssertions.RequireError(await service.SetUploadAsync(new UploadedImage(new string('A', 64), "a.jpg", 1, "text/plain"), bytes)));
     }
 
     [Fact]
@@ -177,7 +175,7 @@ public class BackgroundServiceTests
 
         Result<BackgroundChoice> result = await service.SetUploadAsync(new UploadedImage(new string('A', 64), "a.jpg", 1, "image/jpeg"), new byte[] { 1 });
 
-        Assert.False(result.IsSuccess);
+        Assert.NotEmpty(ResultAssertions.RequireError(result));
         Assert.Null(store.Stored);
     }
 

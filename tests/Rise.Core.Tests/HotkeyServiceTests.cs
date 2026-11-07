@@ -66,8 +66,7 @@ public class HotkeyServiceTests
         Result<HotkeyBinding> result = await service.SetAsync(
             "toggle-theme", new HotkeyBinding("e", Mod: false, Alt: false, Shift: false));
 
-        Assert.False(result.IsSuccess);
-        Assert.Contains("Toggle edit layout", result.Error, StringComparison.Ordinal);
+        Assert.Contains("Toggle edit layout", ResultAssertions.RequireError(result), StringComparison.Ordinal);
     }
 
     [Fact]
@@ -79,7 +78,7 @@ public class HotkeyServiceTests
         Result<HotkeyBinding> result = await service.SetAsync(
             "toggle-theme", new HotkeyBinding("y", Mod: false, Alt: false, Shift: false));
 
-        Assert.True(result.IsSuccess);
+        _ = ResultAssertions.RequireOk(result);
         Assert.Equal("y", store.Stored["toggle-theme"].Key);
         Assert.Equal("toggle-theme", service.TryMatch("y", mod: false, alt: false, shift: false));
     }

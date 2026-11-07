@@ -145,22 +145,89 @@ public class LayoutServiceTests
     }
 
     [Fact]
-    public async Task Reset_RestoresActiveDefaults_AndNotifies()
+    public async Task ApplyCalmBoardArrangement_SetsDVisibilityInDefinitionOrder_AndNotifies()
     {
         var store = new FakeLayoutCollectionStore();
-        var service = new LayoutService(store, Definitions());
-        PageLayout hidden = await service.SetVisibleAsync(await service.LoadAsync(), "Search", false);
-        Assert.False(hidden.Widgets.Single(w => w.Id == "Search").Visible);
+        var service = new LayoutService(store, BoardDefinitions());
+        await service.SaveAsAsync("Work");
+        await service.SetVisibleAsync(await service.LoadAsync(), "Links", false);
+        await service.SetVisibleAsync(await service.LoadAsync(), "Backup", true);
 
         bool notified = false;
         service.Changed += (_, _) => notified = true;
 
-        PageLayout reset = await service.ResetAsync();
+        PageLayout arranged = await service.ApplyCalmBoardArrangementAsync();
 
-        Assert.True(reset.Widgets.Single(w => w.Id == "Search").Visible);
+        Assert.Equal(
+            BoardOrder,
+            arranged.Widgets.Select(w => w.Id));
+        Assert.True(arranged.Widgets.Single(w => w.Id == "Weather").Visible);
+        Assert.True(arranged.Widgets.Single(w => w.Id == "Links").Visible);
+        Assert.True(arranged.Widgets.Single(w => w.Id == "Todo").Visible);
+        Assert.True(arranged.Widgets.Single(w => w.Id == "Notes").Visible);
+        Assert.False(arranged.Widgets.Single(w => w.Id == "Backup").Visible);
+        Assert.False(arranged.Widgets.Single(w => w.Id == "Group").Visible);
+        Assert.True(arranged.Widgets.Single(w => w.Id == "Theme").Visible);
+        Assert.True(notified);
+
+        // Only the active layout changed: the default still hides the widgets it hid.
+        Assert.NotNull(store.StoredCollection);
+        NamedLayout defaults = store.StoredCollection.Layouts.Single(l => l.Id == LayoutCollection.DefaultId);
+        Assert.False(defaults.Layout.Widgets.Single(w => w.Id == "Weather").Visible);
+        Assert.False(defaults.Layout.Widgets.Single(w => w.Id == "Backup").Visible);
+    }
+
+    [Fact]
+    public async Task ApplyCalmBoardArrangement_ClearsGroup_AndShowsMembers()
+    {
+        var stored = new LayoutCollection("default", new[]
+        {
+            new NamedLayout("default", "Default", new PageLayout(
+                BoardDefinitions().Select(d => new WidgetPlacement(d.Id, d.Zone, d.DefaultVisible)).ToArray(),
+                SearchGrouped)),
+        });
+        var service = new LayoutService(new FakeLayoutCollectionStore(stored), BoardDefinitions());
+
+        PageLayout arranged = await service.ApplyCalmBoardArrangementAsync();
+
+        Assert.Empty(arranged.GroupChildren);
+        Assert.True(arranged.Widgets.Single(w => w.Id == "Search").Visible);
+    }
+
+    [Fact]
+    public async Task ApplyArrangementAsync_AppliesGivenPlacementsToActive()
+    {
+        var store = new FakeLayoutCollectionStore();
+        var service = new LayoutService(store, Definitions());
+        PageLayout rearranged = (await service.LoadAsync()).SetVisible("Search", false);
+
+        bool notified = false;
+        service.Changed += (_, _) => notified = true;
+
+        PageLayout applied = await service.ApplyArrangementAsync(rearranged);
+
+        Assert.False(applied.Widgets.Single(w => w.Id == "Search").Visible);
         Assert.True(notified);
         Assert.NotNull(store.StoredCollection);
+        Assert.False(store.StoredCollection.Layouts.Single(l => l.Id == LayoutCollection.DefaultId).Layout.Widgets.Single(w => w.Id == "Search").Visible);
     }
+
+    private static readonly string[] BoardOrder = new[] { "Date", "Clock", "Greeting", "Weather", "Search", "Links", "Backup", "Todo", "Notes", "Group", "Theme" };
+
+    private static IWidgetDefinition[] BoardDefinitions() => new IWidgetDefinition[]
+    {
+        new TestDefinition("Date", "Date", WidgetZone.Main, true, 5, typeof(object)),
+        new TestDefinition("Clock", "Clock", WidgetZone.Main, true, 6, typeof(object)),
+        new TestDefinition("Greeting", "Greeting", WidgetZone.Main, true, 7, typeof(object)),
+        new TestDefinition("Weather", "Weather", WidgetZone.Main, false, 8, typeof(object)),
+        new TestDefinition("Search", "Search", WidgetZone.Main, true, 10, typeof(object)),
+        new TestDefinition("Links", "Links", WidgetZone.Main, true, 20, typeof(object)),
+        new TestDefinition("Backup", "Backup", WidgetZone.Main, false, 35, typeof(object)),
+        new TestDefinition("Todo", "Todo", WidgetZone.Main, false, 36, typeof(object)),
+        new TestDefinition("Notes", "Notes", WidgetZone.Main, false, 37, typeof(object)),
+        new TestGroupDefinition("Group", "Group", WidgetZone.Main, false, 45, typeof(object)),
+        new TestDefinition("Theme", "Theme switcher", WidgetZone.Cluster, true, 50, typeof(object)),
+    };
 
     private sealed record TestGroupDefinition(
         string Id,
