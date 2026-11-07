@@ -34,22 +34,10 @@
 <div class="calm-page@(BoardClass)">
     @if (CalmBoardFullPreview)
     {
-        <div class="calm-board-bar">
-            <span class="calm-board-bar-name">@ActiveLayoutName</span>
-            <label class="calm-board-bar-switch">
-                Layout
-                <select aria-label="Switch layout" value="@Collection.ActiveId" @onchange="SwitchLayoutAsync">
-                    @foreach (var saved in Collection.Layouts)
-                    {
-                        <option value="@saved.Id">@saved.Name</option>
-                    }
-                </select>
-            </label>
-            <button type="button" class="calm-board-bar-button" @onclick="() => EditingLayout = !EditingLayout">
-                @(EditingLayout ? "Done" : "Edit board")
-            </button>
-            <button type="button" class="calm-board-bar-button" @onclick="ApplyDArrangementAsync">Apply D arrangement</button>
-        </div>
+        @if (MainTopLevelIds().Contains(Rise.Slices.Weather.WeatherWidgetDefinition.WidgetId))
+        {
+            <Rise.Slices.Weather.WeatherHeaderLine />
+        }
         <div class="calm-board-top">
         @foreach (string id in CalmTopIds())
         {
@@ -86,6 +74,26 @@
                 </div>
             }
         }
+        </div>
+        <h2 class="calm-board-heading">Morning board</h2>
+        <div class="calm-board-bar">
+            <span class="calm-board-bar-name">Layout · @(ActiveLayoutName)</span>
+            <div class="calm-board-bar-switch-wrap">
+                <button type="button" class="calm-board-bar-button" aria-haspopup="true" aria-expanded="@(SwitchLayoutMenuOpen ? "true" : "false")" @onclick="() => SwitchLayoutMenuOpen = !SwitchLayoutMenuOpen">Switch layout</button>
+                @if (SwitchLayoutMenuOpen)
+                {
+                    <div class="calm-switch-menu-overlay" @onclick="() => SwitchLayoutMenuOpen = false"></div>
+                    <div class="calm-switch-menu" role="menu">
+                        @foreach (var saved in Collection.Layouts)
+                        {
+                            <button type="button" role="menuitem" class="@(saved.Id == Collection.ActiveId ? "selected" : "")" @onclick="() => SwitchLayoutToAsync(saved.Id)">@saved.Name</button>
+                        }
+                    </div>
+                }
+            </div>
+            <button type="button" class="calm-board-bar-button" @onclick="() => EditingLayout = !EditingLayout">
+                @(EditingLayout ? "Done" : "Edit board")
+            </button>
         </div>
     }
     <div class="calm-widget-board">
@@ -203,6 +211,9 @@
     /// <summary>Whether the add-widget menu is open (full board only).</summary>
     private bool AddWidgetMenuOpen { get; set; }
 
+    /// <summary>Whether the Switch layout menu is open (full board only).</summary>
+    private bool SwitchLayoutMenuOpen { get; set; }
+
     /// <summary>
     /// The board classes for the page root. Precedence: the full board
     /// wins — when it is on, the page carries only calm-board-full,
@@ -302,16 +313,12 @@
     private bool IsGroup(string id) =>
         WidgetDefinitions.FirstOrDefault(d => d.Id == id)?.IsGroup ?? false;
 
-    private async Task SwitchLayoutAsync(ChangeEventArgs args)
+    /// <summary>Switches to the chosen saved layout and closes the Switch layout menu.</summary>
+    private async Task SwitchLayoutToAsync(string id)
     {
-        if (args.Value is string id)
-        {
-            await LayoutService.SetActiveLayoutAsync(id);
-        }
+        SwitchLayoutMenuOpen = false;
+        await LayoutService.SetActiveLayoutAsync(id);
     }
-
-    private async Task ApplyDArrangementAsync() =>
-        await LayoutService.ApplyCalmBoardArrangementAsync();
 
     private async Task ShowHiddenWidgetAsync(string id)
     {
@@ -355,6 +362,15 @@
     [JSInvokable]
     public async Task OnHotkeyKeyDown(string key, bool mod, bool alt, bool shift)
     {
+        // Escape closes the Switch layout menu first, whatever else
+        // is open: it is a transient menu, not a mode.
+        if (key == "Escape" && SwitchLayoutMenuOpen)
+        {
+            SwitchLayoutMenuOpen = false;
+            await InvokeAsync(StateHasChanged);
+            return;
+        }
+
         string? action = HotkeyService.TryMatch(key, mod, alt, shift);
         switch (action)
         {

@@ -161,6 +161,31 @@ public class DomainTests
         Assert.Equal(expected, Greeting.FormatTime(new DateTime(2026, 11, 1, 9, 30, 7), use24Hour, showSeconds));
 
     [Theory]
+    [InlineData(9, "Joseph", "Good morning, Joseph.")]
+    [InlineData(13, "Joseph", "Good afternoon, Joseph.")]
+    [InlineData(20, "Joseph", "Good evening, Joseph.")]
+    [InlineData(9, "", "Good morning.")]
+    [InlineData(9, "   ", "Good morning.")]
+    [InlineData(9, null, "Good morning.")]
+    public void Greeting_WithName_IncludesNameOrFallsBack(int hour, string? name, string expected) =>
+        Assert.Equal(expected, Greeting.For(new DateTime(2026, 10, 31, hour, 0, 0, DateTimeKind.Local), name));
+
+    [Theory]
+    [InlineData(false, false, "9:30", "", " AM")]
+    [InlineData(false, true, "9:30", ":07", " AM")]
+    [InlineData(true, false, "09:30", "", "")]
+    [InlineData(true, true, "09:30", ":07", "")]
+    public void Greeting_FormatTimeParts_ConcatenatesToFormattedTime(bool use24Hour, bool showSeconds, string main, string seconds, string suffix)
+    {
+        var moment = new DateTime(2026, 11, 1, 9, 30, 7, DateTimeKind.Local);
+        TimeParts parts = Greeting.FormatTimeParts(moment, use24Hour, showSeconds);
+        Assert.Equal(main, parts.Main);
+        Assert.Equal(seconds, parts.Seconds);
+        Assert.Equal(suffix, parts.Suffix);
+        Assert.Equal(Greeting.FormatTime(moment, use24Hour, showSeconds), parts.Main + parts.Seconds + parts.Suffix);
+    }
+
+    [Theory]
     [InlineData("GitHub", "GI")]
     [InlineData("Google", "GO")]
     [InlineData("My Cool Site", "MC")]

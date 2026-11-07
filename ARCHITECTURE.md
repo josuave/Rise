@@ -342,38 +342,57 @@ the module and hotkey stores.
 
 A third flag, `calm-board-full`, is the full Calm Board (mock-up D):
 the same board treatment, plus a calm top — Date, Clock, Greeting,
-and Search render as full-width unboxed rows above the board — an
-Edit board bar above the board (active layout name, layout switch,
-Edit board toggle, Apply D arrangement), and an add-widget slot last
-in the grid that shows a hidden widget. Precedence: when the full
-flag is on the page carries only `calm-board-full`, so it wins over
-`calm-board` and `calm-board-landscape`; it neither requires nor
-forces them. The D arrangement (Date, Clock, Greeting, Weather,
+and Search render as full-width unboxed rows above the board, with
+the weather summary line first when Weather shows — then a
+"Morning board" heading and an Edit board bar below the calm top
+(active layout name, a Switch layout pill opening a menu of the
+saved layouts, an Edit board toggle pill), and an add-widget slot
+last in the grid that shows a hidden widget. Precedence: when the
+full flag is on the page carries only `calm-board-full`, so it wins
+over `calm-board` and `calm-board-landscape`; it neither requires
+nor forces them. The D arrangement (Date, Clock, Greeting, Weather,
 Search, Links, Todo, Notes visible in definition Order; Backup and
-the group hidden; any grouping cleared) is explicit-apply only: the
-flag never rewrites a stored layout — it applies when the user asks
-for it from the bar, through `LayoutService.ApplyCalmBoardArrangementAsync`,
-on the same path as Reset. Visibility and relative order always come
+the group hidden; any grouping cleared) is manual-only: the flag
+never rewrites a stored layout, and there is no Apply button on
+the page — the arrangement is set up in the layout editor (show
+Weather and Notes, hide Backup and the group, order by definition
+Order, clear any grouping). `LayoutService.ApplyCalmBoardArrangementAsync`
+and `CalmBoardArrangement` still define the arrangement, for tests
+and any future caller. Visibility and relative order always come
 from the stored layout; the top/board split only partitions by the
 top-id set (`CalmBoardArrangement.TopIds`). The 560px one-column
 phone rule carries forward unchanged. Under the full board, Notes
 defaults to post-it view when no view choice is stored (a stored
 choice always wins) and Todo shows a "Today · X of Y done" line;
-both read the flag through `PreviewFeatureService`. No card grips:
-there is no drag yet, and a grip that does nothing would be
-dishonest UI. The Weather widget renders once, in the board as a
-card with current conditions plus its 3-day forecast strip; the
-mock's separate weather header line is a second presentation of
-one widget and is not built.
+both read the flag through `PreviewFeatureService`. The Clock
+renders hero-sized under the flag — digits large, seconds and
+meridiem smaller — via `::deep` rules on the calm-top Clock slot:
+the digits are the Clock widget's markup, split into
+main/seconds/suffix spans so the sizes can differ. The Greeting
+widget takes an optional Name in its settings; when set, the
+automatic greeting addresses the user ("Good morning, Joseph.");
+a custom greeting still wins when set. No card grips: there is no
+drag yet, and a grip that does nothing would be dishonest UI. The
+Weather widget renders once, in the board as a card with current
+conditions plus its 3-day forecast strip; and, when Weather shows,
+a weather header line sits at the top of the calm top (place ·
+current temp · condition · high/low for today), from a small
+`WeatherHeaderLine` component in the Weather slice sharing
+`WeatherService` — it renders nothing while loading or on error,
+so a failed fetch never puts error text in the header.
 
 A fourth flag, `calm-settings`, redraws the Settings dialog itself
 in the Calm Board style: the same sections as warm-paper cards in
-a grid, grouped under hairline headings — Appearance (Theme, Home
+a grid, grouped under hairline headings, each heading carrying
+its card count ("3 cards", "8 cards", "4 cards", computed from
+the sections in the group) — Appearance (Theme, Home
 screen icon, Background), Content (Links, Search, Clock, Greeting,
 Group, Notes, 2048, Weather), System (Keyboard, Backup, Modules,
 Preview features) — in Order order within each group, so the board
 keeps the dialog's established ordering and only adds the grouping.
-The dialog subscribes to the preview service's Changed event and
+The quiet line under the heading is the prototype's wording:
+"Everything in one calm place. The choices you reach for most are
+already on the cards — nothing to dig for." The dialog subscribes to the preview service's Changed event and
 re-reads the flag on every open, so toggling the flag inside the
 dialog re-renders it live, and a toggle made while it was closed is
 honored on the next open. The Theme section is hard-coded in the

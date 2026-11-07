@@ -22,6 +22,9 @@ public partial class HeaderClock : IDisposable
 
     private System.Threading.Timer? _timer;
 
+    /// <summary>The clock's parts for the split rendering: digits, seconds, meridiem — concatenated they equal the formatted time.</summary>
+    private Rise.Domain.TimeParts Parts => Rise.Domain.Greeting.FormatTimeParts(Clock.Now, Config.Use24Hour, Config.ShowSeconds);
+
     protected override async Task OnInitializedAsync()
     {
         await Config.LoadAsync();

@@ -26,6 +26,8 @@ public class SettingsGearTests : BunitContext
 
     private static readonly string[] CalmSettingsHeadings = { "Appearance", "Content", "System" };
 
+    private static readonly string[] CalmSettingsCardCounts = { "3 cards", "8 cards", "4 cards" };
+
     private static readonly string[] CalmSettingsCardTitles =
     {
         "Theme", "Home screen icon", "Background", "Links", "Search", "Clock", "Greeting",
@@ -303,10 +305,14 @@ public class SettingsGearTests : BunitContext
         cut.Find(".calm-settings-gear").Click();
 
         cut.WaitForAssertion(() => Assert.NotNull(cut.Find(".calm-dialog-board")));
-        string[] headings = cut.FindAll(".calm-dialog-board-group")
+        string[] headings = cut.FindAll(".calm-dialog-board-group-heading")
             .Select(h => h.TextContent.Trim())
             .ToArray();
         Assert.Equal(CalmSettingsHeadings, headings);
+        string[] cardCounts = cut.FindAll(".calm-dialog-board-count")
+            .Select(c => c.TextContent.Trim())
+            .ToArray();
+        Assert.Equal(CalmSettingsCardCounts, cardCounts);
         Assert.Equal(15, cut.FindAll(".calm-dialog-board-card").Count);
         // Cards keep the dialog's established Order ordering within
         // each group; the Theme card is first in Appearance.
@@ -314,7 +320,7 @@ public class SettingsGearTests : BunitContext
             .Select(h => h.TextContent.Trim())
             .ToArray();
         Assert.Equal(CalmSettingsCardTitles, cardTitles);
-        Assert.Contains("Everything about your start page, in one place.", cut.Markup, StringComparison.Ordinal);
+        Assert.Contains("Everything in one calm place. The choices you reach for most are already on the cards — nothing to dig for.", cut.Markup, StringComparison.Ordinal);
         Assert.Contains("Lazy section body.", cut.Markup, StringComparison.Ordinal);
     }
 

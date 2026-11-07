@@ -13,13 +13,13 @@
 
             @if (CalmSettingsEnabled)
             {
-                <p class="calm-dialog-board-sub">Everything about your start page, in one place.</p>
+                <p class="calm-dialog-board-sub">Everything in one calm place. The choices you reach for most are already on the cards — nothing to dig for.</p>
 
                 @foreach (var group in GroupedSections())
                 {
                     @if (group.Heading is not null)
                     {
-                        <h3 class="calm-dialog-board-group">@group.Heading</h3>
+                        <h3 class="calm-dialog-board-group"><span class="calm-dialog-board-group-heading">@group.Heading</span><span class="calm-dialog-board-count">@CardCountText(group)</span></h3>
                     }
                     <div class="calm-dialog-board-grid">
                         @foreach (var card in group.Cards)

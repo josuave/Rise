@@ -1,3 +1,3 @@
 @using Rise.Domain
 
-<h1 class="calm-clock">@Greeting.FormatTime(Clock.Now, Config.Use24Hour, Config.ShowSeconds)</h1>
+<h1 class="calm-clock"><span class="calm-clock-main">@Parts.Main</span>@if (Config.ShowSeconds){<span class="calm-clock-seconds">@Parts.Seconds</span>}<span class="calm-clock-suffix">@Parts.Suffix</span></h1>
