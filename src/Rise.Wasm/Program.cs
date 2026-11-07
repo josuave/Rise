@@ -45,6 +45,9 @@ builder.Services.AddSearchSettings();
 // the section itself renders.
 builder.Services.AddScoped<ISettingsSection, LazyNotesSettingsSection>();
 
+// 2048 is a lazy module too: same metadata treatment as Notes.
+builder.Services.AddScoped<ISettingsSection, LazyGame2048SettingsSection>();
+
 // Shell-owned section: the module switchboard. It lives here, not in
 // a slice, because it lists every module including Settings itself.
 builder.Services.AddScoped<ISettingsSection, ModuleSettingsSection>();
@@ -60,6 +63,10 @@ builder.Services.AddScoped<ISettingsSection, PreviewSettingsSection>();
 // Shell-owned section: the background picker. The background is
 // page-wide, so the picker lives here, not in a slice.
 builder.Services.AddScoped<ISettingsSection, BackgroundSettingsSection>();
+
+// Shell-owned section: the home screen icon. The manifest is
+// shell-owned, so the toggle lives here, not in a slice.
+builder.Services.AddScoped<ISettingsSection, HomeScreenIconSettingsSection>();
 
 // Widget definitions, wired here: adding a widget is a new definition
 // plus one line here, never a change to the layout model or the shell.
@@ -77,8 +84,9 @@ builder.Services.AddOmarchyThemes();
 
 // Notes is a lazy module: its definition is metadata here, not the
 // slice's registration, so the slice assembly stays unloaded until
-// the widget itself shows.
-builder.Services.AddSingleton<IWidgetDefinition, LazyWidgetDefinition>();
+// the widget itself shows. 2048 is lazy the same way.
+builder.Services.AddSingleton<IWidgetDefinition>(LazyWidgetDefinition.Notes);
+builder.Services.AddSingleton<IWidgetDefinition>(LazyWidgetDefinition.Game2048);
 builder.Services.AddSettingsWidgets();
 
 // The module catalog, owned by the composition root: the shell,

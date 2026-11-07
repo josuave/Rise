@@ -21,6 +21,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<BackupService>();
         services.AddScoped<TodoService>();
         services.AddScoped<NotesService>();
+        services.AddScoped<Game2048Service>();
         services.AddScoped<ModuleService>();
         services.AddScoped<HotkeyService>();
         services.AddScoped<PreviewFeatureService>();
@@ -41,6 +42,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<ILinkStore, LocalStorageLinkStore>();
         services.AddScoped<ITodoStore, LocalStorageTodoStore>();
         services.AddScoped<INoteStore, LocalStorageNoteStore>();
+        services.AddScoped<IGame2048Store, LocalStorageGame2048Store>();
         services.AddScoped<ISearchLauncher, BrowserSearchLauncher>();
         services.AddScoped<IThemeStore, ThemeStore>();
         services.AddSingleton<IClock, SystemClock>();

@@ -1,0 +1,26 @@
+/* 2048 settings: best score as plain text, two quiet buttons. */
+.calm-game2048-settings-best {
+    margin: 0 0 0.5rem;
+    color: var(--calm-muted);
+}
+
+.calm-game2048-settings-best strong {
+    color: var(--calm-text);
+    font-weight: 600;
+}
+
+.calm-game2048-settings-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.calm-game2048-settings-new,
+.calm-game2048-settings-reset {
+    border: 1px solid var(--calm-border);
+    border-radius: 8px;
+    padding: 0.25rem 0.75rem;
+    background: var(--calm-surface);
+    color: var(--calm-text);
+    cursor: pointer;
+    font-size: 0.9rem;
+}

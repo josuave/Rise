@@ -42,8 +42,7 @@ The split is deliberately Gary Bernhardt's: the core is pure functions
 over immutable data, the shell is thin and does all the effects.
 
 - Pure core: `StartPage.AddLink` / `RemoveLink` take a page and return a
-  new page (or a `Result` failure — the C# 15 union's `Error` case, with
-  `Ok` carrying the new page) — they never save anything.
+  new page (or a `Result` failure) — they never save anything.
   `LinkUrl.TryCreate` validates and normalizes without touching a browser.
   `SearchQuery.Build` turns text into a URI. `Greeting.For` turns a
   `DateTime` into words. These are trivially testable with no mocks,
@@ -114,6 +113,35 @@ Rules for a slice:
    and scoped CSS cannot reach into a child component's markup. The
    theme is never duplicated per slice: scoped files reference the
    shared variables.
+
+   Home screen icon (PWA install icon follows the theme): the static
+   manifest (`wwwroot/manifest.json`) uses the calm light palette
+   (`background_color` and `theme_color` `#f7f5f0`) and declares
+   `any`, `maskable`, and `monochrome` icons at 192 and 512.
+   Per-theme icons live under `wwwroot/icons/<slug>-512.png` /
+   `-192.png` (one per Omarchy theme, plus `calm-light` /
+   `calm-dark` for the built-ins): the theme's Background fills the
+   canvas and the R body takes the theme's Accent (falling back to
+   Text when Accent contrast against Background is below 3.0); the
+   red/cyan glitch strokes keep the brand colours. They are generated, not hand-drawn, and not committed:
+   `tools/gen-icons.py` (Pillow required, `pip install pillow`)
+   parses `OmarchyThemePack.cs` and writes all 54 PNGs. It runs in
+   CI before the build and manually via `python3 tools/gen-icons.py`
+   from the repo root; the outputs are git-ignored (`wwwroot/icons/`
+   and `wwwroot/Rise-maskable-*.png` / `Rise-monochrome-*.png`).
+   The source mark `wwwroot/Rise-512.png` is committed. The install-time manifest is built
+   in the browser: `window.riseHomeIcon` (`wwwroot/index.html`)
+   swaps the manifest `<link>` for a blob manifest for the active
+   theme, with absolute icon URLs resolved against the static
+   manifest's URL (so the `/Rise/` subpath works), and swaps the
+   `apple-touch-icon` links the same way. The preference is
+   `rise.home-icon.v1` (`follow` / `static`, default `follow`),
+   toggled in the shell-owned "Home screen icon" Settings section
+   (Order 90). Honest limit: this picks the icon at install time
+   only — Chrome re-reads only the static manifest for an installed
+   app, so changing the theme later never changes an installed icon.
+   `rise.home-icon.v1` does not ride backup yet (needs a
+   BackupService change).
 
 Current slices: Links (tiles, persisted via `ILinkStore`), Search
 (query box, launched via `ISearchLauncher`; the engine is a Domain
@@ -237,7 +265,26 @@ slice's scoped CSS still loads at boot, and a disabled eager
 module still downloads at boot (skipping that needs every module
 lazy). Grouped lazy widgets render through the same container
 branch, but grouping a lazy widget has not been browser-verified
-yet.
+yet. 2048 is the second lazy module, after Notes, and the pattern
+it confirms: a lazy widget is metadata in the shell, not a slice
+registration. `LazyWidgetDefinition` carries one instance per lazy
+widget (id, title, order, assembly file, component type name) —
+`LazyWidgetDefinition.Notes` and `LazyWidgetDefinition.Game2048`
+— and the lazy container loads the assembly named by the
+definition it resolved, so a third lazy widget is one more
+instance plus one catalog entry, never a change to the container.
+The module's settings section lives in the module's own assembly
+behind `ILazySettingsSection` (`LazyGame2048SettingsSection`,
+Order 145), and its assembly is excluded from the service-worker
+precache by one regex per lazy module. Game state is not widget
+config: the board, score, and best live under `rise.game2048.v1`
+through `IGame2048Store` / `LocalStorageGame2048Store`, with the
+pure merge rules in `Game2048Board` in the Domain and the dice in
+`Game2048Service`, seedable from tests. The widget has a Full screen
+button in its footer (a `window.riseFullscreen` helper in `index.html`
+drives the Fullscreen API, with the label synced on `fullscreenchange`
+so Escape exits cleanly); the button is hidden where the API is
+unsupported (iOS Safari).
 
 Keyboard-first: the shell owns a command palette and a hotkey
 system, both shell-rendered, not widgets. The palette
@@ -292,70 +339,10 @@ the user at runtime and persisted per browser; the hand-rolled
 store is one port, one adapter, and one service in the shape of
 the module and hotkey stores.
 
-A third flag, `calm-board-full`, is the full Calm Board (mock-up D):
-the same board treatment, plus a calm top — Date, Clock, Greeting,
-and Search render as full-width unboxed rows above the board — an
-Edit board bar above the board (active layout name, layout switch,
-Edit board toggle, Apply D arrangement), and an add-widget slot last
-in the grid that shows a hidden widget. Precedence: when the full
-flag is on the page carries only `calm-board-full`, so it wins over
-`calm-board` and `calm-board-landscape`; it neither requires nor
-forces them. The D arrangement (Date, Clock, Greeting, Weather,
-Search, Links, Todo, Notes visible in definition Order; Backup and
-the group hidden; any grouping cleared) is explicit-apply only: the
-flag never rewrites a stored layout — it applies when the user asks
-for it from the bar, through `LayoutService.ApplyCalmBoardArrangementAsync`,
-on the same path as Reset. Visibility and relative order always come
-from the stored layout; the top/board split only partitions by the
-top-id set (`CalmBoardArrangement.TopIds`). The 560px one-column
-phone rule carries forward unchanged. Under the full board, Notes
-defaults to post-it view when no view choice is stored (a stored
-choice always wins) and Todo shows a "Today · X of Y done" line;
-both read the flag through `PreviewFeatureService`. No card grips:
-there is no drag yet, and a grip that does nothing would be
-dishonest UI. The Weather widget renders once, in the board as a
-card with current conditions plus its 3-day forecast strip; the
-mock's separate weather header line is a second presentation of
-one widget and is not built.
-
-A fourth flag, `calm-settings`, redraws the Settings dialog itself
-in the Calm Board style: the same sections as warm-paper cards in
-a grid, grouped under hairline headings — Appearance (Theme, Home
-screen icon, Background), Content (Links, Search, Clock, Greeting,
-Group, Notes, 2048, Weather), System (Keyboard, Backup, Modules,
-Preview features) — in Order order within each group, so the board
-keeps the dialog's established ordering and only adds the grouping.
-The dialog subscribes to the preview service's Changed event and
-re-reads the flag on every open, so toggling the flag inside the
-dialog re-renders it live, and a toggle made while it was closed is
-honored on the next open. The Theme section is hard-coded in the
-dialog, so it is the first card of Appearance; its picker markup is
-duplicated between the flat dialog and the board card, and the two
-copies must stay in sync. A section whose title is in no group
-renders at the end under no heading, so a new section never
-vanishes. All D styles are scoped under a `calm-dialog-board`
-class on the dialog, so the flat dialog is untouched when the flag
-is off. The board grid is two columns in landscape and one column
-in portrait and under 560px, mirroring the page board's collapse;
-the dialog widens to 860px under the flag so two columns breathe.
-
 Backgrounds: one chosen background for the page — a built-in calm
 gradient preset (None, Dawn, Mist, Dusk, Forest, registered in
-Domain) or a custom image address pasted in Settings. The choice is
-a C# 15 union in Domain, `BackgroundChoice(PresetBackground,
-CustomBackground, UploadBackground)` — top-level case records, so
-no nested public types — and its `Css` is an exhaustive switch over
-the cases with an explicit `null` arm for a default union value,
-never a `_` arm (a new case must warn at every switch that does
-not handle it yet). Persistence stays string-shaped: the stored
-JSON under `rise.background.v1` and the backup DTO still carry a
-preset id plus an optional address/descriptor, and the union maps
-to and from that shape only at the two boundaries
-(`BackgroundChoice.FromStored` / `ToStored`, used by the
-localStorage adapter and the backup service); the union itself
-lives in memory only. The `BackgroundPresets.Custom` / `.Upload`
-constants remain as the string wire tags for those two cases.
-The choice lives under `rise.background.v1` through the same port/adapter/
+Domain) or a custom image address pasted in Settings. The choice
+lives under `rise.background.v1` through the same port/adapter/
 service shape as the preview features, and the Background section
 in Settings (Order 170, shell-owned like the preview manager)
 applies it live through the service's Changed event, no restart.

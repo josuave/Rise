@@ -19,6 +19,7 @@
     <ProjectReference Include="..\Slices\Rise.Slices.Backup\Rise.Slices.Backup.csproj" />
     <ProjectReference Include="..\Slices\Rise.Slices.Todo\Rise.Slices.Todo.csproj" />
     <ProjectReference Include="..\Slices\Rise.Slices.Notes\Rise.Slices.Notes.csproj" />
+    <ProjectReference Include="..\Slices\Rise.Slices.Game2048\Rise.Slices.Game2048.csproj" />
     <ProjectReference Include="..\Slices\Rise.Slices.Weather\Rise.Slices.Weather.csproj" />
     <ProjectReference Include="..\Slices\Rise.Slices.OmarchyThemes\Rise.Slices.OmarchyThemes.csproj" />
   </ItemGroup>
@@ -26,6 +27,7 @@
   <ItemGroup>
     <!-- Lazy modules: published but not downloaded until first shown. -->
     <BlazorWebAssemblyLazyLoad Include="Rise.Slices.Notes.wasm" />
+    <BlazorWebAssemblyLazyLoad Include="Rise.Slices.Game2048.wasm" />
   </ItemGroup>
 
   <ItemGroup>

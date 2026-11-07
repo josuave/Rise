@@ -19,6 +19,7 @@ public class ArchitectureTests
     private static readonly string[] SliceAssemblies = new[]
     {
         "Rise.Slices.Backup",
+        "Rise.Slices.Game2048",
         "Rise.Slices.Header",
         "Rise.Slices.Layout",
         "Rise.Slices.Links",
@@ -70,6 +71,7 @@ public class ArchitectureTests
     /// </summary>
     [Theory]
     [InlineData("Rise.Slices.Backup")]
+    [InlineData("Rise.Slices.Game2048")]
     [InlineData("Rise.Slices.Header")]
     [InlineData("Rise.Slices.Layout")]
     [InlineData("Rise.Slices.Links")]
@@ -146,6 +148,7 @@ public class ArchitectureTests
     /// </summary>
     [Theory]
     [InlineData("Rise.Slices.Backup")]
+    [InlineData("Rise.Slices.Game2048")]
     [InlineData("Rise.Slices.Header")]
     [InlineData("Rise.Slices.Layout")]
     [InlineData("Rise.Slices.Links")]

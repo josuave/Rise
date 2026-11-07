@@ -76,6 +76,126 @@
                 }
             } catch (e) { /* private mode or corrupt data: stay on the CSS default */ }
         })();
+        // Home screen icon: the install-time manifest follows the theme.
+        // Chrome re-reads only the static manifest for an installed app,
+        // so this can only pick the icon the user installs with —
+        // changing the theme later never changes an installed icon.
+        // While the "follow" preference is on (the default), this swaps
+        // the manifest <link> for a blob manifest built from the active
+        // theme: icons/<slug>-512.png / -192.png for an Omarchy pack
+        // theme, or the calm light/dark icon for a built-in, system, or
+        // custom choice (custom palettes have no prebuilt file, so they
+        // get the calm icon of their active half's mode). Icon URLs
+        // inside a blob manifest resolve against the blob URL, so they
+        // are absolute, built from the static manifest's own URL — that
+        // keeps the /Rise/ subpath working on GitHub Pages. The
+        // apple-touch-icon links are swapped the same way, so iOS "Add
+        // to Home Screen" matches too. Turning the preference off
+        // restores the static manifest and icons. When the pack palette
+        // cache is missing (first boot before the app writes it), the
+        // static manifest stays until the next load or theme change.
+        window.riseHomeIcon = (function () {
+            var prefKey = 'rise.home-icon.v1';
+            var themeKey = 'rise.theme.v1';
+            var packKey = 'rise.omarchy-themes.v1';
+            var customKey = 'rise.themes.v1';
+            var staticHref = null;
+            var staticUrl = null;
+            var currentBlobUrl = null;
+
+            function prefersDark() {
+                return window.matchMedia('(prefers-color-scheme: dark)').matches;
+            }
+            function stored(key) {
+                try { return window.localStorage.getItem(key); } catch (e) { return null; }
+            }
+            function parsed(key) {
+                try { return JSON.parse(stored(key) || '[]'); } catch (e) { return []; }
+            }
+            function findById(list, id) {
+                for (var i = 0; i < list.length; i++) {
+                    if (list[i].Id === id) { return list[i]; }
+                }
+                return null;
+            }
+            // The active theme as { background, iconBase }, or null when
+            // it cannot be resolved (missing pack cache, deleted custom).
+            function resolve() {
+                var choice = stored(themeKey);
+                var dark = prefersDark();
+                if (choice === 'light') { return { background: '#f7f5f0', iconBase: 'icons/calm-light' }; }
+                if (choice === 'dark') { return { background: '#1b1b1f', iconBase: 'icons/calm-dark' }; }
+                if (choice && choice.indexOf('custom:') === 0) {
+                    var found = findById(parsed(customKey), choice.substring('custom:'.length));
+                    if (!found) { return null; }
+                    var half = dark ? found.Dark : found.Light;
+                    if (!half || !half.Background) { return null; }
+                    return { background: half.Background, iconBase: dark ? 'icons/calm-dark' : 'icons/calm-light' };
+                }
+                if (choice && choice.indexOf('pack:omarchy:') === 0) {
+                    var pack = findById(parsed(packKey), choice.substring('pack:omarchy:'.length));
+                    if (!pack || !pack.Palette || !pack.Palette.Background) { return null; }
+                    return { background: pack.Palette.Background, iconBase: 'icons/' + pack.Id };
+                }
+                // "system" or nothing stored: the device decides.
+                return dark
+                    ? { background: '#1b1b1f', iconBase: 'icons/calm-dark' }
+                    : { background: '#f7f5f0', iconBase: 'icons/calm-light' };
+            }
+            function setAppleIcons(iconBase) {
+                var links = document.querySelectorAll('link[rel="apple-touch-icon"]');
+                for (var i = 0; i < links.length; i++) {
+                    var sizes = links[i].getAttribute('sizes');
+                    links[i].setAttribute('href', sizes === '192x192'
+                        ? iconBase + '-192.png'
+                        : iconBase + '-512.png');
+                }
+            }
+            function restoreStatic(link) {
+                if (staticHref) { link.setAttribute('href', staticHref); }
+                setAppleIcons('Rise');
+            }
+            return {
+                apply: function () {
+                    try {
+                        var link = document.querySelector('link[rel="manifest"]');
+                        if (!link) { return false; }
+                        if (!staticHref) {
+                            staticHref = link.getAttribute('href') || 'manifest.json';
+                            staticUrl = new URL(staticHref, document.baseURI).href;
+                        }
+                        if (stored(prefKey) === 'static') { restoreStatic(link); return true; }
+                        var theme = resolve();
+                        if (!theme) { restoreStatic(link); return false; }
+                        var root = new URL('.', staticUrl).href;
+                        var manifest = {
+                            name: 'Rise',
+                            short_name: 'Rise',
+                            id: root,
+                            start_url: root,
+                            display: 'standalone',
+                            background_color: theme.background,
+                            theme_color: theme.background,
+                            icons: [
+                                { src: new URL(theme.iconBase + '-512.png', staticUrl).href, sizes: '512x512', type: 'image/png', purpose: 'any' },
+                                { src: new URL(theme.iconBase + '-192.png', staticUrl).href, sizes: '192x192', type: 'image/png', purpose: 'any' }
+                            ]
+                        };
+                        if (currentBlobUrl) { URL.revokeObjectURL(currentBlobUrl); }
+                        currentBlobUrl = URL.createObjectURL(new Blob([JSON.stringify(manifest)], { type: 'application/manifest+json' }));
+                        link.setAttribute('href', currentBlobUrl);
+                        setAppleIcons(theme.iconBase);
+                        return true;
+                    } catch (e) { /* stay on whatever manifest is live */ return false; }
+                },
+                // The 512 icon the page currently points at, for the Settings preview.
+                iconHref: function () {
+                    var el = document.querySelector('link[rel="apple-touch-icon"][sizes="512x512"]');
+                    return el ? el.getAttribute('href') : null;
+                }
+            };
+        })();
+        try { window.riseHomeIcon.apply(); } catch (e) { /* stay on the static manifest */ }
     </script>
 </head>
 
@@ -181,6 +301,47 @@
                 window.riseHotkeys.ref = null;
             }
         };
+        // Fullscreen toggle for the 2048 widget. requestFullscreen
+        // on the widget root puts scores + board fullscreen
+        // together; the fullscreenchange listener reports back into
+        // .NET so the button label stays right when the user exits
+        // with Escape or the browser chrome. iOS Safari has no
+        // requestFullscreen on arbitrary elements, so supported()
+        // is false there and the button stays hidden. Entering
+        // focuses the board so arrow keys keep working without
+        // another click.
+        window.riseFullscreen = {
+            ref: null,
+            handler: function () {
+                if (!window.riseFullscreen.ref) { return; }
+                window.riseFullscreen.ref.invokeMethodAsync('OnFullscreenChanged', !!document.fullscreenElement);
+            },
+            supported: function () {
+                return !!document.documentElement.requestFullscreen;
+            },
+            toggle: function (element) {
+                if (document.fullscreenElement) {
+                    document.exitFullscreen();
+                    return;
+                }
+                if (!element || !element.requestFullscreen) { return; }
+                var entered = element.requestFullscreen();
+                if (entered && entered.then) {
+                    entered.then(function () {
+                        var board = element.querySelector('.calm-game2048-board');
+                        if (board) { board.focus(); }
+                    }).catch(function () { /* not allowed: stay as-is */ });
+                }
+            },
+            register: function (dotNetRef) {
+                window.riseFullscreen.ref = dotNetRef;
+                document.addEventListener('fullscreenchange', window.riseFullscreen.handler);
+            },
+            unregister: function () {
+                document.removeEventListener('fullscreenchange', window.riseFullscreen.handler);
+                window.riseFullscreen.ref = null;
+            }
+        };
         // Download helper for the Backup slice. Kept in the shell
         // (not in a component) so slices stay free of JS interop.
         window.riseDownload = {
@@ -251,9 +412,11 @@
             };
         })();
         // When the device flips light/dark, a custom theme follows it
-        // by re-applying the matching half.
+        // by re-applying the matching half, and the install-time
+        // manifest follows it too when the home icon follows the theme.
         window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function () {
             window.riseTheme.applyStoredCustom();
+            window.riseHomeIcon.apply();
         });
     </script>
     <script src="_framework/blazor.webassembly.js"></script>

@@ -15,7 +15,7 @@ const offlineAssetsInclude = [ /\.dll$/, /\.pdb$/, /\.wasm/, /\.html/, /\.js$/, 
 // (the fingerprinted file name keeps the module prefix); a lazy module
 // then loads on demand over the network, and shows its load error when
 // offline instead of its widget.
-const offlineAssetsExclude = [ /^service-worker\.js$/, /^_framework\/Rise\.Slices\.Notes\.[^/]+\.wasm$/ ];
+const offlineAssetsExclude = [ /^service-worker\.js$/, /^_framework\/Rise\.Slices\.Notes\.[^/]+\.wasm$/, /^_framework\/Rise\.Slices\.Game2048\.[^/]+\.wasm$/ ];
 
 async function onInstall(event) {
     console.info('Service worker: Install');

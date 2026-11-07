@@ -1,0 +1,181 @@
+/* 2048 widget: a warm-paper board in the page's calm language —
+   quiet tiles on a hairline grid, scores as plain text. */
+.calm-game2048-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+}
+
+.calm-game2048-title {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.calm-game2048-scores {
+    display: flex;
+    gap: 0.75rem;
+    color: var(--calm-muted);
+    font-size: 0.9rem;
+}
+
+.calm-game2048-score strong {
+    color: var(--calm-text);
+    font-weight: 600;
+}
+
+.calm-game2048-board {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    max-width: 340px;
+    padding: 8px;
+    border-radius: 12px;
+    background: var(--calm-tile-bg);
+    outline: none;
+}
+
+.calm-game2048-board:focus-visible {
+    outline: 2px solid var(--calm-border);
+    outline-offset: 2px;
+}
+
+.calm-game2048-cell {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    aspect-ratio: 1;
+    border-radius: 8px;
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #5d4a37;
+    background: var(--calm-surface);
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.calm-game2048-empty {
+    background: transparent;
+}
+
+.calm-game2048-tile-2 {
+    background: #eee4da;
+}
+
+.calm-game2048-tile-4 {
+    background: #ede0c8;
+}
+
+.calm-game2048-tile-8 {
+    background: #f2b179;
+    color: #f9f6f2;
+}
+
+.calm-game2048-tile-16 {
+    background: #f59563;
+    color: #f9f6f2;
+}
+
+.calm-game2048-tile-32 {
+    background: #f67c5f;
+    color: #f9f6f2;
+}
+
+.calm-game2048-tile-64 {
+    background: #f65e3b;
+    color: #f9f6f2;
+}
+
+.calm-game2048-tile-128 {
+    background: #edcf72;
+    color: #f9f6f2;
+    font-size: 1.2rem;
+}
+
+.calm-game2048-tile-256 {
+    background: #edcc61;
+    color: #f9f6f2;
+    font-size: 1.2rem;
+}
+
+.calm-game2048-tile-512 {
+    background: #edc850;
+    color: #f9f6f2;
+    font-size: 1.2rem;
+}
+
+.calm-game2048-tile-1024 {
+    background: #edc53f;
+    color: #f9f6f2;
+    font-size: 1.05rem;
+}
+
+.calm-game2048-tile-2048 {
+    background: #edc22e;
+    color: #f9f6f2;
+    font-size: 1.05rem;
+}
+
+.calm-game2048-win,
+.calm-game2048-over {
+    margin: 0.75rem 0 0;
+    color: var(--calm-text);
+}
+
+.calm-game2048-footer {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-top: 0.75rem;
+}
+
+.calm-game2048-new,
+.calm-game2048-dismiss,
+.calm-game2048-fullscreen {
+    border: 1px solid var(--calm-border);
+    border-radius: 8px;
+    padding: 0.25rem 0.75rem;
+    background: var(--calm-surface);
+    color: var(--calm-text);
+    cursor: pointer;
+    font-size: 0.9rem;
+    white-space: nowrap;
+}
+
+.calm-game2048-dismiss {
+    margin-left: 0.5rem;
+}
+
+.calm-game2048-hint {
+    color: var(--calm-faint);
+    font-size: 0.85rem;
+}
+
+/* Fullscreen: the widget root becomes the viewport, so it needs
+   its own background (a fullscreen element paints over black by
+   default) and room for a larger board, with the header and footer
+   the same width as the board. */
+.calm-game2048:fullscreen {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    padding: 1.5rem;
+    box-sizing: border-box;
+    overflow: auto;
+    background: var(--calm-bg);
+}
+
+.calm-game2048:fullscreen .calm-game2048-header,
+.calm-game2048:fullscreen .calm-game2048-footer {
+    width: min(80vmin, 480px);
+}
+
+.calm-game2048:fullscreen .calm-game2048-board {
+    width: 100%;
+    max-width: min(80vmin, 480px);
+}

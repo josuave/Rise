@@ -55,6 +55,23 @@ internal sealed class FakeNoteStore : INoteStore
     }
 }
 
+/// <summary>In-memory 2048 store for slice tests: no localStorage, no JS.</summary>
+internal sealed class FakeGame2048Store : IGame2048Store
+{
+    public Game2048State? StoredState { get; private set; }
+
+    public FakeGame2048Store(Game2048State? initial = null) => StoredState = initial;
+
+    public Task<Game2048State?> LoadAsync(CancellationToken cancellationToken = default) =>
+        Task.FromResult(StoredState);
+
+    public Task SaveAsync(Game2048State state, CancellationToken cancellationToken = default)
+    {
+        StoredState = state;
+        return Task.CompletedTask;
+    }
+}
+
 /// <summary>Search launcher that records URLs instead of opening tabs.</summary>
 internal sealed class FakeSearchLauncher : ISearchLauncher
 {

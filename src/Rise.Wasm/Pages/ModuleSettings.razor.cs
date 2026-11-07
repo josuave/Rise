@@ -51,7 +51,10 @@ public partial class ModuleSettings : IDisposable
     private async Task DisableAsync(ModuleInfo module)
     {
         await ModuleService.SetEnabledAsync(module.Id, false);
-        Navigation.NavigateTo("/", forceLoad: true);
+        // Restart at the app's own base, not the site root: the app
+        // is served under a subpath (/Rise/), so NavigateTo("/")
+        // would leave the app entirely instead of restarting it.
+        Navigation.NavigateTo(Navigation.BaseUri, forceLoad: true);
     }
 
     public void Dispose()

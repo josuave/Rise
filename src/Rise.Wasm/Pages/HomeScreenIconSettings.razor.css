@@ -1,0 +1,67 @@
+/* Home screen icon rows: one toggle row in the Preview section's
+   quiet style, a small preview of the install-time icon, and the
+   honest-limit note. The component owns its own classes — colocated
+   CSS is scoped, so nothing here can leak into other slices. */
+.calm-home-icon-row {
+    display: flex;
+    gap: 0.75rem;
+    align-items: flex-start;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid var(--calm-border-soft);
+    cursor: pointer;
+}
+
+.calm-home-icon-row input[type="checkbox"] {
+    accent-color: var(--calm-muted);
+    width: 1.1rem;
+    height: 1.1rem;
+    margin-top: 0.15rem;
+    flex-shrink: 0;
+}
+
+.calm-home-icon-text {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+}
+
+.calm-home-icon-title {
+    font-weight: 600;
+}
+
+.calm-home-icon-description {
+    color: var(--calm-muted);
+    font-size: 0.9rem;
+}
+
+.calm-home-icon-preview {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 0;
+}
+
+.calm-home-icon-image {
+    width: 3rem;
+    height: 3rem;
+    border-radius: 0.5rem;
+    border: 1px solid var(--calm-border-soft);
+}
+
+.calm-home-icon-caption {
+    color: var(--calm-muted);
+    font-size: 0.9rem;
+}
+
+.calm-home-icon-note {
+    color: var(--calm-muted);
+    font-size: 0.9rem;
+    margin-top: 0.5rem;
+}
+
+.calm-home-icon-status,
+.calm-home-icon-loading {
+    color: var(--calm-muted);
+    font-size: 0.9rem;
+    margin-top: 0.75rem;
+}
