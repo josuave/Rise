@@ -291,6 +291,53 @@ the user at runtime and persisted per browser; the hand-rolled
 store is one port, one adapter, and one service in the shape of
 the module and hotkey stores.
 
+A third flag, `calm-board-full`, is the full Calm Board (mock-up D):
+the same board treatment, plus a calm top — Date, Clock, Greeting,
+and Search render as full-width unboxed rows above the board — an
+Edit board bar above the board (active layout name, layout switch,
+Edit board toggle, Apply D arrangement), and an add-widget slot last
+in the grid that shows a hidden widget. Precedence: when the full
+flag is on the page carries only `calm-board-full`, so it wins over
+`calm-board` and `calm-board-landscape`; it neither requires nor
+forces them. The D arrangement (Date, Clock, Greeting, Weather,
+Search, Links, Todo, Notes visible in definition Order; Backup and
+the group hidden; any grouping cleared) is explicit-apply only: the
+flag never rewrites a stored layout — it applies when the user asks
+for it from the bar, through `LayoutService.ApplyCalmBoardArrangementAsync`,
+on the same path as Reset. Visibility and relative order always come
+from the stored layout; the top/board split only partitions by the
+top-id set (`CalmBoardArrangement.TopIds`). The 560px one-column
+phone rule carries forward unchanged. Under the full board, Notes
+defaults to post-it view when no view choice is stored (a stored
+choice always wins) and Todo shows a "Today · X of Y done" line;
+both read the flag through `PreviewFeatureService`. No card grips:
+there is no drag yet, and a grip that does nothing would be
+dishonest UI. The Weather widget renders once, in the board as a
+card with current conditions plus its 3-day forecast strip; the
+mock's separate weather header line is a second presentation of
+one widget and is not built.
+
+A fourth flag, `calm-settings`, redraws the Settings dialog itself
+in the Calm Board style: the same sections as warm-paper cards in
+a grid, grouped under hairline headings — Appearance (Theme, Home
+screen icon, Background), Content (Links, Search, Clock, Greeting,
+Group, Notes, 2048, Weather), System (Keyboard, Backup, Modules,
+Preview features) — in Order order within each group, so the board
+keeps the dialog's established ordering and only adds the grouping.
+The dialog subscribes to the preview service's Changed event and
+re-reads the flag on every open, so toggling the flag inside the
+dialog re-renders it live, and a toggle made while it was closed is
+honored on the next open. The Theme section is hard-coded in the
+dialog, so it is the first card of Appearance; its picker markup is
+duplicated between the flat dialog and the board card, and the two
+copies must stay in sync. A section whose title is in no group
+renders at the end under no heading, so a new section never
+vanishes. All D styles are scoped under a `calm-dialog-board`
+class on the dialog, so the flat dialog is untouched when the flag
+is off. The board grid is two columns in landscape and one column
+in portrait and under 560px, mirroring the page board's collapse;
+the dialog widens to 860px under the flag so two columns breathe.
+
 Backgrounds: one chosen background for the page — a built-in calm
 gradient preset (None, Dawn, Mist, Dusk, Forest, registered in
 Domain) or a custom image address pasted in Settings. The choice

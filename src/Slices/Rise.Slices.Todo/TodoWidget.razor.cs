@@ -14,7 +14,22 @@ public partial class TodoWidget : IDisposable
     [Inject]
     private TodoService TodoService { get; set; } = null!;
 
+    /// <summary>
+    /// Null when the preview service isn't registered: the Today line
+    /// stays off then. A nullable [Inject] still throws at activation
+    /// when unregistered, so tests must register the service.
+    /// </summary>
+    [Inject]
+    private PreviewFeatureService? PreviewFeatureService { get; set; }
+
     private TodoList List { get; set; } = TodoList.Empty();
+
+    /// <summary>Whether the full-board flag is on; the Today line shows only then.</summary>
+    private bool CalmBoardFull { get; set; }
+
+    private int DoneCount => List.Items.Count(item => item.Done);
+
+    private int TotalCount => List.Items.Count;
 
     private string NewText { get; set; } = string.Empty;
 
@@ -23,8 +38,20 @@ public partial class TodoWidget : IDisposable
     protected override async Task OnInitializedAsync()
     {
         List = await TodoService.LoadAsync();
+        await RefreshBoardFlagAsync();
+        PreviewFeatureService?.Changed += OnPreviewFeaturesChanged;
         TodoService.Changed += OnListChanged;
     }
+
+    private async void OnPreviewFeaturesChanged(object? sender, EventArgs args)
+    {
+        await RefreshBoardFlagAsync();
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task RefreshBoardFlagAsync() =>
+        CalmBoardFull = PreviewFeatureService is not null
+            && await PreviewFeatureService.IsEnabledAsync(PreviewFeatures.CalmBoardFull);
 
     private async void OnListChanged(object? sender, EventArgs args)
     {
@@ -74,6 +101,7 @@ public partial class TodoWidget : IDisposable
         if (disposing)
         {
             TodoService.Changed -= OnListChanged;
+            PreviewFeatureService?.Changed -= OnPreviewFeaturesChanged;
         }
     }
 }

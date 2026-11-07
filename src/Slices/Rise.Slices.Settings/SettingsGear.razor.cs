@@ -17,7 +17,10 @@ namespace Rise.Slices.Settings;
 /// Pack themes from the Omarchy module appear there too, when the
 /// module is switched on. Sections belonging to a switched-off module
 /// are hidden: a module's sections live in the module's assembly, so
-/// the dialog filters by assembly name.
+/// the dialog filters by assembly name. Behind the calm-settings
+/// preview flag the dialog renders D-style instead: the same
+/// sections as warm-paper cards in a grid, grouped under hairline
+/// headings (see <see cref="GroupedSections"/>).
 /// </summary>
 public partial class SettingsGear : IDisposable
 {
@@ -50,10 +53,17 @@ public partial class SettingsGear : IDisposable
     [Inject]
     private IModuleCatalog? ModuleCatalog { get; set; }
 
+    /// <summary>Null in older tests: no preview flags then, the dialog renders the flat list.</summary>
+    [Inject]
+    private PreviewFeatureService? PreviewFeatureService { get; set; }
+
     /// <summary>Ids of modules currently switched off.</summary>
     private HashSet<string> DisabledModules { get; set; } = new();
 
     private bool IsOpen { get; set; }
+
+    /// <summary>Whether the D-style settings board is opted in. Read on init and on every open, so a toggle made while the dialog was closed is honored.</summary>
+    private bool CalmSettingsEnabled { get; set; }
 
     /// <summary>Stored preference: "light", "dark", "system" (the default), "custom:&lt;id&gt;", or "pack:omarchy:&lt;slug&gt;".</summary>
     private string StoredTheme { get; set; } = "system";
@@ -72,6 +82,8 @@ public partial class SettingsGear : IDisposable
     {
         await RefreshDisabledAsync();
         ModuleService?.Changed += OnModulesChanged;
+        PreviewFeatureService?.Changed += OnPreviewFeaturesChanged;
+        CalmSettingsEnabled = await IsCalmSettingsEnabledAsync();
         await EnsurePackCacheAsync();
 
         if (CustomThemeService is not null)
@@ -231,7 +243,13 @@ public partial class SettingsGear : IDisposable
 
     private void CancelEdit() => EditingTheme = null;
 
-    private void Open() => IsOpen = true;
+    private async Task OpenAsync()
+    {
+        // Re-read on every open: the flag may have been toggled
+        // while the dialog was closed.
+        CalmSettingsEnabled = await IsCalmSettingsEnabledAsync();
+        IsOpen = true;
+    }
 
     private void Close() => IsOpen = false;
 
@@ -246,6 +264,17 @@ public partial class SettingsGear : IDisposable
         await EnsurePackCacheAsync();
         await InvokeAsync(StateHasChanged);
     }
+
+    private async void OnPreviewFeaturesChanged(object? sender, EventArgs args)
+    {
+        CalmSettingsEnabled = await IsCalmSettingsEnabledAsync();
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private Task<bool> IsCalmSettingsEnabledAsync() =>
+        PreviewFeatureService is null
+            ? Task.FromResult(false)
+            : PreviewFeatureService.IsEnabledAsync(PreviewFeatures.CalmSettings);
 
     /// <summary>
     /// Contributed sections ordered by <see cref="ISettingsSection.Order"/>,
@@ -275,6 +304,89 @@ public partial class SettingsGear : IDisposable
             ? Path.GetFileNameWithoutExtension(lazy.AssemblyFile)
             : section.ComponentType.Assembly.GetName().Name;
 
+    /// <summary>
+    /// D-style grouping of the dialog's sections, keyed by section
+    /// title: which group each contributed section belongs to. The
+    /// hard-coded Theme section is not contributed, so it joins
+    /// Appearance from <see cref="GroupedSections"/> instead.
+    /// </summary>
+    private static readonly Dictionary<string, string> CalmSettingsGroupByTitle = new(StringComparer.Ordinal)
+    {
+        ["Home screen icon"] = "Appearance",
+        ["Background"] = "Appearance",
+        ["Links"] = "Content",
+        ["Search"] = "Content",
+        ["Clock"] = "Content",
+        ["Greeting"] = "Content",
+        ["Group"] = "Content",
+        ["Notes"] = "Content",
+        ["2048"] = "Content",
+        ["Weather"] = "Content",
+        ["Keyboard"] = "System",
+        ["Backup"] = "System",
+        ["Modules"] = "System",
+        ["Preview features"] = "System",
+    };
+
+    /// <summary>D-style groups in display order.</summary>
+    private static readonly string[] CalmSettingsGroupOrder = new[] { "Appearance", "Content", "System" };
+
+    /// <summary>One card in the D-style settings board: the hard-coded Theme card, or one contributed section.</summary>
+    private sealed record SettingsCard(string Title, ISettingsSection? Section);
+
+    /// <summary>One D-style group: its heading (null for ungrouped stragglers) and its cards.</summary>
+    private sealed record SettingsGroup(string? Heading, IReadOnlyList<SettingsCard> Cards);
+
+    /// <summary>
+    /// The visible sections grouped for the D-style board, in group
+    /// order, each group in <see cref="ISettingsSection.Order"/> order
+    /// — the board keeps the dialog's established ordering, it only
+    /// adds the grouping. The hard-coded Theme section is the first
+    /// card of Appearance. A section whose title is in no group lands
+    /// at the end under no heading, so a new section never vanishes.
+    /// </summary>
+    private List<SettingsGroup> GroupedSections()
+    {
+        var cardsByGroup = new Dictionary<string, List<SettingsCard>>(StringComparer.Ordinal);
+        foreach (string heading in CalmSettingsGroupOrder)
+        {
+            cardsByGroup[heading] = new List<SettingsCard>();
+        }
+
+        // Theme is hard-coded in the dialog, not contributed: it is
+        // the first card of Appearance.
+        cardsByGroup["Appearance"].Add(new SettingsCard("Theme", null));
+
+        var ungrouped = new List<SettingsCard>();
+        foreach (ISettingsSection section in VisibleSections())
+        {
+            if (CalmSettingsGroupByTitle.TryGetValue(section.Title, out string? heading))
+            {
+                cardsByGroup[heading].Add(new SettingsCard(section.Title, section));
+            }
+            else
+            {
+                ungrouped.Add(new SettingsCard(section.Title, section));
+            }
+        }
+
+        var groups = new List<SettingsGroup>();
+        foreach (string heading in CalmSettingsGroupOrder)
+        {
+            if (cardsByGroup[heading].Count > 0)
+            {
+                groups.Add(new SettingsGroup(heading, cardsByGroup[heading]));
+            }
+        }
+
+        if (ungrouped.Count > 0)
+        {
+            groups.Add(new SettingsGroup(null, ungrouped));
+        }
+
+        return groups;
+    }
+
     private static Dictionary<string, object?> LazySectionParameters(ILazySettingsSection lazy) =>
         new() { ["Section"] = lazy };
 
@@ -289,6 +401,11 @@ public partial class SettingsGear : IDisposable
         if (disposing && ModuleService is not null)
         {
             ModuleService.Changed -= OnModulesChanged;
+        }
+
+        if (disposing && PreviewFeatureService is not null)
+        {
+            PreviewFeatureService.Changed -= OnPreviewFeaturesChanged;
         }
     }
 }

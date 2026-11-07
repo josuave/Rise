@@ -21,13 +21,33 @@ public partial class NotesWidget : IDisposable
     [Inject]
     private WidgetConfigService ConfigService { get; set; } = null!;
 
+    /// <summary>
+    /// Null when the preview service isn't registered: the board
+    /// default is off then, and the stored choice still rules. A
+    /// nullable [Inject] still throws at activation when unregistered,
+    /// so tests must register the service.
+    /// </summary>
+    [Inject]
+    private PreviewFeatureService? PreviewFeatureService { get; set; }
+
     private NoteList List { get; set; } = NoteList.Empty();
 
     private JsonObject ViewData { get; set; } = new();
 
     private const string PostItViewKey = "PostItView";
 
-    private bool PostItView => WidgetConfigJson.GetBool(ViewData, PostItViewKey);
+    /// <summary>Whether the full-board flag is on; the post-it default when no choice is stored.</summary>
+    private bool CalmBoardFull { get; set; }
+
+    /// <summary>
+    /// The stored choice always wins; with no stored key the full
+    /// board defaults to post-its, and the plain board to the list.
+    /// The toggle still persists, so toggling once stores a choice.
+    /// </summary>
+    private bool PostItView =>
+        ViewData[PostItViewKey] is JsonValue value && value.TryGetValue<bool>(out bool stored)
+            ? stored
+            : CalmBoardFull;
 
     private string NewText { get; set; } = string.Empty;
 
@@ -41,8 +61,20 @@ public partial class NotesWidget : IDisposable
     {
         List = await NotesService.LoadAsync();
         ViewData = await ConfigService.LoadMigratedAsync("Notes", 1, static (data, _) => data);
+        await RefreshBoardFlagAsync();
+        PreviewFeatureService?.Changed += OnPreviewFeaturesChanged;
         NotesService.Changed += OnListChanged;
     }
+
+    private async void OnPreviewFeaturesChanged(object? sender, EventArgs args)
+    {
+        await RefreshBoardFlagAsync();
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task RefreshBoardFlagAsync() =>
+        CalmBoardFull = PreviewFeatureService is not null
+            && await PreviewFeatureService.IsEnabledAsync(PreviewFeatures.CalmBoardFull);
 
     private async void OnListChanged(object? sender, EventArgs args)
     {
@@ -124,6 +156,7 @@ public partial class NotesWidget : IDisposable
         if (disposing)
         {
             NotesService.Changed -= OnListChanged;
+            PreviewFeatureService?.Changed -= OnPreviewFeaturesChanged;
         }
     }
 }
