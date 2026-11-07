@@ -5,9 +5,9 @@
 @import '_content/Rise.Slices.Links/Rise.Slices.Links.nioz298xbz.bundle.scp.css';
 @import '_content/Rise.Slices.Notes/Rise.Slices.Notes.53lbpdfpti.bundle.scp.css';
 @import '_content/Rise.Slices.Search/Rise.Slices.Search.8hl6uk3oje.bundle.scp.css';
-@import '_content/Rise.Slices.Settings/Rise.Slices.Settings.wg6nd41qth.bundle.scp.css';
+@import '_content/Rise.Slices.Settings/Rise.Slices.Settings.5if4uk8itn.bundle.scp.css';
 @import '_content/Rise.Slices.Todo/Rise.Slices.Todo.amvfccnemv.bundle.scp.css';
-@import '_content/Rise.Slices.Weather/Rise.Slices.Weather.i964rxdoj4.bundle.scp.css';
+@import '_content/Rise.Slices.Weather/Rise.Slices.Weather.los2463r17.bundle.scp.css';
 
 /* /Pages/BackgroundSettings.razor.rz.scp.css */
 /* Background picker: preset swatches in a row, then the custom
@@ -406,14 +406,18 @@
 
 /* Full Calm Board (mock-up D, calm-board-full flag): the same board
    treatment as calm-board, plus a calm top — Date, Clock, Greeting,
-   and Search render as full-width unboxed rows above the board — an
-   Edit board bar above the board, and an add-widget slot last in
-   the grid. Precedence lives in Index.BoardClass: when the flag is
-   on the page carries only calm-board-full, so this block alone
-   decides the treatment and the v0 and landscape rules never fight
-   it. The Clock is a top row here, full-width by construction, so
-   it stays the hero. No card grips: there is no drag yet, and a
-   grip that does nothing would be dishonest UI. */
+   and Search render as full-width unboxed rows above the board, with
+   the weather summary line first when Weather shows — then a
+   "Morning board" heading and the Edit board bar (pill buttons),
+   and an add-widget slot last in the grid. Precedence lives in
+   Index.BoardClass: when the flag is on the page carries only
+   calm-board-full, so this block alone decides the treatment and
+   the v0 and landscape rules never fight it. The Clock is a top
+   row here, full-width by construction, and renders hero-sized
+   (see the ::deep rules below: the digits are the Clock widget's
+   own markup, so the slot styles pierce its scope). No card grips:
+   there is no drag yet, and a grip that does nothing would be
+   dishonest UI. */
 .calm-board-full[b-cw8acn2iox] {
     max-width: 860px;
 }
@@ -450,7 +454,37 @@
     padding: 0;
 }
 
-/* Edit board bar: quiet — muted text, one hairline under it. */
+/* Hero clock: the prototype's giant time, digits hero-sized at
+   phone width, seconds and meridiem smaller. ::deep pierces the
+   Clock widget's scope — the slot is this file's markup, the digits
+   are the widget's — so the rule must not carry this file's scope
+   on the clock parts. */
+.calm-board-full .calm-board-top .calm-widget-slot[data-widget="Clock"][b-cw8acn2iox]  .calm-clock {
+    font-size: min(6rem, 23vw);
+    line-height: 1;
+}
+
+.calm-board-full .calm-board-top .calm-widget-slot[data-widget="Clock"][b-cw8acn2iox]  .calm-clock-seconds,
+.calm-board-full .calm-board-top .calm-widget-slot[data-widget="Clock"][b-cw8acn2iox]  .calm-clock-suffix {
+    font-size: 0.35em;
+}
+
+/* "Morning board" heading + Edit board bar: the heading is italic
+   serif like the prototype, over a hairline; the bar sits below
+   the calm top (never at the top of the page) and its controls are
+   pill buttons, also like the prototype. */
+.calm-board-heading[b-cw8acn2iox] {
+    font-family: Georgia, 'Times New Roman', serif;
+    font-style: italic;
+    font-weight: 400;
+    font-size: 1.5rem;
+    text-align: left;
+    color: var(--calm-text);
+    border-top: 1px solid var(--calm-border-soft);
+    padding-top: 1rem;
+    margin: 1.5rem 0 0.75rem;
+}
+
 .calm-board-bar[b-cw8acn2iox] {
     display: flex;
     flex-wrap: wrap;
@@ -460,35 +494,68 @@
     font-size: 0.9rem;
     border-bottom: 1px solid var(--calm-border-soft);
     padding-bottom: 0.75rem;
-    margin-top: 1rem;
 }
 
 .calm-board-bar-name[b-cw8acn2iox] {
     font-weight: 600;
 }
 
-.calm-board-bar-switch[b-cw8acn2iox] {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.calm-board-bar-switch select[b-cw8acn2iox] {
-    background: none;
-    color: inherit;
-    border: 1px solid var(--calm-border-soft);
-    border-radius: 0.5rem;
-    padding: 0.25rem 0.5rem;
-    font: inherit;
-}
-
 .calm-board-bar-button[b-cw8acn2iox] {
-    background: none;
-    border: none;
-    color: var(--calm-muted);
+    background: var(--calm-surface);
+    border: 1px solid var(--calm-border);
+    border-radius: 999px;
+    color: var(--calm-text);
     cursor: pointer;
     font: inherit;
-    padding: 0;
+    padding: 0.375rem 1rem;
+}
+
+/* Switch layout menu: the button's wrapper anchors the menu, the
+   fixed transparent overlay catches taps outside it, and the menu
+   itself lists the saved layouts. The toggle button sits above the
+   overlay (z-index) so it still closes the menu when tapped. */
+.calm-board-bar-switch-wrap[b-cw8acn2iox] {
+    position: relative;
+}
+
+.calm-board-bar-switch-wrap .calm-board-bar-button[b-cw8acn2iox] {
+    position: relative;
+    z-index: 21;
+}
+
+.calm-switch-menu-overlay[b-cw8acn2iox] {
+    position: fixed;
+    inset: 0;
+    z-index: 20;
+}
+
+.calm-switch-menu[b-cw8acn2iox] {
+    position: absolute;
+    top: calc(100% + 0.5rem);
+    left: 0;
+    z-index: 21;
+    display: flex;
+    flex-direction: column;
+    min-width: 12rem;
+    background: var(--calm-surface);
+    border: 1px solid var(--calm-border);
+    border-radius: 0.75rem;
+    padding: 0.5rem;
+}
+
+.calm-switch-menu button[b-cw8acn2iox] {
+    background: none;
+    border: none;
+    color: var(--calm-text);
+    cursor: pointer;
+    font: inherit;
+    padding: 0.5rem 0.75rem;
+    text-align: left;
+    border-radius: 0.5rem;
+}
+
+.calm-switch-menu button.selected[b-cw8acn2iox] {
+    font-weight: 600;
 }
 
 /* Add-widget slot: the button is the card's content — italic,
