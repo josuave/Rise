@@ -55,7 +55,18 @@ public partial class KeyboardSettings
         CapturingActionId = null;
         HotkeyBinding binding = new(args.Key, args.CtrlKey || args.MetaKey, args.AltKey, args.ShiftKey);
         Result<HotkeyBinding> saved = await HotkeyService.SetAsync(actionId, binding);
-        Status = saved.IsSuccess ? $"Saved {binding.Display}." : saved.Error;
+        switch (saved)
+        {
+            case Ok<HotkeyBinding>:
+                Status = $"Saved {binding.Display}.";
+                break;
+            case Error error:
+                Status = error.Message;
+                break;
+            case null:
+                Status = null;
+                break;
+        }
         await RefreshAsync();
     }
 

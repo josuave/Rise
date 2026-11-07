@@ -51,28 +51,48 @@ public partial class BackgroundSettings : IDisposable
     {
         _ = await BackgroundService.GetCssAsync();
         Choice = await BackgroundService.GetChoiceAsync();
-        if (Choice.PresetId == BackgroundPresets.Custom)
+        if (Choice is CustomBackground { Url: var url })
         {
-            CustomUrl = Choice.CustomUrl;
+            CustomUrl = url;
         }
     }
 
-    private bool IsSelected(BackgroundPreset preset) => Choice.PresetId == preset.Id;
+    private bool IsSelected(BackgroundPreset preset) => Choice is PresetBackground { Id: var id } && id == preset.Id;
 
     private async Task SelectPresetAsync(BackgroundPreset preset)
     {
         PendingUpload = null;
         Result<BackgroundChoice> result = await BackgroundService.SetPresetAsync(preset.Id);
-        Status = result.IsSuccess
-            ? preset.Id == BackgroundPresets.None ? "Background off." : $"{preset.Title} background on."
-            : result.Error;
+        switch (result)
+        {
+            case Ok<BackgroundChoice>:
+                Status = preset.Id == BackgroundPresets.None ? "Background off." : $"{preset.Title} background on.";
+                break;
+            case Error error:
+                Status = error.Message;
+                break;
+            case null:
+                Status = null;
+                break;
+        }
     }
 
     private async Task ApplyUrlAsync()
     {
         PendingUpload = null;
         Result<BackgroundChoice> result = await BackgroundService.SetCustomUrlAsync(CustomUrl);
-        Status = result.IsSuccess ? "Image applied." : result.Error;
+        switch (result)
+        {
+            case Ok<BackgroundChoice>:
+                Status = "Image applied.";
+                break;
+            case Error error:
+                Status = error.Message;
+                break;
+            case null:
+                Status = null;
+                break;
+        }
     }
 
     private async Task UploadAsync(InputFileChangeEventArgs args)
@@ -99,16 +119,28 @@ public partial class BackgroundSettings : IDisposable
 
         string hash = Convert.ToHexString(SHA256.HashData(bytes));
         var image = new UploadedImage(hash, file.Name, file.Size, file.ContentType);
-        if (Choice.Upload is not null && Choice.Upload.Hash != hash)
+        UploadedImage? currentImage = Choice.UploadImage;
+        if (currentImage is not null && currentImage.Hash != hash)
         {
             PendingUpload = (image, bytes);
-            Status = $"That's a different image than {Choice.Upload.FileName}.";
+            Status = $"That's a different image than {currentImage.FileName}.";
             return;
         }
 
         PendingUpload = null;
         Result<BackgroundChoice> result = await BackgroundService.SetUploadAsync(image, bytes);
-        Status = result.IsSuccess ? "Image applied." : result.Error;
+        switch (result)
+        {
+            case Ok<BackgroundChoice>:
+                Status = "Image applied.";
+                break;
+            case Error error:
+                Status = error.Message;
+                break;
+            case null:
+                Status = null;
+                break;
+        }
     }
 
     private async Task UsePendingUploadAsync()
@@ -121,7 +153,18 @@ public partial class BackgroundSettings : IDisposable
         (UploadedImage image, byte[] bytes) = PendingUpload.Value;
         PendingUpload = null;
         Result<BackgroundChoice> result = await BackgroundService.SetUploadAsync(image, bytes);
-        Status = result.IsSuccess ? "Image applied." : result.Error;
+        switch (result)
+        {
+            case Ok<BackgroundChoice>:
+                Status = "Image applied.";
+                break;
+            case Error error:
+                Status = error.Message;
+                break;
+            case null:
+                Status = null;
+                break;
+        }
     }
 
     public void Dispose()

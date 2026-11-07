@@ -41,18 +41,23 @@ public partial class WeatherSettings
         }
 
         Result<GeocodedPlace> result = await WeatherService.GeocodeAsync(PlaceText);
-        if (!result.IsSuccess || result.Value is null)
+        switch (result)
         {
-            FormError = result.Error ?? "Couldn't find that place.";
-            return;
+            case Ok<GeocodedPlace> ok:
+                Config.Place = ok.Value.Name;
+                Config.Latitude = ok.Value.Latitude;
+                Config.Longitude = ok.Value.Longitude;
+                await Config.SaveAsync();
+                PlaceText = Config.Place;
+                FormError = null;
+                break;
+            case Error error:
+                FormError = error.Message;
+                return;
+            case null:
+                FormError = "Couldn't find that place.";
+                return;
         }
-
-        Config.Place = result.Value.Name;
-        Config.Latitude = result.Value.Latitude;
-        Config.Longitude = result.Value.Longitude;
-        await Config.SaveAsync();
-        PlaceText = Config.Place;
-        FormError = null;
     }
 
     private async Task SetForecastAsync(bool show)
