@@ -5,7 +5,7 @@
 @import '_content/Rise.Slices.Links/Rise.Slices.Links.nioz298xbz.bundle.scp.css';
 @import '_content/Rise.Slices.Notes/Rise.Slices.Notes.53lbpdfpti.bundle.scp.css';
 @import '_content/Rise.Slices.Search/Rise.Slices.Search.8hl6uk3oje.bundle.scp.css';
-@import '_content/Rise.Slices.Settings/Rise.Slices.Settings.08shoo5mei.bundle.scp.css';
+@import '_content/Rise.Slices.Settings/Rise.Slices.Settings.ytxh6se1lp.bundle.scp.css';
 @import '_content/Rise.Slices.Todo/Rise.Slices.Todo.amvfccnemv.bundle.scp.css';
 @import '_content/Rise.Slices.Weather/Rise.Slices.Weather.los2463r17.bundle.scp.css';
 
@@ -119,6 +119,31 @@
 .calm-background-upload-label input[type="file"][b-jsnesr5ld6] {
     font: inherit;
     color: var(--calm-text);
+}
+
+/* D-style board presentation: this component renders inside a
+   .calm-dialog-board-card there, so these rules only apply in the
+   board — the flat dialog keeps its titled swatches and row layout.
+   The mock's chips have no titles and the selected chip is
+   double-ringed (surface gap, then a text-colored ring); the custom
+   address stacks label-above-input. */
+.calm-dialog-board-card .calm-background-swatch-title[b-jsnesr5ld6] {
+    display: none;
+}
+
+.calm-dialog-board-card .calm-background-swatch[aria-pressed="true"] .calm-background-swatch-color[b-jsnesr5ld6] {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--calm-surface), 0 0 0 4px var(--calm-text);
+}
+
+.calm-dialog-board-card .calm-background-custom[b-jsnesr5ld6] {
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+.calm-dialog-board-card .calm-background-custom input[b-jsnesr5ld6] {
+    width: 100%;
+    box-sizing: border-box;
 }
 /* /Pages/CommandPalette.razor.rz.scp.css */
 .calm-palette-backdrop[b-2doiel3n63] {

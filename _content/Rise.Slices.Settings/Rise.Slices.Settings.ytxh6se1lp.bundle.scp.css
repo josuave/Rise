@@ -1,0 +1,410 @@
+/* _content/Rise.Slices.Settings/SettingsGear.razor.rz.scp.css */
+.calm-settings-gear[b-2o83iblh7t] {
+    background: none;
+    border: none;
+    color: var(--calm-faint);
+    cursor: pointer;
+    font-size: 1.25rem;
+    line-height: 1;
+}
+
+/* Stacking order (keep in sync with the board bar): switch menu
+   overlay 20 / switch button + menu 21 < dialog overlay 30
+   < command palette 100 < search picker 100/101 < Blazor error
+   UI 1000. The overlay renders inside .calm-settings-cluster, so
+   its z-index is relative to the cluster's stacking context — the
+   cluster itself is z-index 30, which is what lifts the dialog
+   above the board bar so the Switch layout button cannot paint
+   over it. */
+.calm-dialog-overlay[b-2o83iblh7t] {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.35);
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 2rem 1rem;
+    box-sizing: border-box;
+    overflow-y: auto;
+    z-index: 30;
+}
+
+.calm-dialog[b-2o83iblh7t] {
+    background: var(--calm-surface);
+    border: 1px solid var(--calm-border-soft);
+    border-radius: 14px;
+    width: 100%;
+    max-width: 560px;
+    padding: 1.25rem 1.5rem;
+    box-sizing: border-box;
+    text-align: left;
+    color: var(--calm-text);
+}
+
+.calm-dialog-header[b-2o83iblh7t] {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.calm-dialog-header h2[b-2o83iblh7t] {
+    margin: 0;
+    font-weight: 300;
+}
+
+.calm-dialog-close[b-2o83iblh7t] {
+    background: none;
+    border: none;
+    color: var(--calm-faint);
+    cursor: pointer;
+    font-size: 1.5rem;
+    line-height: 1;
+}
+
+.calm-dialog h3[b-2o83iblh7t] {
+    font-weight: 400;
+    margin: 1.25rem 0 0.5rem;
+}
+
+.calm-dialog .calm-dialog-close[b-2o83iblh7t] {
+    background: none;
+    border: none;
+    padding: 0;
+}
+
+.calm-theme-options[b-2o83iblh7t] {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.calm-theme-option.selected[b-2o83iblh7t] {
+    background: var(--calm-tile-bg);
+    font-weight: 700;
+}
+
+.calm-theme-custom-row[b-2o83iblh7t] {
+    display: flex;
+    gap: 0.5rem;
+    margin: 0.5rem 0;
+}
+
+.calm-theme-custom-row .calm-theme-option[b-2o83iblh7t] {
+    flex: 1;
+}
+
+.calm-theme-custom-row button:not(.calm-theme-option)[b-2o83iblh7t] {
+    border: 1px solid var(--calm-border);
+    border-radius: 8px;
+    padding: 0.35rem 0.75rem;
+    background: var(--calm-surface);
+    color: var(--calm-text);
+    cursor: pointer;
+}
+
+.calm-theme-pack-row[b-2o83iblh7t] {
+    display: flex;
+    gap: 0.5rem;
+    margin: 0.5rem 0;
+}
+
+.calm-theme-pack-row .calm-theme-option[b-2o83iblh7t] {
+    display: flex;
+    flex: 1;
+    align-items: center;
+    gap: 0.5rem;
+    text-align: left;
+}
+
+.calm-theme-swatch[b-2o83iblh7t] {
+    display: inline-block;
+    width: 1.1rem;
+    height: 1.1rem;
+    flex: none;
+    border: 2px solid;
+    border-radius: 4px;
+}
+
+.calm-theme-mode[b-2o83iblh7t] {
+    margin-left: auto;
+    color: var(--calm-muted);
+    font-size: 0.85rem;
+}
+
+.calm-theme-new[b-2o83iblh7t] {
+    border: 1px solid var(--calm-border);
+    border-radius: 8px;
+    padding: 0.35rem 0.75rem;
+    margin-top: 0.5rem;
+    background: var(--calm-surface);
+    color: var(--calm-text);
+    cursor: pointer;
+}
+
+/* D-style settings (calm-settings flag): the dialog becomes a
+   board — warm-paper cards in a grid, grouped under hairline
+   headings. Every rule here is scoped under .calm-dialog-board,
+   so the flat dialog is untouched. The card treatment mirrors the
+   Calm Board slots: surface bg, soft border, 0.75rem radius,
+   1rem padding. Two columns in landscape, one column in portrait
+   and under 560px. */
+.calm-dialog.calm-dialog-board[b-2o83iblh7t] {
+    max-width: 860px;
+}
+
+.calm-dialog-board-sub[b-2o83iblh7t] {
+    margin: 0.25rem 0 0;
+    color: var(--calm-muted);
+    font-size: 0.9rem;
+}
+
+.calm-dialog-board h3.calm-dialog-board-group[b-2o83iblh7t] {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.75rem;
+    margin: 1.5rem 0 0.75rem;
+    color: var(--calm-muted);
+    font-size: 0.85rem;
+    font-weight: 400;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+/* The hairline stretches between the label and the count, like the mock. */
+.calm-dialog-board-group-rule[b-2o83iblh7t] {
+    flex: 1;
+    border-top: 1px solid var(--calm-border-soft);
+}
+
+.calm-dialog-board-count[b-2o83iblh7t] {
+    text-transform: none;
+    letter-spacing: normal;
+}
+
+.calm-dialog-board-grid[b-2o83iblh7t] {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+.calm-dialog-board .calm-dialog-board-card[b-2o83iblh7t] {
+    background: var(--calm-surface);
+    border: 1px solid var(--calm-border-soft);
+    border-radius: 0.75rem;
+    padding: 1rem;
+    min-width: 0;
+}
+
+.calm-dialog-board .calm-dialog-board-card h3[b-2o83iblh7t] {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0 0 0.5rem;
+    font-weight: 400;
+}
+
+/* One-path line icon before each card title, like the mock's sun
+   and image icons. The svg carries no text, so the card-title
+   assertions still read the plain title. */
+.calm-card-icon[b-2o83iblh7t] {
+    width: 1.25rem;
+    height: 1.25rem;
+    flex: none;
+    color: var(--calm-muted);
+}
+
+/* Board header (calm-settings flag only): the mock's large serif
+   title and a Done pill instead of the ×. The flat dialog keeps its
+   light h2 and × button. */
+.calm-dialog-board .calm-dialog-header h2[b-2o83iblh7t] {
+    font-family: Georgia, 'Times New Roman', serif;
+    font-weight: 700;
+    font-size: 1.75rem;
+}
+
+.calm-dialog-board .calm-dialog-done[b-2o83iblh7t] {
+    border-radius: 999px;
+    padding: 0.5rem 1.25rem;
+    font-weight: 600;
+}
+
+/* Theme card (board only): the mock's segmented control — one pill
+   group, the active segment filled with the text color so it inverts
+   in both themes. */
+.calm-theme-segmented[b-2o83iblh7t] {
+    display: flex;
+    border: 1px solid var(--calm-border);
+    border-radius: 0.75rem;
+    overflow: hidden;
+}
+
+.calm-theme-segmented .calm-theme-option[b-2o83iblh7t] {
+    flex: 1;
+    border: none;
+    border-radius: 0;
+    background: transparent;
+    padding: 0.6rem 0.25rem;
+    text-align: center;
+}
+
+.calm-theme-segmented .calm-theme-option.selected[b-2o83iblh7t] {
+    background: var(--calm-text);
+    color: var(--calm-bg);
+}
+
+/* Small muted labels over the Theme card's groups, like the mock's
+   "My themes" and "Omarchy theme pack". */
+.calm-theme-label[b-2o83iblh7t] {
+    margin: 1rem 0 0.5rem;
+    color: var(--calm-muted);
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.calm-theme-pills[b-2o83iblh7t] {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.calm-theme-pill-wrap[b-2o83iblh7t] {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+/* The per-theme Edit/Delete stay beside their pill, as small muted
+   text buttons — the mock shows clean pills, but the behavior (edit
+   and delete a custom theme) has to stay. */
+.calm-theme-pills .calm-theme-pill-action[b-2o83iblh7t] {
+    border: none;
+    background: none;
+    color: var(--calm-muted);
+    font-size: 0.85rem;
+    padding: 0.25rem;
+    cursor: pointer;
+}
+
+/* The Omarchy pack list collapses into one compact row: the active
+   pack, how many packs there are, and a chevron that turns down
+   when the list is open. */
+.calm-theme-pack-summary[b-2o83iblh7t] {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    width: 100%;
+    text-align: left;
+}
+
+/* Long pack names ellipsize instead of wrapping the row taller. */
+.calm-theme-pack-name[b-2o83iblh7t] {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.calm-theme-pack-count[b-2o83iblh7t] {
+    margin-left: auto;
+    color: var(--calm-muted);
+    font-size: 0.9rem;
+    white-space: nowrap;
+}
+
+.calm-theme-pack-chevron[b-2o83iblh7t] {
+    color: var(--calm-muted);
+    transition: transform 0.15s ease;
+}
+
+.calm-theme-pack-summary[aria-expanded="true"] .calm-theme-pack-chevron[b-2o83iblh7t] {
+    transform: rotate(90deg);
+}
+
+@media (orientation: portrait) {
+    .calm-dialog-board-grid[b-2o83iblh7t] {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 560px) {
+    .calm-dialog-board-grid[b-2o83iblh7t] {
+        grid-template-columns: 1fr;
+    }
+}
+/* _content/Rise.Slices.Settings/ThemeEditor.razor.rz.scp.css */
+.calm-theme-editor[b-6evkto5hon] {
+    margin-top: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.calm-theme-name[b-6evkto5hon] {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.calm-theme-name input[b-6evkto5hon] {
+    flex: 1;
+    border: 1px solid var(--calm-border);
+    border-radius: 8px;
+    padding: 0.35rem 0.75rem;
+    background: var(--calm-surface);
+    color: var(--calm-text);
+}
+
+.calm-theme-palette[b-6evkto5hon] {
+    border: 1px solid var(--calm-border);
+    border-radius: 8px;
+    padding: 0.75rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.calm-theme-field[b-6evkto5hon] {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.calm-theme-field input[type="color"][b-6evkto5hon] {
+    border: 1px solid var(--calm-border);
+    border-radius: 4px;
+    padding: 0;
+    width: 3rem;
+    height: 1.75rem;
+    background: var(--calm-surface);
+    cursor: pointer;
+}
+
+.calm-theme-editor-actions[b-6evkto5hon] {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.calm-theme-editor-actions button[b-6evkto5hon] {
+    border: 1px solid var(--calm-border);
+    border-radius: 8px;
+    padding: 0.35rem 0.75rem;
+    background: var(--calm-surface);
+    color: var(--calm-text);
+    cursor: pointer;
+}
+
+.calm-theme-editor-actions button:disabled[b-6evkto5hon] {
+    opacity: 0.4;
+    cursor: default;
+}
+/* _content/Rise.Slices.Settings/ThemeToggle.razor.rz.scp.css */
+.calm-theme-toggle[b-pavgewnrhr] {
+    background: none;
+    border: none;
+    color: var(--calm-faint);
+    cursor: pointer;
+    font-size: 1.25rem;
+    line-height: 1;
+}
