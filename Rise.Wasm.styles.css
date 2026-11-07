@@ -5,7 +5,7 @@
 @import '_content/Rise.Slices.Links/Rise.Slices.Links.nioz298xbz.bundle.scp.css';
 @import '_content/Rise.Slices.Notes/Rise.Slices.Notes.53lbpdfpti.bundle.scp.css';
 @import '_content/Rise.Slices.Search/Rise.Slices.Search.8hl6uk3oje.bundle.scp.css';
-@import '_content/Rise.Slices.Settings/Rise.Slices.Settings.5if4uk8itn.bundle.scp.css';
+@import '_content/Rise.Slices.Settings/Rise.Slices.Settings.08shoo5mei.bundle.scp.css';
 @import '_content/Rise.Slices.Todo/Rise.Slices.Todo.amvfccnemv.bundle.scp.css';
 @import '_content/Rise.Slices.Weather/Rise.Slices.Weather.los2463r17.bundle.scp.css';
 
@@ -293,7 +293,11 @@
 }
 
 /* Settings cluster (kept subtle so the Calm page stays calm): theme
-   toggle immediately left of the gear, fixed top-right. */
+   toggle immediately left of the gear, fixed top-right. The cluster
+   is a stacking context, and the Settings dialog overlay renders
+   inside it — so the cluster's z-index is what lifts the dialog
+   above the board bar (switch button + menu 21). Keep below the
+   command palette (100). */
 .calm-settings-cluster[b-cw8acn2iox] {
     position: fixed;
     top: 1rem;
@@ -301,7 +305,7 @@
     display: flex;
     gap: 0.25rem;
     align-items: center;
-    z-index: 10;
+    z-index: 30;
 }
 
 /* First-run hint: one muted line above Edit layout, dismissed once
