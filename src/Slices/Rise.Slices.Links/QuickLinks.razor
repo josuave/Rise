@@ -1,13 +1,76 @@
 @using Rise.Domain
 
-<div class="calm-links">
-    @foreach (var link in Page.Links)
+<div class="calm-links-widget">
+    <div class="calm-links-header">
+        <input type="search"
+               class="calm-links-filter"
+               placeholder="Filter links…"
+               aria-label="Filter links"
+               @bind="SearchQuery"
+               @bind:event="oninput" />
+        <button type="button"
+                class="calm-links-view-toggle"
+                aria-label="@(IsDetailed ? "Switch to compact view" : "Switch to detailed view")"
+                aria-pressed="@(IsDetailed ? "true" : "false")"
+                @onclick="ToggleViewAsync">@(IsDetailed ? "Detailed" : "Compact")</button>
+    </div>
+    @if (TagsInUse().Count > 0)
     {
-        <div class="calm-link">
-            <a class="calm-link-target" href="@link.Url.Value" target="_blank" rel="noopener noreferrer" title="@link.Url.Value">
-                <span class="calm-link-initials">@link.Initials</span>
-                <span class="calm-link-name">@link.Name</span>
-            </a>
+        <div class="calm-links-tagbar" role="group" aria-label="Filter by tag">
+            <button type="button"
+                    class="calm-tag-pill@(SelectedTag is null ? " active" : "")"
+                    aria-pressed="@(SelectedTag is null ? "true" : "false")"
+                    @onclick="() => SelectTag(null)">All</button>
+            @foreach (string tag in TagsInUse())
+            {
+                <button type="button"
+                        class="calm-tag-pill@(string.Equals(SelectedTag, tag, StringComparison.OrdinalIgnoreCase) ? " active" : "")"
+                        aria-pressed="@(string.Equals(SelectedTag, tag, StringComparison.OrdinalIgnoreCase) ? "true" : "false")"
+                        @onclick="() => SelectTag(tag)">@tag</button>
+            }
         </div>
     }
+    <div class="calm-links@(IsDetailed ? " detailed" : "")">
+        @foreach (Link link in VisibleLinks())
+        {
+            <div class="calm-link">
+                @if (link.IsPinned)
+                {
+                    <span class="calm-link-pin" aria-label="Pinned link" title="Pinned">📌</span>
+                }
+                <a class="calm-link-target" href="@link.Url.Value" target="_blank" rel="noopener noreferrer" title="@link.Url.Value" @onclick="() => OnLinkClick(link)">
+                    @if (link.IconUrl is null || FaviconFailed.Contains(link.Id))
+                    {
+                        <span class="calm-link-initials">@link.Initials</span>
+                    }
+                    else
+                    {
+                        <img class="calm-link-icon" src="@link.IconUrl" alt="" @onerror="() => OnFaviconError(link.Id)" />
+                    }
+                    <span class="calm-link-name">@link.Name</span>
+                    <span class="calm-link-domain">@(DomainOf(link) ?? link.Url.Value)</span>
+                </a>
+                @if (link.Tags.Count > 0)
+                {
+                    <div class="calm-link-tags">
+                        @foreach (string tag in link.Tags)
+                        {
+                            <span class="calm-link-tag">@tag</span>
+                        }
+                    </div>
+                }
+                @if (!string.IsNullOrEmpty(link.Description))
+                {
+                    <div class="calm-link-note-row">
+                        <p class="calm-link-note@(ExpandedNotes.Contains(link.Id) ? " expanded" : "")">@link.Description</p>
+                        <button type="button"
+                                class="calm-link-note-toggle"
+                                aria-label="@NoteToggleLabel(link)"
+                                aria-expanded="@(ExpandedNotes.Contains(link.Id) ? "true" : "false")"
+                                @onclick="() => ToggleNote(link.Id)">@(ExpandedNotes.Contains(link.Id) ? "▾" : "▸")</button>
+                    </div>
+                }
+            </div>
+        }
+    </div>
 </div>

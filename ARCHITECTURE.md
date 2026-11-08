@@ -499,7 +499,35 @@ The shell (`Index`) renders widgets from the layout instead of naming
 components directly, and re-renders whenever the layout service's
 `Changed` event fires. The link service has the same event, so tiles
 stay fresh when the Settings section saves. Links are edited only in
-the Settings dialog: the Links section adds, removes, and resets. The layout editor itself is a
+the Settings dialog: the Links section adds, removes, and resets. A
+link carries a name, address, plain-text note, tags, pin, click
+count, creation time, and last-accessed time (`Link` in the Domain);
+old saved entries migrate with defaults for the new fields, and the
+backup carries them as a v1 extension. The widget shows Compact
+tiles or Detailed cards (`LinksConfig`, `ViewMode` + `LinkSort`
+under `rise.widgets.v1`, riding backup), sorted Custom, by
+frequency, alphabetically, or by date added — pinned first in every
+sort — with a tag filter bar, a quick filter, and note previews.
+Favicons come from Google's s2 service (`LinkFavicon.ForUrl`): the
+link's host is sent to google.com, and a failed image falls back to
+a letter tile. Transfer lives in the same section: import merges a
+Netscape Bookmark HTML file (`NetscapeBookmarks.Parse` in
+Application — pure string-in/objects-out, folders flatten to tags,
+`<DD>` becomes the note, `ADD_DATE` the creation time, malformed
+entries skipped), skipping addresses already saved; export renders
+the current links back as Netscape HTML (`rise-bookmarks.html`)
+through the `IFileDownloader` port. The bookmarklet is a
+`javascript:` link the user drags to the bookmarks bar; clicking it
+on any page opens Rise in a new tab with
+`?add=<url>&title=…&notes=…` (selected text becomes the note).
+There is no backend, so the query string is the whole receive
+mechanism: the Links section reads it on open and pre-fills a
+pending-add card (Add saves through the link service, Dismiss
+discards it), and either choice clears the query with a replace
+navigation so a reload does not re-trigger it. The dialog itself
+cannot be opened pre-filled from the section — that needs a
+SettingsGear change, a follow-up if wanted.
+The layout editor itself is a
 widget of last resort in the shell: move up/down, hide/show, reset to
 defaults, all buttons (drag-and-drop is a later step, not v1), with
 titles taken from the definitions. Like the Settings contract, this

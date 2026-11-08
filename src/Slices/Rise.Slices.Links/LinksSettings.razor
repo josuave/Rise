@@ -1,6 +1,23 @@
+@using Rise.Domain
+@using Microsoft.AspNetCore.Components.Forms
+
+<div class="calm-settings-sort">
+    <label for="links-sort">Sort links</label>
+    <select id="links-sort" aria-label="Sort links" value="@SortName" @onchange="OnSortChangedAsync">
+        @foreach (string name in Enum.GetNames<LinkSort>())
+        {
+            <option value="@name">@SortLabel(name)</option>
+        }
+    </select>
+</div>
 <div class="calm-settings-add-form">
     <input type="text" placeholder="Name" aria-label="Link name" @bind="NewName" />
     <input type="url" placeholder="https://example.com" aria-label="Link URL" @bind="NewUrl" />
+    <textarea placeholder="Notes (optional)" aria-label="Link notes" @bind="NewDescription"></textarea>
+    <input type="text" placeholder="Tags, comma-separated (optional)" aria-label="Link tags" @bind="NewTags" />
+    <label class="calm-settings-pin">
+        <input type="checkbox" aria-label="Pin link" @bind="NewPinned" /> Pin link
+    </label>
     <button type="button" @onclick="AddAsync">Add link</button>
 </div>
 @if (!string.IsNullOrEmpty(FormError))
@@ -11,12 +28,81 @@
     @foreach (var link in Page.Links)
     {
         <li>
-            <span>@link.Name (@link.Url.Value)</span>
-            <button type="button" aria-label="Remove @link.Name" @onclick="() => RemoveAsync(link)">Remove</button>
+            @if (IsEditing(link))
+            {
+                <div class="calm-settings-edit-form">
+                    <input type="text" aria-label="Edit link name" @bind="EditName" />
+                    <input type="url" aria-label="Edit link URL" @bind="EditUrl" />
+                    <textarea aria-label="Edit link notes" @bind="EditDescription"></textarea>
+                    <input type="text" aria-label="Edit link tags" placeholder="Tags, comma-separated" @bind="EditTags" />
+                    <label class="calm-settings-pin">
+                        <input type="checkbox" aria-label="Edit link pinned" @bind="EditPinned" /> Pin link
+                    </label>
+                    <button type="button" @onclick="SaveEditAsync">Save</button>
+                    <button type="button" @onclick="CancelEdit">Cancel</button>
+                </div>
+            }
+            else
+            {
+                <span>
+                    @if (link.IsPinned)
+                    {
+                        <span aria-label="Pinned link" title="Pinned">📌 </span>
+                    }
+                    @link.Name (@link.Url.Value)
+                    @if (link.Tags.Count > 0)
+                    {
+                        <span class="calm-settings-tags">
+                            @foreach (string tag in link.Tags)
+                            {
+                                <span class="calm-settings-tag">@tag</span>
+                            }
+                        </span>
+                    }
+                </span>
+                <span class="calm-settings-row-buttons">
+                    <button type="button" aria-label="Edit @link.Name" @onclick="() => StartEdit(link)">Edit</button>
+                    <button type="button" aria-label="Remove @link.Name" @onclick="() => RemoveAsync(link)">Remove</button>
+                </span>
+            }
         </li>
     }
 </ul>
 <button type="button" @onclick="ResetAsync">Reset links to defaults</button>
+<div class="calm-settings-transfer">
+    @if (HasPendingAdd)
+    {
+        <div class="calm-settings-pending">
+            <p class="calm-dialog-note">From your bookmarklet — review it, then save it or dismiss it.</p>
+            <input type="text" placeholder="Name" aria-label="Pending link name" @bind="PendingName" />
+            <input type="url" placeholder="https://example.com" aria-label="Pending link URL" @bind="PendingUrl" />
+            <textarea placeholder="Notes (optional)" aria-label="Pending link notes" @bind="PendingNotes"></textarea>
+            <input type="text" placeholder="Tags, comma-separated (optional)" aria-label="Pending link tags" @bind="PendingTags" />
+            <button type="button" @onclick="SavePendingAddAsync">Add link</button>
+            <button type="button" @onclick="DismissPendingAdd">Dismiss</button>
+            @if (!string.IsNullOrEmpty(PendingError))
+            {
+                <p class="calm-form-error">@PendingError</p>
+            }
+        </div>
+    }
+    <div class="calm-settings-transfer-row">
+        <label class="calm-settings-import-label">
+            Import bookmarks
+            <InputFile @key="ImportCount" accept=".html,.htm" OnChange="ImportAsync" aria-label="Import bookmarks file" />
+        </label>
+        @if (FileDownloader is not null)
+        {
+            <button type="button" @onclick="ExportAsync">Export bookmarks</button>
+        }
+    </div>
+    <p class="calm-dialog-note">Import reads a Netscape bookmark file — the format browsers export. Links already saved are skipped. Export downloads the current links as <code>rise-bookmarks.html</code>.</p>
+    <div class="calm-settings-bookmarklet">
+        <p class="calm-dialog-note">Drag this to your bookmarks bar, then click it on any page to send that page to Rise:</p>
+        <a href="@BookmarkletHref">Add to Rise</a>
+        <p class="calm-dialog-note">Rise opens with the page ready to add — open Settings, Links, review it, and tap Add link. The page's selected text becomes the note.</p>
+    </div>
+</div>
 @if (!string.IsNullOrEmpty(Message))
 {
     <span class="calm-dialog-note"> @Message</span>

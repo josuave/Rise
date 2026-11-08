@@ -363,6 +363,115 @@ public class BackupServiceTests
     }
 
     [Fact]
+    public async Task Export_IncludesNewLinkFields()
+    {
+        var source = new Fixture();
+        await SeedAsync(source);
+        var detailed = new Link(
+            Guid.NewGuid(),
+            "Example",
+            new LinkUrl("https://example.com/"),
+            "a note",
+            new List<string> { "Work", "Home" },
+            "https://example.com/icon.png",
+            true,
+            7,
+            new DateTimeOffset(2026, 1, 2, 0, 0, 0, TimeSpan.Zero),
+            new DateTimeOffset(2026, 1, 3, 0, 0, 0, TimeSpan.Zero));
+        await source.Links.SaveAsync(new StartPage(new[] { detailed }));
+        string json = await source.Service.ExportAsync();
+
+        Result<BackupEnvelope> parsed = BackupFormat.Parse(json);
+        BackupEnvelope parsedEnvelope = ResultAssertions.RequireOk(parsed);
+        BackupStateDto state = System.Text.Json.JsonSerializer.Deserialize<BackupStateDto>(
+            parsedEnvelope.State.ToJsonString())!;
+        Assert.Single(state.Links);
+        BackupLinkDto exported = state.Links[0];
+        Assert.Equal(detailed.Id, exported.Id);
+        Assert.Equal("a note", exported.Description);
+        Assert.Equal(new List<string> { "Work", "Home" }, exported.Tags);
+        Assert.Equal("https://example.com/icon.png", exported.IconUrl);
+        Assert.True(exported.IsPinned);
+        Assert.Equal(7, exported.ClickCount);
+        Assert.Equal(detailed.CreatedAt, exported.CreatedAt);
+        Assert.Equal(detailed.LastAccessedAt, exported.LastAccessedAt);
+    }
+
+    [Fact]
+    public async Task Import_RoundTrip_PreservesNewLinkFields()
+    {
+        var source = new Fixture();
+        await SeedAsync(source);
+        var detailed = new Link(
+            Guid.NewGuid(),
+            "Example",
+            new LinkUrl("https://example.com/"),
+            "a note",
+            new List<string> { "Work", "Home" },
+            "https://example.com/icon.png",
+            true,
+            7,
+            new DateTimeOffset(2026, 1, 2, 0, 0, 0, TimeSpan.Zero),
+            new DateTimeOffset(2026, 1, 3, 0, 0, 0, TimeSpan.Zero));
+        await source.Links.SaveAsync(new StartPage(new[] { detailed }));
+        string json = await source.Service.ExportAsync();
+        var target = new Fixture();
+
+        Result<BackupEnvelope> result = await target.Service.ImportAsync(json);
+
+        _ = ResultAssertions.RequireOk(result);
+        Assert.NotNull(target.Links.Stored);
+        Assert.Single(target.Links.Stored.Links);
+        Link restored = target.Links.Stored.Links[0];
+        Assert.Equal(detailed.Id, restored.Id);
+        Assert.Equal("Example", restored.Name);
+        Assert.Equal("https://example.com/", restored.Url.Value);
+        Assert.Equal("a note", restored.Description);
+        Assert.Equal(new List<string> { "Work", "Home" }, restored.Tags);
+        Assert.Equal("https://example.com/icon.png", restored.IconUrl);
+        Assert.True(restored.IsPinned);
+        Assert.Equal(7, restored.ClickCount);
+        Assert.Equal(detailed.CreatedAt, restored.CreatedAt);
+        Assert.Equal(detailed.LastAccessedAt, restored.LastAccessedAt);
+    }
+
+    [Fact]
+    public async Task Import_OldBackupWithoutNewLinkFields_ReadsDefaults()
+    {
+        var source = new Fixture();
+        await SeedAsync(source);
+        JsonObject root = JsonNode.Parse(await source.Service.ExportAsync())!.AsObject();
+        JsonObject link = root["State"]!.AsObject()["Links"]!.AsArray()[0]!.AsObject();
+        Guid id = link["Id"]!.GetValue<Guid>();
+        link.Remove("Description");
+        link.Remove("Tags");
+        link.Remove("IconUrl");
+        link.Remove("IsPinned");
+        link.Remove("ClickCount");
+        link.Remove("CreatedAt");
+        link.Remove("LastAccessedAt");
+        var target = new Fixture();
+        DateTimeOffset before = DateTimeOffset.UtcNow;
+
+        Result<BackupEnvelope> result = await target.Service.ImportAsync(root.ToJsonString());
+
+        _ = ResultAssertions.RequireOk(result);
+        Assert.NotNull(target.Links.Stored);
+        Assert.Single(target.Links.Stored.Links);
+        Link restored = target.Links.Stored.Links[0];
+        Assert.Equal(id, restored.Id);
+        Assert.Equal("Example", restored.Name);
+        Assert.Equal("https://example.com/", restored.Url.Value);
+        Assert.Null(restored.Description);
+        Assert.Empty(restored.Tags);
+        Assert.Null(restored.IconUrl);
+        Assert.False(restored.IsPinned);
+        Assert.Equal(0, restored.ClickCount);
+        Assert.True(restored.CreatedAt >= before.AddSeconds(-5) && restored.CreatedAt <= DateTimeOffset.UtcNow.AddSeconds(5));
+        Assert.Null(restored.LastAccessedAt);
+    }
+
+    [Fact]
     public async Task Hotkeys_RoundTrip_RestoresOverrides()
     {
         var source = new Fixture();

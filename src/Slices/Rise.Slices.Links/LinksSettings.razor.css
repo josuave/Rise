@@ -1,3 +1,19 @@
+.calm-settings-sort {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0 0 0.75rem;
+    font-size: 0.85rem;
+}
+
+.calm-settings-sort select {
+    border: 1px solid var(--calm-border);
+    border-radius: 8px;
+    padding: 0.4rem 0.6rem;
+    background: var(--calm-surface);
+    color: var(--calm-text);
+}
+
 .calm-settings-add-form {
     display: flex;
     flex-wrap: wrap;
@@ -13,6 +29,30 @@
     padding: 0.5rem 0.75rem;
     background: var(--calm-surface);
     color: var(--calm-text);
+}
+
+.calm-settings-add-form textarea {
+    flex: 1 1 100%;
+    min-height: 3rem;
+    border: 1px solid var(--calm-border);
+    border-radius: 8px;
+    padding: 0.5rem 0.75rem;
+    background: var(--calm-surface);
+    color: var(--calm-text);
+    font: inherit;
+    resize: vertical;
+}
+
+.calm-settings-pin {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.85rem;
+    cursor: pointer;
+}
+
+.calm-settings-pin input {
+    flex: none;
 }
 
 .calm-settings-add-form button {
@@ -43,4 +83,111 @@
     padding: 0.25rem 0;
     font-size: 0.85rem;
     word-break: break-all;
+}
+
+.calm-settings-tags {
+    margin-left: 0.25rem;
+}
+
+.calm-settings-tag {
+    display: inline-block;
+    border: 1px solid var(--calm-border-soft);
+    border-radius: 999px;
+    padding: 0.05rem 0.45rem;
+    font-size: 0.7rem;
+    margin-right: 0.25rem;
+    white-space: nowrap;
+}
+
+.calm-settings-row-buttons {
+    display: flex;
+    gap: 0.35rem;
+    flex-shrink: 0;
+}
+
+.calm-settings-edit-form {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    flex: 1;
+}
+
+.calm-settings-edit-form input,
+.calm-settings-edit-form textarea {
+    flex: 1;
+    min-width: 0;
+    border: 1px solid var(--calm-border);
+    border-radius: 8px;
+    padding: 0.5rem 0.75rem;
+    background: var(--calm-surface);
+    color: var(--calm-text);
+}
+
+.calm-settings-edit-form textarea {
+    flex: 1 1 100%;
+    min-height: 3rem;
+    font: inherit;
+    resize: vertical;
+}
+
+.calm-settings-transfer {
+    border-top: 1px solid var(--calm-border-soft);
+    margin-top: 0.75rem;
+    padding-top: 0.75rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.calm-settings-transfer-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.calm-settings-import-label {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.85rem;
+    cursor: pointer;
+}
+
+.calm-settings-pending {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    border: 1px solid var(--calm-border);
+    border-radius: 8px;
+    padding: 0.5rem 0.75rem;
+}
+
+.calm-settings-pending input,
+.calm-settings-pending textarea {
+    flex: 1;
+    min-width: 0;
+    border: 1px solid var(--calm-border);
+    border-radius: 8px;
+    padding: 0.5rem 0.75rem;
+    background: var(--calm-surface);
+    color: var(--calm-text);
+}
+
+.calm-settings-pending textarea {
+    flex: 1 1 100%;
+    min-height: 3rem;
+    font: inherit;
+    resize: vertical;
+}
+
+.calm-settings-bookmarklet a {
+    display: inline-block;
+    border: 1px solid var(--calm-border);
+    border-radius: 8px;
+    padding: 0.5rem 1rem;
+    background: var(--calm-surface);
+    color: var(--calm-text);
+    text-decoration: none;
 }
