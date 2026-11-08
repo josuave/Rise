@@ -3,12 +3,29 @@ using Rise.Domain;
 
 namespace Rise.Application.Services;
 
-/// <summary>One link in a backup: id, name, and URL string.</summary>
+/// <summary>
+/// One link in a backup: id, name, and URL string, plus the optional
+/// description, tags, icon address, pinned flag, click count, creation
+/// time, and last-accessed time. The new members are a compatible v1
+/// extension: a file written before them has no such members, which
+/// read as no description or tags, no icon, unpinned, zero clicks, and
+/// no creation time (import stamps "now", like the link store does).
+/// </summary>
 // CA1054/CA1056 do not fit here: backup files store URLs as
 // strings, and validation happens via LinkUrl.TryCreate on import.
 [SuppressMessage("Microsoft.Design", "CA1054:UriParametersShouldNotBeStrings", Justification = "Backup files store URLs as strings; LinkUrl.TryCreate validates on import.")]
 [SuppressMessage("Microsoft.Design", "CA1056:UriPropertiesShouldNotBeStrings", Justification = "Backup files store URLs as strings; LinkUrl.TryCreate validates on import.")]
-public sealed record BackupLinkDto(Guid Id, string Name, string Url);
+public sealed record BackupLinkDto(
+    Guid Id,
+    string Name,
+    string Url,
+    string? Description = null,
+    IReadOnlyList<string>? Tags = null,
+    string? IconUrl = null,
+    bool IsPinned = false,
+    long ClickCount = 0,
+    DateTimeOffset? CreatedAt = null,
+    DateTimeOffset? LastAccessedAt = null);
 
 /// <summary>One palette in a backup: the nine calm CSS variables.</summary>
 public sealed record BackupPaletteDto(

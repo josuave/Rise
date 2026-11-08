@@ -50,7 +50,17 @@ public sealed class BackupService(
         BackgroundChoice? background = await backgroundStore.GetAsync(cancellationToken);
 
         var state = new BackupStateDto(
-            page.Links.Select(link => new BackupLinkDto(link.Id, link.Name, link.Url.Value)).ToList(),
+            page.Links.Select(link => new BackupLinkDto(
+                link.Id,
+                link.Name,
+                link.Url.Value,
+                link.Description,
+                link.Tags,
+                link.IconUrl,
+                link.IsPinned,
+                link.ClickCount,
+                link.CreatedAt,
+                link.LastAccessedAt)).ToList(),
             theme,
             themes.Select(ToTheme).ToList(),
             new BackupLayoutsDto(
@@ -177,7 +187,24 @@ public sealed class BackupService(
                 return Result<ImportedState>.Failure("That backup has a link without a valid name or web address.");
             }
 
-            links.Add(new Link(dto.Id, dto.Name.Trim(), url));
+            // The new link fields are a compatible v1 extension: a file
+            // that predates them has no such members, which read as no
+            // description or tags, no icon, unpinned, zero clicks, and
+            // no creation time — stamped "now", like the link store does.
+            // (The Link constructor normalises tags and stamps UtcNow
+            // for a default creation time; a negative click count reads
+            // as zero there too.)
+            links.Add(new Link(
+                dto.Id,
+                dto.Name.Trim(),
+                url,
+                dto.Description,
+                dto.Tags,
+                dto.IconUrl,
+                dto.IsPinned,
+                dto.ClickCount,
+                dto.CreatedAt ?? default,
+                dto.LastAccessedAt));
         }
 
         string theme = state.Theme.Trim();

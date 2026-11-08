@@ -21,11 +21,15 @@ namespace Rise.Slices.Tests;
 public class QuickLinksTests : BunitContext
 {
     private readonly FakeLinkStore _store = new();
+    private readonly FakeWidgetConfigStore _configs = new();
 
     public QuickLinksTests()
     {
         Services.AddScoped<ILinkStore>(_ => _store);
         Services.AddScoped<StartPageService>();
+        Services.AddScoped<IWidgetConfigStore>(_ => _configs);
+        Services.AddScoped<WidgetConfigService>();
+        Services.AddScoped<LinksConfig>();
         Services.AddSingleton<IWidgetDefinition, SearchWidgetDefinition>();
         Services.AddSingleton<IWidgetDefinition, LinksWidgetDefinition>();
         Services.AddSingleton<IWidgetDefinition, ThemeWidgetDefinition>();

@@ -12,7 +12,9 @@ namespace Rise.Slices.Links;
 /// </summary>
 public sealed class LinksWidgetDefinition : IWidgetDefinition
 {
-    public string Id => "Links";
+    public const string WidgetId = "Links";
+
+    public string Id => WidgetId;
     public string Title => "Links";
     public WidgetZone Zone => WidgetZone.Main;
     public bool DefaultVisible => true;
@@ -26,6 +28,7 @@ public static class LinksWidgetExtensions
     public static IServiceCollection AddLinksWidgets(this IServiceCollection services)
     {
         services.AddSingleton<IWidgetDefinition, LinksWidgetDefinition>();
+        services.AddScoped<LinksConfig>();
         return services;
     }
 }
